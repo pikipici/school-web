@@ -26,7 +26,8 @@
 1. `PLAN.md` — product, data, API, security, acceptance AC01–AC25.
 2. `DESIGN.md` — visual direction and antislop rules.
 3. `.kiro/steering/IMPLEMENTATION_PLAN.md` — current execution checklist.
-4. This file — environment and current checkpoint.
+4. `.kiro/steering/PROGRESS.md` — status aktual, evidence, commit, blocker, dan next step.
+5. This file — environment and current checkpoint.
 
 ## Working agreements
 
