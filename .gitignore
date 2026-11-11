@@ -1,0 +1,39 @@
+# Secrets and local environment
+.env
+.env.*
+!.env.example
+!**/.env.example
+
+# Node / Next.js
+node_modules/
+.next/
+out/
+frontend/out/
+frontend/.next/
+
+# Go build and generated code
+backend/bin/
+backend/internal/dbsql/
+coverage/
+*.coverprofile
+
+# Runtime/deployment output
+/public/
+*.pid
+*.log
+
+# Test/browser output
+playwright-report/
+test-results/
+coverage-summary.txt
+
+# Editors and OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.bak
+.tmp/
