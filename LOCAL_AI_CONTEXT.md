@@ -41,17 +41,18 @@
 ## Current state
 
 - Fase 0 plan approved for progress on 2026-11-12.
-- Task 0.1 complete: Git `main`, repository hygiene, pointer docs, and ignore verification.
-- No application production source exists yet.
+- Tasks 0.1–0.2 complete: repository baseline and tested Go HTTP foundation.
+- Backend currently exposes `/healthz` and honest zero-state `/api/v1/public/summary`; unknown API routes return JSON 404.
 - No GitHub remote configured.
-- `cbt-vps` project workspace/database/service not provisioned yet.
+- `cbt-vps` build-only workspace exists at `/home/ubuntu/informatika-monitoring`; no runtime, DB, `.env`, bare deploy repo, or systemd service exists yet.
+- Toolchain installed for remote verification: Go 1.27.4, Node 26.13.1 LTS, npm 11.20.0.
 - VPS was previously cleaned of the old Crypto Station project.
 
 ## Phase tracker
 
 - [~] Fase 0 — Foundation
   - [x] 0.1 Repository hygiene
-  - [ ] 0.2 Go router foundation
+  - [x] 0.2 Go router foundation
   - [ ] 0.3 PostgreSQL readiness
   - [ ] 0.4 Next.js static frontend
   - [ ] 0.5 Typed API client
@@ -90,4 +91,4 @@ npm run build
 
 ## Current next step
 
-Commit Task 0.1 baseline. Then obtain explicit approval to create only a non-runtime source/build workspace at `/home/ubuntu/informatika-monitoring` on `cbt-vps`, so Task 0.2 can record its required RED/GREEN Go tests remotely. Full DB, bare deploy repo, `.env`, systemd, port, and runtime provisioning remain a separate Task 0.10 checkpoint.
+Commit Task 0.2. Then run Task 0.3 strict TDD with a fake DB `Pinger`: safe `/readyz` success/failure behavior, graceful shutdown, and server hardening. Real database connectivity remains pending Task 0.10 approval; no DB, `.env`, bare deploy repo, systemd, port, or runtime provisioning yet.

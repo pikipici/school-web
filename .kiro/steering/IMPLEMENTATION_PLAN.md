@@ -88,7 +88,7 @@ git check-ignore frontend/node_modules frontend/out backend/bin .env
 
 **Acceptance:** planning docs remain present; no secret or generated output is tracked.
 
-### Task 0.2 — Scaffold Go module and router with TDD `[ ]`
+### Task 0.2 — Scaffold Go module and router with TDD `[x]`
 
 **Objective:** Establish the Go service and prove routing before implementation grows.
 
@@ -475,16 +475,17 @@ BRANCH=main
 
 - 2026-11-12: plan created from `PLAN.md`, LMS deployment pattern, `DESIGN.md`, and upstream antislop rules.
 - 2026-11-12: user approved progress. Task 0.1 completed: Git `main` initialized; `.gitignore`, `README.md`, and `LOCAL_AI_CONTEXT.md` created; ignore rules verified for secrets and generated output; `DESIGN.md` lint remains green.
+- 2026-11-12: user approved a build-only VPS workspace. Go 1.27.4, Node 26.13.1 LTS, and npm 11.20.0 installed on `cbt-vps`; source workspace created without DB, `.env`, systemd, port binding, or runtime activation.
+- 2026-11-12: Task 0.2 strict RED observed remotely: `internal/http` failed with `no non-test Go files`. Minimal router/config/server implementation then passed targeted test, full `go test ./... -count=1`, `go vet ./...`, and `go build ./cmd/api`. Independent review found no blockers.
 - `project-2` had no Git repository before Task 0.1.
-- No application production code exists yet.
-- Task 0.2 requires the first strict RED test run. Since build/test is locked to `cbt-vps`, a minimal source-sync/build workspace is now a prerequisite; this does not authorize DB/service/runtime provisioning or deployment.
 - `cbt-vps` was previously cleaned; database, systemd, and runtime provisioning still require explicit side-effect approval at Task 0.10.
 
 ## 8. Current Next Step
 
-**CHECKPOINT AFTER TASK 0.1.**
+**CHECKPOINT AFTER TASK 0.2.**
 
-1. Commit the verified documentation/repository baseline.
-2. Get explicit approval to create only `/home/ubuntu/informatika-monitoring` as a non-runtime source/build workspace on `cbt-vps`.
-3. Start Task 0.2 with router tests, sync them to the workspace, and record the expected RED failure before creating Go production code.
-4. Database, `.env`, bare deploy repo, systemd service, port binding, and runtime activation remain out of scope until Task 0.10 approval.
+1. Commit the verified Go router foundation.
+2. Task 0.3 requires PostgreSQL readiness behavior. Write failing tests against a fake `Pinger` first; those unit tests do not require creating the real database.
+3. Implement the readiness service, graceful shutdown, and safe `/readyz` contract, then run targeted/full Go gates on `cbt-vps`.
+4. A real PostgreSQL connection smoke remains blocked until Task 0.10 database provisioning approval; do not misreport unit readiness tests as live DB verification.
+5. Database, `.env`, bare deploy repo, systemd service, port binding, and runtime activation remain out of scope.
