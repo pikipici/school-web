@@ -1,11 +1,14 @@
 package httpapi
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
+	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/pikipici/informatika-monitoring/backend/internal/health"
 )
 
 type errorEnvelope struct {
@@ -18,12 +21,22 @@ type errorDetail struct {
 }
 
 func NewRouter() http.Handler {
+	return newRouter(nil)
+}
+
+func NewRouterWithPinger(pinger health.Pinger) http.Handler {
+	return newRouter(pinger)
+}
+
+func newRouter(pinger health.Pinger) http.Handler {
 	router := chi.NewRouter()
 	router.Use(middleware.RequestID)
 	router.Use(requestIDHeader)
 	router.Use(middleware.Recoverer)
 
 	router.Get("/healthz", healthz)
+	readiness := health.NewService(pinger)
+	router.Get("/readyz", readyz(readiness))
 	router.Get("/api/v1/public/summary", publicSummary)
 	router.NotFound(notFound)
 
@@ -42,6 +55,19 @@ func requestIDHeader(next http.Handler) http.Handler {
 
 func healthz(w http.ResponseWriter, _ *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]string{"status": "ok"})
+}
+
+func readyz(service health.Service) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx, cancel := context.WithTimeout(r.Context(), 2*time.Second)
+		defer cancel()
+		result := service.Readiness(ctx)
+		if !result.Ready {
+			writeJSON(w, http.StatusServiceUnavailable, result)
+			return
+		}
+		writeJSON(w, http.StatusOK, result)
+	}
 }
 
 func publicSummary(w http.ResponseWriter, _ *http.Request) {

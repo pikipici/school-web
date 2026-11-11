@@ -127,7 +127,7 @@ go build ./cmd/api
 
 **Commit:** `feat(api): add Go HTTP foundation and health endpoint`.
 
-### Task 0.3 — Add PostgreSQL readiness boundary `[ ]`
+### Task 0.3 — Add PostgreSQL readiness boundary `[x]`
 
 **Objective:** Keep liveness independent while readiness accurately reports DB state.
 
@@ -477,15 +477,16 @@ BRANCH=main
 - 2026-11-12: user approved progress. Task 0.1 completed: Git `main` initialized; `.gitignore`, `README.md`, and `LOCAL_AI_CONTEXT.md` created; ignore rules verified for secrets and generated output; `DESIGN.md` lint remains green.
 - 2026-11-12: user approved a build-only VPS workspace. Go 1.27.4, Node 26.13.1 LTS, and npm 11.20.0 installed on `cbt-vps`; source workspace created without DB, `.env`, systemd, port binding, or runtime activation.
 - 2026-11-12: Task 0.2 strict RED observed remotely: `internal/http` failed with `no non-test Go files`. Minimal router/config/server implementation then passed targeted test, full `go test ./... -count=1`, `go vet ./...`, and `go build ./cmd/api`. Independent review found no blockers.
+- 2026-11-12: Task 0.3 strict RED observed remotely: `internal/health` had no production file and `NewRouterWithPinger` was undefined. Fake-Pinger readiness tests then passed targeted/full Go gates. Independent review found and drove fixes for premature DB activation, missing nil-dependency `/readyz`, and shutdown cleanup races; final re-review PASS. Real PostgreSQL smoke remains explicitly pending Task 0.10.
 - `project-2` had no Git repository before Task 0.1.
 - `cbt-vps` was previously cleaned; database, systemd, and runtime provisioning still require explicit side-effect approval at Task 0.10.
 
 ## 8. Current Next Step
 
-**CHECKPOINT AFTER TASK 0.2.**
+**CHECKPOINT AFTER TASK 0.3.**
 
-1. Commit the verified Go router foundation.
-2. Task 0.3 requires PostgreSQL readiness behavior. Write failing tests against a fake `Pinger` first; those unit tests do not require creating the real database.
-3. Implement the readiness service, graceful shutdown, and safe `/readyz` contract, then run targeted/full Go gates on `cbt-vps`.
-4. A real PostgreSQL connection smoke remains blocked until Task 0.10 database provisioning approval; do not misreport unit readiness tests as live DB verification.
-5. Database, `.env`, bare deploy repo, systemd service, port binding, and runtime activation remain out of scope.
+1. Commit the verified readiness boundary.
+2. Start Task 0.4: scaffold Next.js App Router + TypeScript + Tailwind with static export in `frontend/`.
+3. Implement only the honest public foundation from `DESIGN.md`; no fake student rows, KPI claims, generated visual assets, auth, or business CRUD.
+4. Run `npm ci`, lint, typecheck, and static build on `cbt-vps`; verify `out/index.html` exists.
+5. Real DB, `.env`, bare deploy repo, systemd, port binding, and runtime activation remain out of scope.

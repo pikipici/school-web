@@ -41,8 +41,9 @@
 ## Current state
 
 - Fase 0 plan approved for progress on 2026-11-12.
-- Tasks 0.1–0.2 complete: repository baseline and tested Go HTTP foundation.
-- Backend currently exposes `/healthz` and honest zero-state `/api/v1/public/summary`; unknown API routes return JSON 404.
+- Tasks 0.1–0.3 complete: repository baseline, Go HTTP foundation, and tested readiness boundary.
+- Backend exposes `/healthz`, safe `/readyz`, and honest zero-state `/api/v1/public/summary`; unknown API routes return JSON 404.
+- Readiness uses a fake-Pinger-tested boundary. Without configured DB it honestly returns 503; real PostgreSQL smoke remains pending Task 0.10.
 - No GitHub remote configured.
 - `cbt-vps` build-only workspace exists at `/home/ubuntu/informatika-monitoring`; no runtime, DB, `.env`, bare deploy repo, or systemd service exists yet.
 - Toolchain installed for remote verification: Go 1.27.4, Node 26.13.1 LTS, npm 11.20.0.
@@ -53,7 +54,7 @@
 - [~] Fase 0 — Foundation
   - [x] 0.1 Repository hygiene
   - [x] 0.2 Go router foundation
-  - [ ] 0.3 PostgreSQL readiness
+  - [x] 0.3 PostgreSQL readiness
   - [ ] 0.4 Next.js static frontend
   - [ ] 0.5 Typed API client
   - [ ] 0.6 Go static serving
@@ -91,4 +92,4 @@ npm run build
 
 ## Current next step
 
-Commit Task 0.2. Then run Task 0.3 strict TDD with a fake DB `Pinger`: safe `/readyz` success/failure behavior, graceful shutdown, and server hardening. Real database connectivity remains pending Task 0.10 approval; no DB, `.env`, bare deploy repo, systemd, port, or runtime provisioning yet.
+Commit Task 0.3, then scaffold Task 0.4 Next.js static frontend from `DESIGN.md`. Validate npm install, lint, typecheck, and static build only on `cbt-vps`. Real DB, `.env`, bare deploy repo, systemd, port, and runtime provisioning remain pending Task 0.10.
