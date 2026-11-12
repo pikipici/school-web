@@ -1,0 +1,105 @@
+# Fase 1 — Database dan Login Admin (Rencana)
+
+> Status: **DRAFT — menunggu approval. Belum ada kode.**
+> Dibuat: 13 November 2026.
+
+## Tujuan
+
+Guru bisa login dengan aman ke dashboard admin. Database punya tabel dasar untuk akun, sesi, dan audit. Belum ada CRUD Pengumuman, Materi, atau kelompok (itu Fase 2 dan seterusnya).
+
+## Di dalam scope
+
+- Migrasi Goose pertama: `admin_users`, `admin_sessions`, `audit_log`.
+- Query sqlc dan lapisan akses data.
+- Login, logout, dan "siapa saya" di Go.
+- Perintah CLI untuk membuat dan mereset akun admin.
+- Halaman `/admin/login` dan kerangka `/admin` (kosong, jujur).
+- Audit log untuk login berhasil, login gagal, logout.
+- Cadangan database otomatis sebelum migrasi di skrip deploy.
+
+## Di luar scope
+
+- CRUD Pengumuman, Materi, lampiran, kelas, kelompok.
+- Kode akses kelompok dan portal kelompok.
+- Pendaftaran admin publik, reset sandi lewat email, OAuth.
+- Hostname dan HTTPS publik (lihat keputusan 1).
+
+## Keputusan yang saya usulkan
+
+| Hal | Usulan | Alasan |
+|---|---|---|
+| Akun | Satu admin (guru), dibuat lewat CLI di server | Tidak ada pendaftaran publik |
+| Hash sandi | Argon2id | Standar modern, ada di `golang.org/x/crypto` |
+| Sandi | Minimal 12 karakter, tidak ada di daftar sandi umum | Cukup kuat tanpa aturan rumit |
+| Sesi | Disimpan di PostgreSQL. Token acak 32 byte; yang disimpan hanya hash SHA-256 | Token bocor dari DB tidak bisa dipakai |
+| Masa sesi | Idle 30 menit, maksimal 12 jam | Dapat diubah |
+| Cookie | `HttpOnly`, `SameSite=Strict`, `Secure` saat HTTPS | Cegah pencurian lewat skrip |
+| CSRF | Token per sesi di header `X-CSRF-Token` + cek `Origin` | Semua aksi ubah data terlindungi |
+| Batas percobaan | Per IP dan per akun, jeda naik bertahap | Cegah tebak sandi |
+| Pesan gagal | Sama untuk "akun tidak ada" dan "sandi salah" | Cegah tebak nama akun |
+| Reset sandi | CLI di server (tidak ada email) | Sesuai prinsip tanpa email otomatis |
+| Frontend | Hanya UI. Penjaga halaman di Next.js bersifat kosmetik; yang menegakkan tetap Go | Sesuai aturan backend di Go |
+
+## Endpoint
+
+| Method | Path | Fungsi |
+|---|---|---|
+| POST | `/api/v1/admin/auth/login` | Masuk, set cookie sesi |
+| POST | `/api/v1/admin/auth/logout` | Hapus sesi |
+| GET | `/api/v1/admin/auth/me` | Info admin dan token CSRF; 401 jika belum login |
+
+Semua dicatat di `docs/openapi.yaml`. Respons memakai amplop error standar yang sudah ada.
+
+## Skema awal (garis besar)
+
+- `admin_users`: id, username (unik), password_hash, dibuat, diperbarui, login_terakhir.
+- `admin_sessions`: id, user_id, token_hash (unik), csrf_token, dibuat, terakhir_aktif, kedaluwarsa, ip, user_agent.
+- `audit_log`: id, waktu (UTC), aktor, aksi, hasil, ip, detail aman (tanpa sandi atau token).
+
+Waktu disimpan UTC, ditampilkan WIB.
+
+## Task
+
+| Task | Isi | Uji |
+|---|---|---|
+| 1.1 | Database uji terpisah di `cbt-vps` (`informatika_monitoring_test`) dan pembantu uji integrasi | Uji koneksi lulus |
+| 1.2 | Migrasi 0001–0003 + sqlc | `goose up/down`, `sqlc generate`, uji skema |
+| 1.3 | Paket sandi (Argon2id, kebijakan sandi) | TDD: hash cocok, salah ditolak, sandi lemah ditolak |
+| 1.4 | Paket sesi (buat, cek idle dan absolut, hapus) | TDD dengan jam palsu |
+| 1.5 | Batas percobaan login | TDD: kunci, pulih, per IP dan per akun |
+| 1.6 | Handler login/logout/me + middleware auth dan CSRF | TDD HTTP: 401, 403 CSRF, cookie flag |
+| 1.7 | CLI `adminctl` (buat, reset sandi) | Uji; sandi dari prompt atau stdin, tidak lewat argumen |
+| 1.8 | Audit log pada login/logout | Uji: tidak ada rahasia di log |
+| 1.9 | Frontend `/admin/login` dan `/admin` | lint, typecheck, build; keadaan loading/error/sukses |
+| 1.10 | Deploy: cadangan `pg_dump` sebelum migrasi, migrasi pertama, smoke baru | `deploy --check`, lalu deploy |
+| 1.11 | Gerbang penutupan + `docs/F1_ACCEPTANCE.md` | Semua gate, cek browser nyata |
+
+Setiap task: uji gagal dulu (RED), lalu implementasi, lalu go test/vet/build di VPS, lalu commit.
+
+## Risiko dan mitigasi
+
+1. **Login lewat HTTP polos di internet** — sandi bisa disadap. Mitigasi: jangan buka `/admin` ke publik sebelum HTTPS; sampai itu, akses admin lewat tunnel SSH.
+2. **Migrasi maju-saja** — rollback binary tidak membatalkan skema. Mitigasi: `pg_dump` sebelum migrasi (Task 1.10).
+3. **Tidak ada Docker di VPS** — uji integrasi memakai PostgreSQL lokal VPS dengan database uji terpisah, tanpa menyentuh data produksi.
+4. **Penguncian akun** — penyerang bisa mengunci guru. Mitigasi: kunci per IP lebih dulu; jeda bertahap, bukan kunci permanen.
+5. **Lupa sandi satu-satunya admin** — Mitigasi: CLI reset di server.
+
+## Keputusan yang saya butuhkan dari user
+
+1. **Domain dan HTTPS**: punya domain? Disarankan Caddy (HTTPS otomatis) di depan port 8300. Tanpa itu, admin hanya via tunnel SSH.
+2. **Username admin**: apa yang dipakai?
+3. **Masa sesi**: setuju idle 30 menit dan maksimal 12 jam?
+4. **2FA (TOTP)**: ditambahkan sekarang, atau Fase berikutnya? Usulan saya: berikutnya.
+
+## Gerbang selesai Fase 1
+
+- [ ] Migrasi naik dan turun bersih; `sqlc generate` hijau.
+- [ ] Semua uji Go lulus (unit + integrasi), vet dan build hijau.
+- [ ] Login, logout, me bekerja; 401 dan 403 benar; cookie flag benar.
+- [ ] Batas percobaan terbukti oleh uji.
+- [ ] Tidak ada sandi atau token di log, respons, atau repo.
+- [ ] OpenAPI diperbarui.
+- [ ] Frontend lint, typecheck, build lulus; cek browser nyata (360px, zoom 200%, keyboard).
+- [ ] Deploy ke `cbt-vps` + smoke lulus; cadangan sebelum migrasi terbukti ada.
+- [ ] Tidak ada CRUD bisnis yang bocor ke Fase 1.
+- [ ] User menyetujui pindah ke Fase 2.
