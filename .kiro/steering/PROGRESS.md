@@ -11,11 +11,11 @@
 - Task terakhir selesai: **0.11 — Remote baseline deployment dan smoke**
 - Next task: **0.12 — Antislop Delivery Gate dan phase close**
 - Local branch: `main`
-- Task 0.9 implementation commit: `a0bfb2f`
+- Deployment evidence commit: `594ea74`
 - Working tree: bersih saat status ini dibuat
-- Runtime aplikasi: **belum diaktifkan**
-- Real database: **belum dibuat**
-- Public domain/live deployment: **belum dilakukan**
+- Runtime internal aplikasi: **aktif dan terverifikasi di `cbt-vps:8300`**
+- PostgreSQL aplikasi: **aktif dan readiness PASS**
+- Public hostname/HTTPS: **belum dilakukan dan tetap di luar scope Fase 0**
 
 ## Sources of Truth
 
@@ -329,7 +329,10 @@ Target:
 - SSH alias: `cbt-vps`
 - Host: `43.134.111.212`
 - User: `ubuntu`
-- Build-only workspace: `/home/ubuntu/informatika-monitoring`
+- Git checkout/runtime workspace: `/home/ubuntu/informatika-monitoring`
+- Bare deploy repository: `/home/ubuntu/git-repos/informatika-monitoring.git`
+- Service: `informatika-monitoring-api.service`
+- Internal port: `8300`
 
 Verified toolchain:
 
@@ -339,17 +342,17 @@ Node.js: 26.13.1 LTS
 npm:     11.20.0
 ```
 
-Current provisioning boundary:
+Current provisioning state:
 
-- Build-only source workspace: PRESENT
-- Application database `informatika_monitoring`: ABSENT
-- Application `.env`: ABSENT
-- Bare Git deploy repository: ABSENT
-- `informatika-monitoring-api.service`: ABSENT
-- Runtime port 8300 activation: NOT DONE
-- Public/live deployment: NOT DONE
-
-The absence above is intentional. Database, secret environment, systemd, port binding, and runtime activation require the Task 0.10 checkpoint.
+- Clean Git checkout: PRESENT
+- Application database `informatika_monitoring`: PRESENT
+- Least-privilege application role: PRESENT and verified non-superuser
+- Application `.env`: PRESENT, owner `ubuntu:ubuntu`, mode `0600`
+- Bare Git deploy repository: PRESENT
+- `informatika-monitoring-api.service`: ACTIVE and ENABLED
+- Runtime port 8300: ACTIVE and owned by the systemd MainPID
+- Immutable release deployment: PRESENT
+- Public hostname/HTTPS: NOT CONFIGURED — intentionally outside Fase 0 scope
 
 ## Current Backend Contract
 
@@ -376,7 +379,6 @@ Not available yet:
 - Classes/groups CRUD.
 - Real monitoring data.
 - Group portal.
-- Deployed runtime.
 
 ## Safety and Scope Status
 
@@ -392,10 +394,11 @@ Still enforced:
 
 ## Blockers / Pending External Decisions
 
-1. Real PostgreSQL smoke waits for Task 0.10 provisioning approval.
-2. Runtime activation waits for Task 0.10.
-3. Docker is unavailable on `cbt-vps`; optional local Compose has static review only and is not required for Tasks 0.8–0.9.
-4. Public hostname/HTTPS cutover is not yet decided and is not needed for Tasks 0.8–0.9.
+1. Task 0.10–0.11 tidak memiliki blocker acceptance; provisioning dan baseline deployment sudah VERIFIED.
+2. Docker tidak tersedia di `cbt-vps`; optional Compose hanya mendapat static review dan bukan dependency runtime.
+3. npm masih melaporkan tujuh moderate dependency advisories; harus dicatat pada Task 0.12, bukan disamarkan sebagai audit bersih.
+4. Public hostname/HTTPS cutover belum diputuskan dan tetap di luar scope Fase 0.
+5. Perpindahan ke Fase 1 menunggu Task 0.12 PASS dan approval user.
 
 ## Task 0.10–0.11 Deployment Evidence
 
