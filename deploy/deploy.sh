@@ -105,12 +105,6 @@ check_port_owner() {
   log "port $APP_PORT listener belongs to $SERVICE_NAME cgroup"
 }
 
-make_pg_service_file() {
-  local file="$1"
-  umask 077
-  printf '[deploy]\nconninfo=%s\n' "$DB_DSN" > "$file"
-}
-
 preflight() {
   log "=== PRE-FLIGHT ==="
   [[ "$mode" == check || "$ROOT_DIR" == "$REMOTE_DIR" ]] || fail "remote checkout mismatch: expected $REMOTE_DIR"
@@ -123,8 +117,7 @@ preflight() {
   sudo_systemctl show --property=MainPID --value >/dev/null || fail "sudoers must permit systemctl show for $SERVICE_NAME"
   sudo -n ss -H -ltnp "sport = :$APP_PORT" >/dev/null || fail "sudoers must permit ss listener inspection"
   BUILD_ROOT="$(mktemp -d "${TMPDIR:-/tmp}/informatika-deploy.XXXXXX")"
-  make_pg_service_file "$BUILD_ROOT/pg_service.conf"
-  PGSERVICEFILE="$BUILD_ROOT/pg_service.conf" PGSERVICE=deploy timeout 5 psql -X -v ON_ERROR_STOP=1 -Atqc 'SELECT 1' >/dev/null || fail "database connectivity check failed"
+  PGDATABASE="$DB_DSN" timeout 5 psql -X -v ON_ERROR_STOP=1 -Atqc 'SELECT 1' >/dev/null || fail "database connectivity check failed"
   GOOSE_DRIVER=postgres GOOSE_DBSTRING="$DB_DSN" goose -dir "$ROOT_DIR/backend/sql/migrations" status >/dev/null || fail "goose status failed"
   available_mb="$(df -Pm "$ROOT_DIR" | sed -n '2{s/  */ /g;p}' | cut -d' ' -f4)"
   [[ "$available_mb" =~ ^[0-9]+$ ]] || fail "could not determine free disk space"
