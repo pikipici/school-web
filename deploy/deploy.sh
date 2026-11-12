@@ -180,7 +180,8 @@ poll_ready() {
 }
 
 atomic_link() {
-  local target="$1" link="$2" tmp="$link.tmp.$$"
+  local target="$1" link="$2" tmp
+  tmp="$link.tmp.$$"
   ln -s -- "$target" "$tmp"
   mv -Tf -- "$tmp" "$link"
 }
