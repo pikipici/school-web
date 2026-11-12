@@ -81,6 +81,23 @@ Whenever migration files exist, deployment first writes a verified, owner-only (
 
 A deployment creates immutable `releases/<timestamp>-<commit>/{bin,public}` (the API binary and `adminctl`), runs forward Goose migrations, atomically switches `bin/current` and `public`, restarts, polls readiness, and runs smoke tests. Previous release directories and prior link targets remain available. Release and links must share a filesystem.
 
+## HTTPS (Caddy)
+
+Caddy terminates TLS on ports 80 and 443 and proxies to the app on `127.0.0.1:8300`. It is installed from the official Caddy apt repository, and `/etc/caddy/Caddyfile` is a copy of `deploy/Caddyfile` (`sudo install -m 0644 -o root -g root deploy/Caddyfile /etc/caddy/Caddyfile`, then `caddy validate --config /etc/caddy/Caddyfile`). The Caddyfile overwrites `X-Forwarded-For` with the real client address, drops `X-Real-IP`, removes the `Server` header, adds security headers, and caps request bodies at 1 MB. The app trusts `X-Forwarded-For` only from a loopback peer and reads its rightmost entry, so this overwrite is what makes the login rate limit see the true client.
+
+Turn-on order. Do not reorder: starting Caddy before DNS and the firewall are right makes it fail its certificate request repeatedly, and Let's Encrypt limits failed attempts.
+
+1. DNS (Cloudflare): an `A` record for `fikriramaaulia.online` pointing to the server's public IP, proxy status **DNS only (grey cloud)**. Remove the existing proxied `A`/`AAAA` records for that name first; a proxied record hides the server and breaks certificate issuance. This replaces whatever the name serves today.
+2. Firewall of the VPS provider's console (not the OS firewall, which is inactive): allow inbound TCP 80 and 443 from anywhere. Port 8300 must stay closed to the internet.
+3. Check from outside the server: `dig +short fikriramaaulia.online` returns the server IP, and TCP 80 and 443 connect.
+4. `sudo systemctl enable --now caddy`, then `sudo journalctl -u caddy -n 50 --no-pager` and look for a successful certificate. `curl -I https://fikriramaaulia.online/` must return 200 with a valid certificate, and `curl -I http://fikriramaaulia.online/` must redirect to HTTPS.
+5. Only after step 4 works, set `ADMIN_COOKIE_SECURE=true` in `.env` and restart the service. From then on the admin cookie is `__Host-admin_session` with `Secure`, and the app accepts admin requests only from an `https://` origin, so the old SSH-tunnel login over plain `http://localhost` stops working. Use the HTTPS address.
+6. After a few stable days raise HSTS in the Caddyfile (`max-age=86400`, later `31536000`). Test with `caddy validate`, install, `sudo systemctl reload caddy`.
+
+Rollback: `sudo systemctl disable --now caddy`, set `ADMIN_COOKIE_SECURE=false`, restart the app, and use the SSH tunnel again. Browsers that already saw the HSTS header will refuse plain HTTP for its `max-age`, which is why it starts at one hour.
+
+A Content-Security-Policy header is not set yet: the static Next.js export uses inline scripts, so a policy needs per-build hashes or a nonce setup. Track it as follow-up work.
+
 ## Failure and rollback
 
 Once release mutation starts, an ERR trap attempts rollback. Rollback atomically restores both prior symlinks, restarts the service, and verifies readiness. It reports success only if all those steps succeed; otherwise it explicitly reports an unverified/unhealthy rollback and exits nonzero. A first deployment has no previous runtime to restore.

@@ -1,0 +1,33 @@
+# Reverse proxy and automatic HTTPS for the Go app on 127.0.0.1:8300.
+# Install to /etc/caddy/Caddyfile (see docs/DEPLOYMENT.md, "HTTPS").
+#
+# Caddy obtains and renews the certificate by itself. That needs, from the
+# internet: DNS for this name pointing at this server (in Cloudflare: "DNS only",
+# grey cloud) and ports 80 and 443 open to the world.
+
+fikriramaaulia.online {
+	encode zstd gzip
+
+	header {
+		# Start with one hour. Once HTTPS is proven stable, raise it
+		# (86400, then 31536000) so browsers stop trying plain HTTP.
+		Strict-Transport-Security "max-age=3600"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		Permissions-Policy "camera=(), microphone=(), geolocation=()"
+		-Server
+	}
+
+	# Login bodies are under 4 KiB. Raise this per path when file uploads exist.
+	request_body {
+		max_size 1MB
+	}
+
+	reverse_proxy 127.0.0.1:8300 {
+		# The app trusts X-Forwarded-For only from this local proxy and reads its
+		# rightmost entry, so always overwrite it with the real client address.
+		header_up X-Forwarded-For {remote_host}
+		header_up -X-Real-IP
+	}
+}
