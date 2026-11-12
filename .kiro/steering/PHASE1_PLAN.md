@@ -68,7 +68,7 @@ Waktu disimpan UTC, ditampilkan WIB.
 | 1.4 **DONE** | Paket sesi (buat, cek idle dan absolut, hapus) | TDD dengan jam palsu |
 | 1.5 **DONE** | Batas percobaan login | TDD: kunci, pulih, per IP dan per akun |
 | 1.6 **DONE** | Handler login/logout/me + middleware auth dan CSRF | TDD HTTP: 401, 403 CSRF, cookie flag |
-| 1.7 | CLI `adminctl` (buat, reset sandi) | Uji; sandi dari prompt atau stdin, tidak lewat argumen |
+| 1.7 **DONE** | CLI `adminctl` (buat, reset sandi) | Uji; sandi dari prompt atau stdin, tidak lewat argumen |
 | 1.8 | Audit log pada login/logout | Uji: tidak ada rahasia di log |
 | 1.9 | Frontend `/admin/login` dan `/admin` | lint, typecheck, build; keadaan loading/error/sukses |
 | 1.10 | Deploy: cadangan `pg_dump` sebelum migrasi, migrasi pertama, smoke baru | `deploy --check`, lalu deploy |
@@ -150,3 +150,8 @@ o non-test Go files. GREEN di cbt-vps: 3 uji lulus (validasi DSN, koneksi, reset
 - Konfigurasi baru: `ADMIN_COOKIE_SECURE` (true/false/1/0; nilai lain ditolak agar salah ketik tidak melemahkan keamanan). Rute admin hanya aktif bila `DATABASE_URL` ada. Pembersihan sesi tiap 10 menit di `main`.
 - **Task 1.8 tinggal** menyediakan implementasi `AuditRecorder` yang menulis ke tabel `audit_log` (titik panggil dan tes peristiwa sudah ada) lalu memasangnya di `main`.
 - **Sebelum HTTPS dipasang (H5):** `ADMIN_COOKIE_SECURE` harus `false` (HTTP), dan Caddy wajib menimpa `X-Forwarded-For` dengan alamat klien sebenarnya; jika Cloudflare mode proxied dipakai, alamat klien harus diambil dari header Cloudflare yang tepercaya (butuh perubahan kecil di `clientIP`).
+- **Task 1.7 selesai (13 Nov 2026).** RED: `no non-test Go files`. GREEN di `cbt-vps` dengan database uji nyata: 13 uji `adminctl` lulus; seluruh suite lulus 2 kali dan dengan `-race`; vet/build/gofmt/sqlc hijau. Perintah: `create-admin --username NAMA` (hanya satu admin; sisipan atomik `INSERT ... WHERE NOT EXISTS`) dan `reset-password --username NAMA` (ganti hash lalu akhiri semua sesi). Sandi hanya lewat terminal tanpa echo (diminta dua kali) atau `--password-stdin` (maks 1 KiB, hanya akhir baris yang dibuang); flag `--password` ditolak sehingga rahasia tidak lewat argv; keluaran tidak pernah memuat sandi atau hash; kebijakan sandi sama dengan login; username dinormalisasi huruf kecil seperti login. Kode keluar: 0 sukses, 1 gagal operasi, 2 salah pakai/input.
+- Binary: `backend/cmd/adminctl`. Dependensi baru: `golang.org/x/term v0.48.0` (terpin, `go mod verify` OK). Uji `go build` biner nyata: `help` tanpa DB berjalan; tanpa `DATABASE_URL` berhenti dengan pesan jelas (exit 1).
+- **Untuk Task 1.10:** skrip deploy saat ini hanya membangun `cmd/api`; harus ikut membangun `adminctl` ke direktori rilis (`bin/adminctl`) dan runbook menjelaskan cara pakai: `set -a; . /home/ubuntu/informatika-monitoring/.env; set +a; bin/current/adminctl create-admin --username fikri`. Pembuatan akun admin dilakukan setelah migrasi produksi pertama.
+- Batas diketahui: dua `create-admin` yang benar-benar serentak dengan username berbeda bisa lolos keduanya (kecil kemungkinannya; operasi manual oleh satu operator).
+- Audit CLI (`admin.created`, `admin.password_reset`) ditambahkan di Task 1.8 bersama penyimpan `audit_log`.

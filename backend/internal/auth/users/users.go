@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"regexp"
 	"strings"
 	"time"
 
@@ -16,6 +17,14 @@ import (
 
 // ErrNotFound means no account has that username.
 var ErrNotFound = errors.New("users: not found")
+
+// ErrAdminExists means an admin account already exists; the site allows only one.
+var ErrAdminExists = errors.New("users: admin already exists")
+
+var usernamePattern = regexp.MustCompile(`^[a-z0-9._-]{3,32}$`)
+
+// ValidUsername reports whether s is an acceptable (already lower-case) username.
+func ValidUsername(s string) bool { return usernamePattern.MatchString(s) }
 
 // User is the minimum an authentication check needs.
 type User struct {
@@ -48,6 +57,19 @@ func (s *Store) FindByUsername(ctx context.Context, username string) (User, erro
 		return User{}, fmt.Errorf("users: find: %w", err)
 	}
 	return User{ID: row.ID, Username: row.Username, PasswordHash: row.PasswordHash}, nil
+}
+
+// CreateFirstAdmin creates the only admin account. It returns ErrAdminExists
+// if any admin is already present; the check and insert are one statement.
+func (s *Store) CreateFirstAdmin(ctx context.Context, username, hash string) (int64, error) {
+	id, err := s.q.CreateFirstAdminUser(ctx, dbsql.CreateFirstAdminUserParams{Username: username, PasswordHash: hash})
+	if errors.Is(err, pgx.ErrNoRows) {
+		return 0, ErrAdminExists
+	}
+	if err != nil {
+		return 0, fmt.Errorf("users: create first admin: %w", err)
+	}
+	return id, nil
 }
 
 // MarkLogin records a successful login time.
