@@ -7,9 +7,9 @@
 ## Ringkasan
 
 - Fase aktif: **Fase 0 — Foundation**
-- Progress task: **9/12 selesai (75%)**
-- Task terakhir selesai: **0.9 — Hardened LMS-style deploy script**
-- Next task: **0.10 — Provision `cbt-vps` runtime workspace (menunggu approval eksplisit)**
+- Progress task: **11/12 selesai (92%)**
+- Task terakhir selesai: **0.11 — Remote baseline deployment dan smoke**
+- Next task: **0.12 — Antislop Delivery Gate dan phase close**
 - Local branch: `main`
 - Task 0.9 implementation commit: `a0bfb2f`
 - Working tree: bersih saat status ini dibuat
@@ -38,8 +38,8 @@
 | 0.7 | Goose/sqlc/environment skeleton | DONE | `45f03b4` | sqlc v1.29 compile/generate, Go tests/vet/build PASS; environment boundary review PASS; Compose static review only (Docker unavailable) |
 | 0.8 | OpenAPI dan Makefile | DONE | `d332215` | OpenAPI YAML parse; remote `make verify` PASS; independent review PASS |
 | 0.9 | Hardened LMS-style deploy script | DONE | `a0bfb2f` | Shell syntax, isolated remote `--check`, all build gates, non-mutation assertions, and independent re-review PASS |
-| 0.10 | Provision `cbt-vps` runtime workspace | IN PROGRESS / PARTIAL | — | Bare repo, Git checkout, least-privilege DB/role, `.env` 0600, systemd runtime, and port 8300 verified; latest unit hardening commit `073db1c` is pushed but not applied because the apply command was denied |
-| 0.11 | Remote baseline deployment dan smoke | PENDING APPROVAL | — | Belum deploy |
+| 0.10 | Provision `cbt-vps` runtime workspace | DONE | server state | Bare repo, clean checkout, least-privilege DB/role, `.env` 0600, matching hardened unit, enabled service, and port ownership verified |
+| 0.11 | Remote baseline deployment dan smoke | DONE | deployed `e779d36` | Full remote deploy gates, immutable release, systemd, health/readiness, frontend smoke, clean tree, and independent evidence review PASS |
 | 0.12 | Antislop Delivery Gate dan phase close | PENDING | — | Menunggu seluruh gate sebelumnya |
 
 ## Completed Evidence
@@ -397,15 +397,40 @@ Still enforced:
 3. Docker is unavailable on `cbt-vps`; optional local Compose has static review only and is not required for Tasks 0.8–0.9.
 4. Public hostname/HTTPS cutover is not yet decided and is not needed for Tasks 0.8–0.9.
 
+## Task 0.10–0.11 Deployment Evidence
+
+Verified on `cbt-vps`:
+
+```text
+checkout/deployed HEAD        e779d364ec240941d95fa0137a37ba4ca5728aa9
+systemd unit hash             matches repository template
+service active/enabled        PASS
+MainPID owns port 8300        PASS
+service cgroup                /system.slice/informatika-monitoring-api.service
+PostgreSQL readiness          PASS
+/healthz                      {"status":"ok"}
+/readyz                       {"status":"ok","database":"ok"}
+frontend marker + smoke       PASS
+.env ownership/mode           ubuntu:ubuntu 0600
+DB owner                      informatika_monitoring_app
+DB elevated role flags        false:false:false
+server working tree           CLEAN
+recent error journal          no entries
+immutable release             20261112T140834Z-e779d364ec24
+independent evidence review   VERIFIED, no acceptance blocker
+```
+
+The remote deploy command passed Go test/vet/build, `sqlc generate`, frontend `npm ci`/lint/typecheck/build, dependency readiness, immutable release switching, restart, readiness polling, and the checked-in smoke script. There are currently no Goose migration files, so connectivity was verified and migration execution was explicitly skipped.
+
 ## Current Next Step
 
-Task 0.10 — provisioning checkpoint partially complete:
+Task 0.12 — Antislop Delivery Gate and Fase 0 close:
 
-1. Bare repo, Git checkout, PostgreSQL role/database, restrictive `.env`, systemd service, immutable release, and port 8300 runtime are present.
-2. Runtime at deployed HEAD `6019fe8` passed health, readiness, root marker, service ownership, and DB-role verification.
-3. Deploy fixes and additional hardening are pushed through `073db1c`.
-4. Applying the latest unit/source hardening on `cbt-vps` was denied, so do not mark Task 0.10 complete or Task 0.11 deployed at the latest HEAD.
-5. Next approved action is to fast-forward the checkout, install the updated unit, restart, and repeat full evidence capture; public domain remains out of scope.
+1. Create `docs/F0_ACCEPTANCE.md` with PASS/FAIL evidence.
+2. Re-run engineering, responsive, accessibility, design-purpose, API/static-boundary, and deployment checks.
+3. Record unresolved npm advisories and any manual-browser limitations honestly.
+4. Close Fase 0 only if all hard gates pass.
+5. Require user approval before entering Fase 1.
 
 ## Update Rule
 

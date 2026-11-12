@@ -369,7 +369,7 @@ BRANCH=main
 
 **Commit:** `chore(deploy): add hardened single-VPS deployment`.
 
-### Task 0.10 — Provision `cbt-vps` workspace `[ ]`
+### Task 0.10 — Provision `cbt-vps` workspace `[x]`
 
 **Objective:** Prepare an isolated non-public workspace using the approved paths.
 
@@ -393,7 +393,7 @@ BRANCH=main
 
 **Commit:** none for server secrets; commit only generic templates/docs.
 
-### Task 0.11 — Remote baseline deployment and smoke `[ ]`
+### Task 0.11 — Remote baseline deployment and smoke `[x]`
 
 **Objective:** Prove the entire delivery chain on `cbt-vps`.
 
@@ -483,10 +483,10 @@ BRANCH=main
 
 ## 8. Current Next Step
 
-**CHECKPOINT AFTER TASK 0.9.**
+**CHECKPOINT AFTER TASK 0.11.**
 
-1. Commit and push the verified hardened deployment tooling.
-2. Stop before Task 0.10 until explicit approval to provision PostgreSQL, `.env`, bare deploy repo, systemd, and port 8300.
-3. On approval, inspect the live VPS state again before any mutation and preserve unexpected state.
-4. Install only the documented least-privilege runtime and sudo boundaries.
-5. Keep public domain/HTTPS cutover out of scope until the baseline runtime smoke is green.
+1. Record and commit the verified Task 0.10–0.11 provisioning/deployment evidence.
+2. Start Task 0.12 Antislop Delivery Gate and create `docs/F0_ACCEPTANCE.md`.
+3. Re-run engineering, responsive, accessibility, API/static-boundary, and deployment gates.
+4. Keep public domain/HTTPS cutover out of scope.
+5. Do not enter Fase 1 until Task 0.12 passes and the user approves the phase checkpoint.

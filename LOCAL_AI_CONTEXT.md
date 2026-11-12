@@ -46,7 +46,7 @@
 - Backend exposes `/healthz`, safe `/readyz`, and honest zero-state `/api/v1/public/summary`; unknown API routes return JSON 404.
 - Readiness uses a fake-Pinger-tested boundary. Without configured DB it honestly returns 503; real PostgreSQL smoke remains pending Task 0.10.
 - GitHub `origin` configured and `main` pushed to `pikipici/school-web`.
-- `cbt-vps` now has a bare repo, Git checkout, least-privilege PostgreSQL role/database, `.env` mode 0600, systemd service, immutable release, and port 8300 runtime. Runtime evidence passed at HEAD `6019fe8`; latest hardening through `073db1c` is pushed but not yet applied because the apply command was denied.
+- `cbt-vps` has a bare repo, clean Git checkout, least-privilege PostgreSQL role/database, `.env` mode 0600, matching hardened systemd unit, enabled service, immutable release, and verified port 8300 runtime at HEAD `e779d36`.
 - Toolchain installed for remote verification: Go 1.27.4, Node 26.13.1 LTS, npm 11.20.0.
 - VPS was previously cleaned of the old Crypto Station project.
 
@@ -62,8 +62,8 @@
   - [x] 0.7 Goose/sqlc/env skeleton
   - [x] 0.8 OpenAPI/Makefile
   - [x] 0.9 Hardened deploy script
-  - [ ] 0.10 VPS provisioning
-  - [ ] 0.11 Remote deployment/smoke
+  - [x] 0.10 VPS provisioning
+  - [x] 0.11 Remote deployment/smoke
   - [ ] 0.12 Delivery Gate
 - [ ] Fase 1 — Database + admin authentication
 
@@ -93,4 +93,4 @@ npm run build
 
 ## Current next step
 
-Commit and push Task 0.9, then stop at the Task 0.10 approval checkpoint. Real DB, `.env`, bare deploy repo, systemd installation, port 8300, and runtime activation must not be provisioned without explicit approval.
+Record Task 0.10–0.11 completion evidence, then execute Task 0.12 Antislop Delivery Gate and create `docs/F0_ACCEPTANCE.md`. Do not enter Fase 1 until the gate passes and the user approves the phase checkpoint.
