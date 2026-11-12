@@ -1,14 +1,14 @@
 ---
 version: alpha
-name: Papan Progres Informatika
-description: Papan kendali kelas yang hangat, jelas, dan dapat dipercaya untuk monitoring tugas kelompok kelas IX.
+name: Web Pribadi Guru Informatika
+description: Web pribadi guru yang rapi dan profesional, berisi pengumuman, materi, dan progres tugas kelompok kelas IX.
 colors:
   ink: "#182018"
   inkMuted: "#465046"
   canvas: "#F3F0E5"
   surface: "#FFFDF6"
   surfaceMuted: "#E7E4D8"
-  line: "#9A9D91"
+  line: "#7A7E72"
   primary: "#185C49"
   primaryHover: "#104536"
   primarySoft: "#D9EBE2"
@@ -126,16 +126,21 @@ components:
 
 ## Overview
 
-`Papan Progres Informatika` terasa seperti papan kendali kelas yang disusun guru, bukan dashboard SaaS generik. Antarmuka harus hangat, tegas, mudah dipindai siswa, dan efisien saat guru mencatat banyak kelompok. Karakter utamanya datang dari tiga jalur status yang selalu dipisahkan: **Pengumpulan**, **Pemeriksaan**, dan **Buku Tulis**.
+> Revisi 13 November 2026: produk berubah dari alat tunggal "Papan Progres" menjadi **web pribadi guru** yang memuat konten sekolah. Lihat `.kiro/steering/REDESIGN_BACKLOG.md`.
 
-Antislop digunakan sebagai filter, bukan sumber gaya. Setiap teknik visual harus melayani hierarki, keterbacaan, status, atau efisiensi tugas. Jika nama sekolah dan nama aplikasi dilepas, komposisi tiga jalur status, tipografi editorial, serta permukaan seperti kertas kerja tetap harus membuat produk ini dikenali.
+Web ini adalah rumah pribadi seorang guru Informatika. Kesannya rapi, profesional, dan tenang, seperti catatan seorang pengajar, bukan dashboard SaaS dan bukan papan kendali. Halaman depan langsung menampilkan konten: **Pengumuman** terbaru, lalu daftar **Materi**. **Progres Tugas Kelompok** adalah satu menu tersendiri, bukan seluruh produk. Di dalamnya tiga jalur status tetap dipisahkan: **Pengumpulan**, **Pemeriksaan**, dan **Buku Tulis**.
+
+Acuan struktur: [leerob.com](https://leerob.com) untuk daftar konten yang bersih, dan [gov.uk](https://www.gov.uk) untuk pengumuman yang jelas dan mudah dibaca. Yang ditiru hanya struktur dan ketertiban, bukan tampilan.
+
+Antislop digunakan sebagai filter, bukan sumber gaya. Setiap teknik visual harus melayani hierarki, keterbacaan, status, atau efisiensi tugas.
 
 ### Product truth
 
-- Status diperbarui manual oleh guru setelah memeriksa Gmail di luar website.
-- Website tidak membaca Gmail, tidak menerima upload berkas, dan tidak memeriksa tugas otomatis.
+- Hanya nama guru yang tampil di header; tanpa foto. Nama sementara dipusatkan di satu berkas (`frontend/src/lib/site.ts`) sampai nama asli diberikan.
+- Pengumuman dan Materi nanti ditulis lewat dashboard admin; guru boleh melampirkan PDF dan PPT. Sebelum itu tersedia, tampilkan keadaan kosong yang jujur.
+- Status progres diperbarui manual oleh guru setelah memeriksa Gmail di luar website. Peringatan ini hanya muncul di halaman progres.
+- Website tidak membaca Gmail, tidak menerima upload dari siswa, dan tidak memeriksa tugas otomatis.
 - Monitoring publik hanya berisi informasi aman dan ringkas.
-- Catatan detail hanya terlihat oleh guru dan kelompok pemiliknya setelah dipublikasikan.
 - Tidak ada ranking, statistik palsu, testimonial, klaim otomatis, atau copy pemasaran berlebihan.
 
 ### Liveliness dials
@@ -172,7 +177,14 @@ Aturan:
 
 ## Layout
 
-### Public monitoring
+### Beranda dan navigasi
+
+- Header: nama guru di kiri; menu `Pengumuman`, `Materi`, `Progres Tugas` di kanan. Pada layar sempit menu membungkus ke baris kedua, tetap terlihat, tanpa ikon hamburger.
+- Isi beranda berurutan: judul halaman satu baris, daftar Pengumuman terbaru, daftar Materi. Tidak ada hero.
+- Pengumuman: baris berisi tanggal (WIB), judul, dan ringkasan satu kalimat. Materi: daftar judul dengan topik dan tautan lampiran.
+- Menu hanya berisi halaman atau bagian yang benar-benar ada.
+
+### Public monitoring (halaman Progres Tugas)
 
 - Desktop: header ringkas, penjelasan manual-update, filter, kemudian daftar kelompok.
 - Kolom status tetap terpisah: Kelompok, Kelas, Topik, Pengumpulan, Pemeriksaan, Buku Tulis, Terakhir Diperbarui.

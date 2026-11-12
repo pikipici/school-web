@@ -2,7 +2,7 @@
 
 ## Boundary
 
-Target: SSH alias `cbt-vps`, checkout `/home/ubuntu/informatika-monitoring`, user `ubuntu`, unit `informatika-monitoring-api.service`, port `8300`. Task 0.9 supplies tooling only; it does not activate the service.
+Target: SSH alias `cbt-vps`, checkout `/home/ubuntu/informatika-monitoring`, user `ubuntu`, unit `informatika-monitoring-api.service`, port `8300`. Task 0.9 supplied the tooling; Tasks 0.10–0.11 provisioned and activated the service (internal port only, no public hostname/HTTPS).
 
 ## Server prerequisites
 

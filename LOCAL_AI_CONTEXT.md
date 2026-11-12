@@ -42,9 +42,9 @@
 ## Current state
 
 - Fase 0 plan approved for progress on 2026-11-12.
-- Tasks 0.1–0.9 complete: repository baseline, Go HTTP/readiness, Next.js static public foundation/client, secure Go static serving, Goose/sqlc/environment skeleton, OpenAPI/Makefile contract, and hardened non-activating deployment tooling.
+- Tasks 0.1–0.11 complete: repository baseline, Go HTTP/readiness, Next.js static public foundation/client, secure Go static serving, Goose/sqlc/environment skeleton, OpenAPI/Makefile contract, hardened deployment tooling, VPS provisioning, and verified baseline deployment (release `20261112T140834Z-e779d364ec24`).
 - Backend exposes `/healthz`, safe `/readyz`, and honest zero-state `/api/v1/public/summary`; unknown API routes return JSON 404.
-- Readiness uses a fake-Pinger-tested boundary. Without configured DB it honestly returns 503; real PostgreSQL smoke remains pending Task 0.10.
+- Readiness uses a fake-Pinger-tested boundary and is verified against the real PostgreSQL on `cbt-vps` (`/readyz` returns database ok).
 - GitHub `origin` configured and `main` pushed to `pikipici/school-web`.
 - `cbt-vps` has a bare repo, clean Git checkout, least-privilege PostgreSQL role/database, `.env` mode 0600, matching hardened systemd unit, enabled service, immutable release, and verified port 8300 runtime at HEAD `e779d36`.
 - Toolchain installed for remote verification: Go 1.27.4, Node 26.13.1 LTS, npm 11.20.0.

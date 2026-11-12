@@ -1,10 +1,32 @@
 # PLAN.md — Website Monitoring dan Evaluasi Tugas Kelompok Informatika Kelas IX
 
 **Status:** Spesifikasi pengembangan / developer handoff
-**Versi:** 2.0 — 12 November 2026 (revisi arsitektur backend Go)
+**Versi:** 2.1 — 13 November 2026 (revisi arah: web pribadi guru dengan Pengumuman dan Materi)
 **Tahun pelajaran awal:** 2026/2027
 **Bahasa antarmuka:** Bahasa Indonesia
 **Prinsip utama:** Pengumpulan tugas tetap melalui email guru. **Website TIDAK terintegrasi dengan Gmail; seluruh status, pemeriksaan, dan revisi dicatat MANUAL oleh guru.** Backend aplikasi wajib menggunakan **Go**, sedangkan Next.js hanya untuk frontend.
+
+---
+
+## 0. Revisi arah produk (13 November 2026)
+
+Produk bukan lagi alat tunggal monitoring, melainkan **web pribadi guru** yang memuat konten sekolah. Monitoring tugas kelompok (bagian 1–12 di bawah) tetap berlaku utuh, tetapi menjadi **satu modul** bernama *Progres Tugas Kelompok*. Rincian keputusan: `.kiro/steering/REDESIGN_BACKLOG.md`; arah visual: `DESIGN.md`.
+
+| Modul | Isi | Siapa yang menulis | Akses baca |
+|---|---|---|---|
+| **Pengumuman** | Judul, tanggal (WIB), isi singkat | Guru lewat dashboard admin | Publik |
+| **Materi** | Judul, topik, deskripsi, lampiran | Guru lewat dashboard admin | Publik |
+| **Progres Tugas Kelompok** | Seluruh isi PLAN ini | Guru lewat dashboard admin | Publik ringkas; detail via kode akses kelompok |
+
+Keputusan terkunci:
+
+- Halaman depan langsung menampilkan konten (Pengumuman terbaru, lalu daftar Materi), tanpa hero.
+- Menu publik: `Pengumuman`, `Materi`, `Progres Tugas`.
+- Header menampilkan **nama pribadi guru saja**, tanpa foto. Nama sementara: "Guru Informatika" (`frontend/src/lib/site.ts`) sampai nama asli diberikan.
+- Konten Pengumuman dan Materi ditulis lewat dashboard admin Go; tidak ada penulisan konten dari browser publik.
+- **Lampiran Materi dari guru** diizinkan dengan tipe **PDF dan PPT/PPTX** saja. Ini pengecualian terbatas atas larangan upload di bawah: larangan tetap berlaku untuk **kelompok/siswa** dan untuk berkas tugas.
+- Ketentuan lampiran yang harus diselesaikan sebelum implementasi (belum diputuskan): ukuran maksimal per berkas, lokasi penyimpanan (disk VPS di luar direktori publik atau layanan lain), validasi tipe berdasarkan isi bukan hanya ekstensi, nama berkas aman, dan jalur unduh lewat Go.
+- Pengumuman dan Materi baru berisi data setelah login admin dan database tersedia (Fase 1 dan sesudahnya). Sampai itu, tampilan menunjukkan keadaan kosong yang jujur.
 
 ---
 
@@ -25,7 +47,7 @@ Tujuan:
 ### Non-negotiable
 
 - **Tidak ada** Gmail API, IMAP, OAuth akses Gmail, sinkronisasi inbox, atau balas email otomatis.
-- **Tidak ada** unggah/penyimpanan PPT atau PDF di website pada MVP.
+- **Tidak ada** unggah/penyimpanan PPT atau PDF **tugas kelompok** di website pada MVP. Pengecualian: lampiran Materi dari guru (lihat bagian 0).
 - Website **tidak memverifikasi sendiri** email sudah masuk; sumber status adalah input guru.
 - Siswa **tidak dapat** mengubah status atau mengesahkan revisinya sendiri.
 - **Semua logika backend utama dan API bisnis wajib di Go**; jangan mengganti backend dengan Next.js Route Handlers/Server Actions, Supabase Edge Functions, atau implementasi CRUD langsung dari browser.
@@ -90,6 +112,8 @@ Peran yang dapat dicatat secara opsional: (1) mencari/menyusun materi, (2) menyu
 
 ### Fitur wajib
 
+- [ ] Pengumuman: guru membuat, mengubah, dan menghapus; publik membaca (lihat bagian 0).
+- [ ] Materi: guru mengelola entri dan lampiran PDF/PPT; publik membaca dan mengunduh (lihat bagian 0).
 - [ ] Login aman untuk guru/admin; tidak ada pendaftaran admin publik.
 - [ ] CRUD kelas, kelompok, topik terpilih, email resmi kelompok, dan tahun pelajaran.
 - [ ] Data awal tujuh topik dan tahun ajaran 2026/2027.
@@ -107,7 +131,7 @@ Peran yang dapat dicatat secara opsional: (1) mencari/menyusun materi, (2) menyu
 ### Bukan cakupan MVP
 
 - Integrasi Gmail atau notifikasi email otomatis.
-- Upload, preview, dan penyimpanan file PPT/PDF dalam website.
+- Upload, preview, dan penyimpanan file PPT/PDF **tugas kelompok** dalam website (lampiran Materi dari guru dikecualikan).
 - AI grading, OCR, atau pemeriksaan berkas otomatis.
 - Forum/chat, akun tiap siswa, ranking publik, aplikasi Android, atau WhatsApp bot.
 - Penghitungan nilai otomatis sebelum bobot penilaian dikonfirmasi guru.

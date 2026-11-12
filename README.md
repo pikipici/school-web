@@ -11,7 +11,7 @@ Website untuk memantau pengumpulan dan evaluasi tugas kelompok Informatika kelas
 
 ## Status
 
-Fase 0 foundation sedang berjalan. Task 0.1–0.9 sudah selesai: repository baseline, Go HTTP/readiness, Next.js static public foundation/client, static serving dari Go, Goose/sqlc/environment skeleton, kontrak OpenAPI/Makefile, serta hardened deployment tooling yang belum mengaktifkan runtime. Dokumen sumber:
+Fase 0 foundation sedang berjalan. Task 0.1–0.11 sudah selesai: repository baseline, Go HTTP/readiness, Next.js static public foundation/client, static serving dari Go, Goose/sqlc/environment skeleton, kontrak OpenAPI/Makefile, hardened deployment tooling, provisioning `cbt-vps`, dan baseline deployment internal di port 8300 (tanpa hostname publik). Tersisa Task 0.12 (Antislop Delivery Gate). Dokumen sumber:
 
 - `PLAN.md` — spesifikasi produk dan arsitektur.
 - `DESIGN.md` — arah visual dan accessibility.
@@ -46,4 +46,4 @@ make build-frontend
 make verify
 ```
 
-`make verify` bersifat fail-fast dan tidak pernah menjalankan deployment. `make deploy` merupakan dispatcher eksplisit ke `cbt-vps`; gunakan hanya setelah provisioning Task 0.10 disetujui dan selesai.
+`make verify` bersifat fail-fast dan tidak pernah menjalankan deployment. `make deploy` merupakan dispatcher eksplisit ke `cbt-vps`; gunakan hanya dengan persetujuan eksplisit; provisioning Task 0.10 sudah selesai.

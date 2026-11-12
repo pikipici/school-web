@@ -9,7 +9,7 @@
 - Fase aktif: **Fase 0 — Foundation**
 - Progress task: **11/12 selesai (92%)**
 - Task terakhir selesai: **0.11 — Remote baseline deployment dan smoke**
-- Next task: **0.12 — Antislop Delivery Gate dan phase close**
+- Next task: **0.12 — Antislop Delivery Gate dan phase close** (sedang berjalan, menunggu cek browser manual)
 - Local branch: `main`
 - Deployment evidence commit: `594ea74`
 - Working tree: bersih saat status ini dibuat
@@ -40,7 +40,7 @@
 | 0.9 | Hardened LMS-style deploy script | DONE | `a0bfb2f` | Shell syntax, isolated remote `--check`, all build gates, non-mutation assertions, and independent re-review PASS |
 | 0.10 | Provision `cbt-vps` runtime workspace | DONE | server state | Bare repo, clean checkout, least-privilege DB/role, `.env` 0600, matching hardened unit, enabled service, and port ownership verified |
 | 0.11 | Remote baseline deployment dan smoke | DONE | deployed `e779d36` | Full remote deploy gates, immutable release, systemd, health/readiness, frontend smoke, clean tree, and independent evidence review PASS |
-| 0.12 | Antislop Delivery Gate dan phase close | PENDING | — | Menunggu seluruh gate sebelumnya |
+| 0.12 | Antislop Delivery Gate dan phase close | IN PROGRESS | — | Gate otomatis PASS (`deploy --check`, health/readiness, API/static boundary); gate browser manual BELUM; lihat `docs/F0_ACCEPTANCE.md` |
 
 ## Completed Evidence
 
@@ -427,13 +427,15 @@ The remote deploy command passed Go test/vet/build, `sqlc generate`, frontend `n
 
 ## Current Next Step
 
-Task 0.12 — Antislop Delivery Gate and Fase 0 close:
+**Redesign web pribadi berjalan sebelum Fase 0 ditutup** (lihat `.kiro/steering/REDESIGN_BACKLOG.md`). Tampilan tahap satu sudah ditulis (working tree, belum commit/deploy): beranda berisi Pengumuman dan Materi (keadaan kosong jujur), halaman `/progres`, nama sementara di `frontend/src/lib/site.ts`, smoke marker diganti `aria-label="Menu utama"`. Lint/typecheck/build PASS di `cbt-vps`.
 
-1. Create `docs/F0_ACCEPTANCE.md` with PASS/FAIL evidence.
-2. Re-run engineering, responsive, accessibility, design-purpose, API/static-boundary, and deployment checks.
-3. Record unresolved npm advisories and any manual-browser limitations honestly.
-4. Close Fase 0 only if all hard gates pass.
-5. Require user approval before entering Fase 1.
+Tersisa:
+
+1. Commit, push, dan deploy dengan approval user; jalankan ulang smoke.
+2. Revisi `PLAN.md` (Pengumuman, Materi, lampiran PDF/PPT dari guru).
+3. Cek manual browser nyata (360px, menengah, desktop, zoom 200%, keyboard) via `ssh -L 8300:127.0.0.1:8300 cbt-vps`.
+4. Putuskan 7 advisory npm moderate (dev-only). Garis `--line` sudah digelapkan ke 3.64:1.
+5. Perbarui `docs/F0_ACCEPTANCE.md`, tutup Fase 0, minta persetujuan Fase 1.
 
 ## Update Rule
 
