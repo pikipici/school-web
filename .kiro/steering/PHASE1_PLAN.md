@@ -84,7 +84,26 @@ Setiap task: uji gagal dulu (RED), lalu implementasi, lalu go test/vet/build di 
 4. **Penguncian akun** — penyerang bisa mengunci guru. Mitigasi: kunci per IP lebih dulu; jeda bertahap, bukan kunci permanen.
 5. **Lupa sandi satu-satunya admin** — Mitigasi: CLI reset di server.
 
-## Keputusan yang saya butuhkan dari user
+## Keputusan user (13 Nov 2026)
+
+1. **Domain**: `fikriramaaulia.online`. Cek DNS (hanya baca): domain ini memakai Cloudflare (IP `104.21.15.63`, `172.67.161.194`) dan **belum menunjuk ke VPS** (`43.134.111.212`). Port 80/443 di VPS bebas; Caddy/Nginx belum terpasang; `sudo` tanpa sandi tersedia.
+2. Username, masa sesi, dan 2FA: **belum dijawab**.
+
+### Rencana HTTPS (perlu persetujuan sebelum menyentuh VPS atau DNS)
+
+| Langkah | Isi | Siapa |
+|---|---|---|
+| H1 | Putuskan alamat: apex `fikriramaaulia.online` atau subdomain (mis. `www`, `guru`). Pastikan apex tidak dipakai situs lain | User |
+| H2 | Buat rekor DNS A ke `43.134.111.212` di Cloudflare | User |
+| H3 | Pilih mode Cloudflare: **DNS saja (awan abu-abu)** agar Caddy mengurus sertifikat sendiri (paling sederhana), atau **proxied (awan oranye)** + SSL Full (strict) + Origin Certificate | User |
+| H4 | Buka port 80 dan 443 di firewall/security group penyedia VPS | User |
+| H5 | Pasang Caddy, `reverse_proxy 127.0.0.1:8300`, header keamanan (HSTS, nosniff), batas ukuran body | Saya (dengan izin) |
+| H6 | Set `COOKIE_SECURE=true` dan uji dari luar | Saya |
+
+Selama H1–H6 belum selesai, `/admin` tidak boleh dibuka ke publik; akses admin lewat tunnel SSH.
+
+## Keputusan yang masih saya butuhkan dari user
+
 
 1. **Domain dan HTTPS**: punya domain? Disarankan Caddy (HTTPS otomatis) di depan port 8300. Tanpa itu, admin hanya via tunnel SSH.
 2. **Username admin**: apa yang dipakai?
