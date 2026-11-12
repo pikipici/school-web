@@ -42,7 +42,7 @@
 ## Current state
 
 - Fase 0 plan approved for progress on 2026-11-12.
-- Tasks 0.1–0.6 complete: repository baseline, Go HTTP/readiness, Next.js static public foundation, typed public-summary client states, and secure static-export serving from Go.
+- Tasks 0.1–0.7 complete: repository baseline, Go HTTP/readiness, Next.js static public foundation/client, secure Go static serving, and Goose/sqlc/environment skeleton.
 - Backend exposes `/healthz`, safe `/readyz`, and honest zero-state `/api/v1/public/summary`; unknown API routes return JSON 404.
 - Readiness uses a fake-Pinger-tested boundary. Without configured DB it honestly returns 503; real PostgreSQL smoke remains pending Task 0.10.
 - GitHub `origin` configured and `main` pushed to `pikipici/school-web`.
@@ -59,7 +59,7 @@
   - [x] 0.4 Next.js static frontend
   - [x] 0.5 Typed API client
   - [x] 0.6 Go static serving
-  - [ ] 0.7 Goose/sqlc/env skeleton
+  - [x] 0.7 Goose/sqlc/env skeleton
   - [ ] 0.8 OpenAPI/Makefile
   - [ ] 0.9 Hardened deploy script
   - [ ] 0.10 VPS provisioning
@@ -93,4 +93,4 @@ npm run build
 
 ## Current next step
 
-Commit and push Task 0.6, then implement Task 0.7 Goose/sqlc and environment skeleton without business schema or real credentials. Validate sqlc configuration and existing gates only on `cbt-vps`. Real DB, `.env`, bare deploy repo, systemd, port, and runtime provisioning remain pending Task 0.10.
+Commit and push Task 0.7, then implement Task 0.8 baseline OpenAPI and Makefile verification contract. Validate OpenAPI syntax and `make verify` only on `cbt-vps`. Real DB, `.env`, bare deploy repo, systemd, port, and runtime provisioning remain pending Task 0.10.

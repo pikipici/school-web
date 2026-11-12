@@ -261,7 +261,7 @@ cd backend && go test ./... -count=1 && go vet ./... && go build ./cmd/api
 
 **Commit:** `feat(api): serve exported frontend routes`.
 
-### Task 0.7 — Add Goose/sqlc and environment skeleton `[ ]`
+### Task 0.7 — Add Goose/sqlc and environment skeleton `[x]`
 
 **Objective:** Lock database tooling without prematurely creating business schema.
 
@@ -483,10 +483,10 @@ BRANCH=main
 
 ## 8. Current Next Step
 
-**CHECKPOINT AFTER TASK 0.6.**
+**CHECKPOINT AFTER TASK 0.7.**
 
-1. Commit and push the verified Go static-export serving boundary.
-2. Start Task 0.7: add Goose/sqlc and environment skeleton without business schema.
-3. Keep `DATABASE_URL` backend-only and all examples free of real credentials.
-4. Verify sqlc configuration and environment boundaries on `cbt-vps`.
+1. Commit and push the verified database-tooling and environment skeleton.
+2. Start Task 0.8: add the baseline OpenAPI contract and Makefile verification commands.
+3. Keep deploy dispatch separate from verification and avoid runtime activation.
+4. Validate OpenAPI syntax and `make verify` on `cbt-vps`.
 5. Real DB, `.env`, bare deploy repo, systemd, port binding, and runtime activation remain out of scope.

@@ -7,9 +7,9 @@
 ## Ringkasan
 
 - Fase aktif: **Fase 0 — Foundation**
-- Progress task: **6/12 selesai (50%)**
-- Task terakhir selesai: **0.6 — Go static export serving**
-- Next task: **0.7 — Goose/sqlc/environment skeleton**
+- Progress task: **7/12 selesai (58%)**
+- Task terakhir selesai: **0.7 — Goose/sqlc/environment skeleton**
+- Next task: **0.8 — OpenAPI dan Makefile**
 - Local branch: `main`
 - Local HEAD: `95609ab`
 - Working tree: bersih saat status ini dibuat
@@ -35,7 +35,7 @@
 | 0.4 | Next.js static frontend | DONE | task commit | npm ci, lint, typecheck, static build, out/index.html, production audit PASS; independent review PASS |
 | 0.5 | Typed frontend API client | DONE | task commit | lint, typecheck, static build, production audit, and real Go-through-Next rewrite smoke PASS; independent review PASS |
 | 0.6 | Go static export serving | DONE | task commit | strict RED; targeted/full tests, vet, build, real-binary static smoke PASS; independent security review blockers fixed |
-| 0.7 | Goose/sqlc/environment skeleton | PENDING | — | Belum dimulai |
+| 0.7 | Goose/sqlc/environment skeleton | DONE | task commit | sqlc v1.29 compile/generate, Go tests/vet/build PASS; environment boundary review PASS; Compose static review only (Docker unavailable) |
 | 0.8 | OpenAPI dan Makefile | PENDING | — | Belum dimulai |
 | 0.9 | Hardened LMS-style deploy script | PENDING | — | Belum dimulai |
 | 0.10 | Provision `cbt-vps` runtime workspace | PENDING APPROVAL | — | DB, `.env`, bare repo, systemd, dan port belum dibuat |
@@ -219,12 +219,12 @@ Still enforced:
 
 ## Current Next Step
 
-Task 0.7 — add Goose/sqlc and environment skeleton:
+Task 0.8 — add OpenAPI and Makefile contract:
 
-1. Add empty migration/query directories and deterministic sqlc configuration.
-2. Add backend/frontend/root environment examples without real credentials.
-3. Add optional development PostgreSQL Compose configuration without provisioning the VPS database.
-4. Run `sqlc compile` and existing verification gates on `cbt-vps`.
+1. Document `/healthz`, `/readyz`, `/api/v1/public/summary`, and the standard error envelope.
+2. Add separate backend/frontend verification targets and one fail-fast `make verify` target.
+3. Keep `deploy` as explicit dispatch only; verification must never mutate runtime state.
+4. Validate OpenAPI syntax and run `make verify` on `cbt-vps`.
 5. Run independent review before commit.
 
 ## Update Rule
