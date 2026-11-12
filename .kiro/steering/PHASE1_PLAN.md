@@ -66,7 +66,7 @@ Waktu disimpan UTC, ditampilkan WIB.
 | 1.2 **DONE** | Migrasi 0001–0003 + sqlc | `goose up/down`, `sqlc generate`, uji skema |
 | 1.3 **DONE** | Paket sandi (Argon2id, kebijakan sandi) | TDD: hash cocok, salah ditolak, sandi lemah ditolak |
 | 1.4 **DONE** | Paket sesi (buat, cek idle dan absolut, hapus) | TDD dengan jam palsu |
-| 1.5 | Batas percobaan login | TDD: kunci, pulih, per IP dan per akun |
+| 1.5 **DONE** | Batas percobaan login | TDD: kunci, pulih, per IP dan per akun |
 | 1.6 | Handler login/logout/me + middleware auth dan CSRF | TDD HTTP: 401, 403 CSRF, cookie flag |
 | 1.7 | CLI `adminctl` (buat, reset sandi) | Uji; sandi dari prompt atau stdin, tidak lewat argumen |
 | 1.8 | Audit log pada login/logout | Uji: tidak ada rahasia di log |
@@ -142,3 +142,6 @@ o non-test Go files. GREEN di cbt-vps: 3 uji lulus (validasi DSN, koneksi, reset
 - **Task 1.4 selesai (13 Nov 2026).** RED: `no non-test Go files`. GREEN di `cbt-vps` (database uji nyata, jam palsu): 12 uji lulus. Token 32 byte acak, hanya hash SHA-256 yang disimpan (token mentah tidak ada di baris DB); idle 30 menit bergeser saat aktif; batas mutlak 12 jam tetap berlaku walau aktif; `last_seen_at` ditulis paling cepat tiap 1 menit; revoke idempoten; revoke semua sesi satu user tidak menyentuh user lain; purge menghapus sesi idle/kedaluwarsa; hapus user membatalkan sesinya; token cacat ditolak tanpa query DB. Semua kegagalan memakai satu `ErrInvalid`. `go test ./...` lulus 2 kali, vet/build/gofmt/sqlc hijau.
 - Refactor: `testdb` kini punya `Goose` dan `OpenMigrated`; `schema_test` memakainya.
 - Query sqlc sesi: `backend/sql/queries/admin_sessions.sql`. Pembersihan berkala (`PurgeExpired`) belum dijadwalkan; dipasang di Task 1.6 atau 1.10.
+- **Task 1.5 selesai (13 Nov 2026).** RED: `no non-test Go files`. GREEN di `cbt-vps`: 15 uji lulus, juga dengan `go test -race` 3 kali. Aturan: 5 gagal per IP atau 10 gagal per akun dalam 15 menit memicu kunci sementara 1, 2, 4, 8, lalu maksimal 15 menit (bukan permanen). Kunci satu IP tidak memblokir IP lain; serangan terdistribusi hanya mengunci akun yang diserang. Username dinormalisasi (huruf kecil, spasi dibuang) dan akun yang tidak ada dihitung sama. IPv6 dihitung per /64; alamat tak terbaca masuk satu keranjang bersama. Memori dibatasi 10.000 kunci per tabel; kunci yang sedang terkunci tidak digusur banjir kunci sampah. `Gate` membatasi hash serentak. `go test ./...`, vet, build, gofmt, sqlc hijau.
+- Batas yang diketahui: penyimpanan di memori, jadi hilang saat restart service (dapat diterima untuk satu proses). Akun guru bisa terkunci sampai 15 menit saat serangan terdistribusi.
+- **Untuk Task 1.6:** pasang `Check` sebelum verifikasi, `Gate` di sekitar hash (saran 2 slot), `RecordFailure` saat gagal, `RecordSuccess` saat berhasil, dan balas `429` dengan `Retry-After`. IP klien harus diambil dengan benar (di belakang Caddy: header yang dipercaya hanya dari proxy lokal).
