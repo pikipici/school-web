@@ -19,7 +19,7 @@
 - Service target: `informatika-monitoring-api.service`
 - Internal port: `8300`
 - Database target: `informatika_monitoring`
-- GitHub remote: belum ditentukan
+- GitHub remote: `https://github.com/pikipici/school-web.git` (`origin`, public)
 
 ## Sources of truth
 
@@ -45,7 +45,7 @@
 - Tasks 0.1–0.5 complete: repository baseline, Go HTTP foundation, tested readiness boundary, Next.js static public foundation, and typed public-summary client states.
 - Backend exposes `/healthz`, safe `/readyz`, and honest zero-state `/api/v1/public/summary`; unknown API routes return JSON 404.
 - Readiness uses a fake-Pinger-tested boundary. Without configured DB it honestly returns 503; real PostgreSQL smoke remains pending Task 0.10.
-- No GitHub remote configured.
+- GitHub `origin` configured and `main` pushed to `pikipici/school-web`.
 - `cbt-vps` build-only workspace exists at `/home/ubuntu/informatika-monitoring`; no runtime, DB, `.env`, bare deploy repo, or systemd service exists yet.
 - Toolchain installed for remote verification: Go 1.27.4, Node 26.13.1 LTS, npm 11.20.0.
 - VPS was previously cleaned of the old Crypto Station project.

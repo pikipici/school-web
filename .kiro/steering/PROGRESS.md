@@ -213,10 +213,9 @@ Still enforced:
 
 ## Blockers / Pending External Decisions
 
-1. GitHub repository/remote `origin` has not been selected or created.
-2. Real PostgreSQL smoke waits for Task 0.10 provisioning approval.
-3. Runtime activation waits for Task 0.10.
-4. Public hostname/HTTPS cutover is not yet decided and is not needed for Tasks 0.4–0.9.
+1. Real PostgreSQL smoke waits for Task 0.10 provisioning approval.
+2. Runtime activation waits for Task 0.10.
+3. Public hostname/HTTPS cutover is not yet decided and is not needed for Tasks 0.6–0.9.
 
 ## Current Next Step
 
