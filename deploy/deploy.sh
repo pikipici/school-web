@@ -133,7 +133,11 @@ env.update({
     "PGUSER": urllib.parse.unquote(uri.username),
     "PGPASSWORD": urllib.parse.unquote(uri.password or ""),
 })
-query = dict(urllib.parse.parse_qsl(uri.query, keep_blank_values=True))
+query_pairs = urllib.parse.parse_qsl(uri.query, keep_blank_values=True)
+query = dict(query_pairs)
+if len(query_pairs) != len(query) or set(query) - {"sslmode"}:
+    raise SystemExit("unsupported or duplicate PostgreSQL DSN query parameter")
+env["PGDATABASE"] = urllib.parse.unquote(uri.path.lstrip("/"))
 if "sslmode" in query:
     env["PGSSLMODE"] = query["sslmode"]
 subprocess.run(

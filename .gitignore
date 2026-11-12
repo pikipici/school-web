@@ -18,7 +18,9 @@ coverage/
 *.coverprofile
 
 # Runtime/deployment output
-/public/
+/bin/
+/public
+/releases/
 *.pid
 *.log
 
