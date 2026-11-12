@@ -12,6 +12,10 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/pikipici/informatika-monitoring/backend/internal/auth/password"
+	"github.com/pikipici/informatika-monitoring/backend/internal/auth/ratelimit"
+	"github.com/pikipici/informatika-monitoring/backend/internal/auth/session"
+	"github.com/pikipici/informatika-monitoring/backend/internal/auth/users"
 	"github.com/pikipici/informatika-monitoring/backend/internal/config"
 	"github.com/pikipici/informatika-monitoring/backend/internal/db"
 	"github.com/pikipici/informatika-monitoring/backend/internal/health"
@@ -35,6 +39,7 @@ func run() error {
 	defer stop()
 
 	var pinger health.Pinger
+	var admin *httpapi.AdminAuth
 	if strings.TrimSpace(cfg.DatabaseURL) != "" {
 		pool, err := db.Open(ctx, cfg.DatabaseURL)
 		if err != nil {
@@ -42,11 +47,26 @@ func run() error {
 		}
 		defer pool.Close()
 		pinger = pool
+
+		hasher, err := password.NewHasher(password.DefaultParams())
+		if err != nil {
+			return fmt.Errorf("konfigurasi hash sandi tidak valid: %w", err)
+		}
+		sessions := session.New(pool, session.Options{})
+		admin = httpapi.NewAdminAuth(httpapi.AdminAuthConfig{
+			Users:        users.New(pool, nil),
+			Sessions:     sessions,
+			Limiter:      ratelimit.New(ratelimit.Options{}),
+			Hasher:       hasher,
+			Gate:         ratelimit.NewGate(2),
+			SecureCookie: cfg.AdminCookieSecure,
+		})
+		go purgeSessions(ctx, sessions)
 	}
 
 	server := &http.Server{
 		Addr:              cfg.Address,
-		Handler:           httpapi.NewRouterWithPingerAndPublicDir(pinger, cfg.PublicDir),
+		Handler:           httpapi.NewRouterWithDeps(httpapi.Deps{Pinger: pinger, PublicDir: cfg.PublicDir, Admin: admin}),
 		ReadHeaderTimeout: 5 * time.Second,
 		ReadTimeout:       15 * time.Second,
 		WriteTimeout:      15 * time.Second,
@@ -56,7 +76,7 @@ func run() error {
 
 	serverErrors := make(chan error, 1)
 	go func() {
-		slog.Info("API mulai", "address", cfg.Address, "environment", cfg.Environment, "database_configured", pinger != nil)
+		slog.Info("API mulai", "address", cfg.Address, "environment", cfg.Environment, "database_configured", pinger != nil, "admin_auth_enabled", admin != nil, "cookie_secure", cfg.AdminCookieSecure)
 		serverErrors <- server.ListenAndServe()
 	}()
 
@@ -79,5 +99,25 @@ func run() error {
 			return nil
 		}
 		return fmt.Errorf("HTTP server gagal: %w", err)
+	}
+}
+
+// purgeSessions removes expired admin sessions every ten minutes until ctx ends.
+func purgeSessions(ctx context.Context, sessions *session.Service) {
+	ticker := time.NewTicker(10 * time.Minute)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			purgeCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
+			if n, err := sessions.PurgeExpired(purgeCtx); err != nil {
+				slog.Error("pembersihan sesi gagal", "error", err)
+			} else if n > 0 {
+				slog.Info("sesi kedaluwarsa dihapus", "count", n)
+			}
+			cancel()
+		}
 	}
 }

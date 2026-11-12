@@ -1,8 +1,8 @@
 openapi: 3.0.3
 info:
   title: Informatika Monitoring API
-  version: 0.1.0
-  description: Kontrak API fondasi yang saat ini diimplementasikan oleh backend Go.
+  version: 0.2.0
+  description: Kontrak API yang saat ini diimplementasikan oleh backend Go, termasuk autentikasi admin. Endpoint admin hanya aktif bila database dikonfigurasi.
 servers:
   - url: /
     description: Same-origin runtime
@@ -73,6 +73,127 @@ paths:
                   updatedAt: null
         "404":
           $ref: "#/components/responses/NotFound"
+  /api/v1/admin/auth/login:
+    post:
+      summary: Masuk sebagai admin
+      description: >
+        Membuat sesi dan men-set cookie HttpOnly SameSite=Strict (bernama `admin_session`,
+        atau `__Host-admin_session` dengan atribut Secure di HTTPS). Cookie berlaku
+        selama sesi browser; server menolak sesi yang tidak aktif 30 menit atau lebih dari 12 jam.
+        Header Origin, bila ada, wajib sama dengan host. Kegagalan login tidak
+        membedakan nama pengguna yang salah dari kata sandi yang salah.
+      operationId: adminLogin
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+      responses:
+        "200":
+          description: Berhasil masuk.
+          headers:
+            Set-Cookie:
+              description: Cookie sesi admin.
+              schema:
+                type: string
+            X-Request-ID:
+              $ref: "#/components/headers/RequestID"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthEnvelope"
+        "400":
+          $ref: "#/components/responses/InvalidRequest"
+        "401":
+          description: Nama pengguna atau kata sandi salah (INVALID_CREDENTIALS).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "403":
+          description: Origin tidak diizinkan (FORBIDDEN).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "413":
+          description: Badan permintaan lebih dari 4 KiB (PAYLOAD_TOO_LARGE).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "415":
+          description: Content-Type bukan application/json (UNSUPPORTED_MEDIA_TYPE).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "429":
+          description: Terlalu banyak percobaan (RATE_LIMITED).
+          headers:
+            Retry-After:
+              description: Detik sampai boleh mencoba lagi.
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "503":
+          description: Kapasitas hash sandi penuh (SERVICE_BUSY).
+          headers:
+            Retry-After:
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+  /api/v1/admin/auth/logout:
+    post:
+      summary: Keluar dari sesi admin
+      description: >
+        Idempoten. Bila sesi valid, wajib menyertakan header X-CSRF-Token yang
+        sama dengan token dari login atau /me, dan Origin yang sama dengan host.
+      operationId: adminLogout
+      parameters:
+        - name: X-CSRF-Token
+          in: header
+          required: false
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Sesi dihapus dan cookie dibersihkan.
+        "403":
+          description: CSRF token atau Origin tidak valid (FORBIDDEN).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+  /api/v1/admin/auth/me:
+    get:
+      summary: Ambil identitas sesi admin
+      operationId: adminMe
+      responses:
+        "200":
+          description: Sesi valid.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                example: no-store
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthEnvelope"
+        "401":
+          description: Belum masuk atau sesi berakhir (UNAUTHENTICATED).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
 components:
   headers:
     RequestID:
@@ -80,6 +201,12 @@ components:
       schema:
         type: string
   responses:
+    InvalidRequest:
+      description: Permintaan tidak valid (INVALID_REQUEST).
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorEnvelope"
     NotFound:
       description: Endpoint tidak ditemukan.
       headers:
@@ -94,6 +221,37 @@ components:
               code: NOT_FOUND
               message: Endpoint tidak ditemukan.
   schemas:
+    LoginRequest:
+      type: object
+      additionalProperties: false
+      required: [username, password]
+      properties:
+        username:
+          type: string
+          maxLength: 64
+        password:
+          type: string
+          maxLength: 128
+          format: password
+    AuthEnvelope:
+      type: object
+      additionalProperties: false
+      required: [data]
+      properties:
+        data:
+          type: object
+          additionalProperties: false
+          required: [username, csrfToken, expiresAt]
+          properties:
+            username:
+              type: string
+            csrfToken:
+              type: string
+              description: Kirim sebagai header X-CSRF-Token pada setiap permintaan POST/PUT/PATCH/DELETE admin.
+            expiresAt:
+              type: string
+              format: date-time
+              description: Batas mutlak sesi (12 jam); sesi juga berakhir setelah 30 menit tidak aktif.
     HealthResponse:
       type: object
       additionalProperties: false

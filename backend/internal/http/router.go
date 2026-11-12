@@ -23,22 +23,36 @@ type errorDetail struct {
 }
 
 func NewRouter() http.Handler {
-	return newRouter(nil, "")
+	return newRouter(Deps{})
 }
 
 func NewRouterWithPinger(pinger health.Pinger) http.Handler {
-	return newRouter(pinger, "")
+	return newRouter(Deps{Pinger: pinger})
 }
 
 func NewRouterWithPublicDir(publicDir string) http.Handler {
-	return newRouter(nil, publicDir)
+	return newRouter(Deps{PublicDir: publicDir})
 }
 
 func NewRouterWithPingerAndPublicDir(pinger health.Pinger, publicDir string) http.Handler {
-	return newRouter(pinger, publicDir)
+	return newRouter(Deps{Pinger: pinger, PublicDir: publicDir})
 }
 
-func newRouter(pinger health.Pinger, publicDir string) http.Handler {
+// Deps carries optional collaborators. Unset ones disable their routes.
+type Deps struct {
+	Pinger    health.Pinger
+	PublicDir string
+	// Admin enables /api/v1/admin/auth/*.
+	Admin *AdminAuth
+}
+
+// NewRouterWithDeps builds the router from Deps.
+func NewRouterWithDeps(deps Deps) http.Handler {
+	return newRouter(deps)
+}
+
+func newRouter(deps Deps) http.Handler {
+	pinger, publicDir := deps.Pinger, deps.PublicDir
 	router := chi.NewRouter()
 	router.Use(middleware.RequestID)
 	router.Use(requestIDHeader)
@@ -48,6 +62,15 @@ func newRouter(pinger health.Pinger, publicDir string) http.Handler {
 	readiness := health.NewService(pinger)
 	router.Get("/readyz", readyz(readiness))
 	router.Get("/api/v1/public/summary", publicSummary)
+	if deps.Admin != nil {
+		router.Route("/api/v1/admin/auth", func(r chi.Router) {
+			r.Post("/login", deps.Admin.login)
+			r.Post("/logout", deps.Admin.logout)
+			r.Get("/me", deps.Admin.me)
+			r.NotFound(notFound)
+			r.MethodNotAllowed(methodNotAllowed)
+		})
+	}
 	router.HandleFunc("/api/v1", notFound)
 	router.HandleFunc("/api/v1/", notFound)
 	router.HandleFunc("/api/v1/*", notFound)
@@ -96,6 +119,10 @@ func publicSummary(w http.ResponseWriter, _ *http.Request) {
 			"updatedAt":    nil,
 		},
 	})
+}
+
+func methodNotAllowed(w http.ResponseWriter, _ *http.Request) {
+	writeError(w, http.StatusMethodNotAllowed, "METHOD_NOT_ALLOWED", "Metode tidak diizinkan.")
 }
 
 func notFound(w http.ResponseWriter, _ *http.Request) {

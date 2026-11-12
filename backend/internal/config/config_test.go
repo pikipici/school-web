@@ -39,3 +39,34 @@ func TestPublicDirUsesTrimmedExplicitValue(t *testing.T) {
 		t.Fatalf("PublicDir = %q", cfg.PublicDir)
 	}
 }
+
+func TestAdminCookieSecureParsing(t *testing.T) {
+	load := func(v string) (config.Config, error) {
+		return config.Load(func(key string) string {
+			if key == "ADMIN_COOKIE_SECURE" {
+				return v
+			}
+			return ""
+		})
+	}
+
+	for _, tc := range []struct {
+		in   string
+		want bool
+	}{
+		{"", false}, {"  ", false}, {"false", false}, {"0", false},
+		{"true", true}, {"TRUE", true}, {"1", true}, {" true ", true},
+	} {
+		cfg, err := load(tc.in)
+		if err != nil {
+			t.Fatalf("ADMIN_COOKIE_SECURE=%q: %v", tc.in, err)
+		}
+		if cfg.AdminCookieSecure != tc.want {
+			t.Fatalf("ADMIN_COOKIE_SECURE=%q => %v; want %v", tc.in, cfg.AdminCookieSecure, tc.want)
+		}
+	}
+
+	if _, err := load("maybe"); err == nil {
+		t.Fatal("ADMIN_COOKIE_SECURE=maybe must be rejected, not silently treated as false")
+	}
+}
