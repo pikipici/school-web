@@ -1,5 +1,5 @@
-// Nama sementara. Ganti di sini saat nama asli diberikan; satu-satunya sumber nama situs.
-export const SITE_OWNER = "Guru Informatika";
+// Nama pemilik situs. Satu-satunya sumber nama; ubah di sini bila perlu.
+export const SITE_OWNER = "Fikri Rama Aulia";
 export const SITE_TITLE = `${SITE_OWNER} — Web Pribadi`;
 export const SITE_DESCRIPTION =
   "Web pribadi guru Informatika: pengumuman, materi, dan progres tugas kelompok kelas IX.";

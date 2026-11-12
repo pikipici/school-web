@@ -136,7 +136,7 @@ Antislop digunakan sebagai filter, bukan sumber gaya. Setiap teknik visual harus
 
 ### Product truth
 
-- Hanya nama guru yang tampil di header; tanpa foto. Nama sementara dipusatkan di satu berkas (`frontend/src/lib/site.ts`) sampai nama asli diberikan.
+- Hanya nama guru yang tampil di header; tanpa foto. Nama dipusatkan di satu berkas (`frontend/src/lib/site.ts`).
 - Pengumuman dan Materi nanti ditulis lewat dashboard admin; guru boleh melampirkan PDF dan PPT. Sebelum itu tersedia, tampilkan keadaan kosong yang jujur.
 - Status progres diperbarui manual oleh guru setelah memeriksa Gmail di luar website. Peringatan ini hanya muncul di halaman progres.
 - Website tidak membaca Gmail, tidak menerima upload dari siswa, dan tidak memeriksa tugas otomatis.

@@ -22,7 +22,7 @@ Keputusan terkunci:
 
 - Halaman depan langsung menampilkan konten (Pengumuman terbaru, lalu daftar Materi), tanpa hero.
 - Menu publik: `Pengumuman`, `Materi`, `Progres Tugas`.
-- Header menampilkan **nama pribadi guru saja**, tanpa foto. Nama sementara: "Guru Informatika" (`frontend/src/lib/site.ts`) sampai nama asli diberikan.
+- Header menampilkan **nama pribadi guru saja**, tanpa foto. Nama: "Fikri Rama Aulia" (`frontend/src/lib/site.ts`).
 - Konten Pengumuman dan Materi ditulis lewat dashboard admin Go; tidak ada penulisan konten dari browser publik.
 - **Lampiran Materi dari guru** diizinkan dengan tipe **PDF dan PPT/PPTX** saja. Ini pengecualian terbatas atas larangan upload di bawah: larangan tetap berlaku untuk **kelompok/siswa** dan untuk berkas tugas.
 - Ketentuan lampiran yang harus diselesaikan sebelum implementasi (belum diputuskan): ukuran maksimal per berkas, lokasi penyimpanan (disk VPS di luar direktori publik atau layanan lain), validasi tipe berdasarkan isi bukan hanya ekstensi, nama berkas aman, dan jalur unduh lewat Go.

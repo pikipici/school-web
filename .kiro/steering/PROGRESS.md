@@ -433,7 +433,7 @@ Berikutnya, menunggu approval user:
 
 1. Putuskan aturan lampiran Materi (ukuran, penyimpanan, validasi).
 2. Fase 1 — database dan login admin.
-3. Ganti nama sementara di `frontend/src/lib/site.ts`.
+3. Nama di header sudah diganti jadi "Fikri Rama Aulia" (menunggu commit/deploy).
 
 ## Update Rule
 
