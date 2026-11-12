@@ -11,7 +11,7 @@
 - Task terakhir selesai: **0.9 — Hardened LMS-style deploy script**
 - Next task: **0.10 — Provision `cbt-vps` runtime workspace (menunggu approval eksplisit)**
 - Local branch: `main`
-- Task 0.8 implementation commit: `d332215`
+- Task 0.9 implementation commit: `a0bfb2f`
 - Working tree: bersih saat status ini dibuat
 - Runtime aplikasi: **belum diaktifkan**
 - Real database: **belum dibuat**
@@ -37,7 +37,7 @@
 | 0.6 | Go static export serving | DONE | `700762a` | strict RED; targeted/full tests, vet, build, real-binary static smoke PASS; independent security review blockers fixed |
 | 0.7 | Goose/sqlc/environment skeleton | DONE | `45f03b4` | sqlc v1.29 compile/generate, Go tests/vet/build PASS; environment boundary review PASS; Compose static review only (Docker unavailable) |
 | 0.8 | OpenAPI dan Makefile | DONE | `d332215` | OpenAPI YAML parse; remote `make verify` PASS; independent review PASS |
-| 0.9 | Hardened LMS-style deploy script | DONE | pending commit | Shell syntax, isolated remote `--check`, all build gates, non-mutation assertions, and independent re-review PASS |
+| 0.9 | Hardened LMS-style deploy script | DONE | `a0bfb2f` | Shell syntax, isolated remote `--check`, all build gates, non-mutation assertions, and independent re-review PASS |
 | 0.10 | Provision `cbt-vps` runtime workspace | PENDING APPROVAL | — | DB, `.env`, bare repo, systemd, dan port belum dibuat |
 | 0.11 | Remote baseline deployment dan smoke | PENDING APPROVAL | — | Belum deploy |
 | 0.12 | Antislop Delivery Gate dan phase close | PENDING | — | Menunggu seluruh gate sebelumnya |
