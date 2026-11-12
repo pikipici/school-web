@@ -63,7 +63,7 @@ Fase 0 membangun "Papan Progres Informatika" sebagai alat tunggal untuk monitori
 | Jawab 5 pertanyaan awal | DONE |
 | Jawab 3 pertanyaan terbuka baru | DONE (nama sementara, lampiran PDF+PPT, redesign tahap satu hanya tampilan) |
 | Revisi `DESIGN.md` | DONE (13 Nov 2026) |
-| Revisi `PLAN.md` | DONE (v2.1, bagian 0; aturan lampiran ukuran/penyimpanan masih terbuka) |
+| Revisi `PLAN.md` | DONE (v2.1, bagian 0; aturan lampiran diputuskan 13 Nov 2026: PDF/PPT/PPTX, 25 MB, disk VPS di luar rilis) |
 | Implementasi tampilan tahap satu | DONE di working tree, belum commit/deploy. Lint, typecheck, build PASS di `cbt-vps` (salinan sementara, runtime tidak disentuh). Rute `/` dan `/progres` terlayani Go. |
 | Cek browser manual (360px, zoom 200%, keyboard) | PENDING |
 | Nama asli menggantikan "Guru Informatika" di `frontend/src/lib/site.ts` | PENDING |

@@ -431,7 +431,7 @@ Fase 0 ditutup (13 Nov 2026) dengan pengecualian: cek browser nyata belum dilaku
 
 Berikutnya, menunggu approval user:
 
-1. Putuskan aturan lampiran Materi (ukuran, penyimpanan, validasi).
+1. Aturan lampiran Materi SUDAH diputuskan di `PLAN.md` bagian 0 (PDF/PPT/PPTX, 25 MB, disk VPS di luar rilis).
 2. Fase 1 — database dan login admin.
 3. Nama di header sudah diganti jadi "Fikri Rama Aulia" (menunggu commit/deploy).
 

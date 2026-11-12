@@ -25,7 +25,23 @@ Keputusan terkunci:
 - Header menampilkan **nama pribadi guru saja**, tanpa foto. Nama: "Fikri Rama Aulia" (`frontend/src/lib/site.ts`).
 - Konten Pengumuman dan Materi ditulis lewat dashboard admin Go; tidak ada penulisan konten dari browser publik.
 - **Lampiran Materi dari guru** diizinkan dengan tipe **PDF dan PPT/PPTX** saja. Ini pengecualian terbatas atas larangan upload di bawah: larangan tetap berlaku untuk **kelompok/siswa** dan untuk berkas tugas.
-- Ketentuan lampiran yang harus diselesaikan sebelum implementasi (belum diputuskan): ukuran maksimal per berkas, lokasi penyimpanan (disk VPS di luar direktori publik atau layanan lain), validasi tipe berdasarkan isi bukan hanya ekstensi, nama berkas aman, dan jalur unduh lewat Go.
+- **Aturan lampiran Materi (diputuskan 13 Nov 2026):**
+
+| Aspek | Aturan |
+|---|---|
+| Siapa | Hanya admin yang sudah login; endpoint wajib autentikasi + perlindungan CSRF |
+| Tipe | `.pdf`, `.ppt`, `.pptx`. Tolak `.pptm`, `.ppsm`, dan tipe lain |
+| Validasi | Berdasarkan isi (magic bytes), bukan ekstensi: PDF diawali `%PDF-`; PPTX adalah ZIP berisi `ppt/`; PPT lama bertanda OLE (`D0CF11E0`). Ekstensi harus cocok dengan isi |
+| Ukuran | Maksimal **25 MB** per berkas, maksimal **5 lampiran** per materi; batas dipaksa di Go dengan `http.MaxBytesReader` sebelum menyimpan |
+| Kuota | Total lampiran maksimal **2 GB**; tolak unggahan bila sisa disk VPS di bawah 1 GB |
+| Penyimpanan | Disk VPS di `/home/ubuntu/informatika-monitoring-data/attachments/`, **di luar** direktori rilis dan `public`, agar tidak hilang saat deploy atau rollback. Metadata di PostgreSQL |
+| Nama berkas | Nama di disk dibuat server (UUID + ekstensi). Nama asli hanya disimpan sebagai teks tampilan yang sudah dibersihkan |
+| Unduh | Lewat endpoint Go publik; header `Content-Disposition: attachment`, `X-Content-Type-Options: nosniff`, dan `Content-Type` dari tipe tervalidasi. Tidak pernah ditampilkan inline atau disajikan sebagai file statis |
+| Pencadangan | Direktori data ikut dicadangkan; rencana cadangan wajib ada sebelum fitur ini aktif di produksi |
+| Batas risiko | Tidak ada pemindai virus pada MVP. PPT/PPTX bisa memuat makro; karena hanya guru yang mengunggah dan pengunduh membuka sendiri, risiko dicatat dan dapat ditambah ClamAV kemudian |
+| Hapus | Menghapus Materi atau lampiran menghapus berkas dari disk dan mencatat audit log |
+
+- Larangan upload dari kelompok/siswa tetap berlaku penuh.
 - Pengumuman dan Materi baru berisi data setelah login admin dan database tersedia (Fase 1 dan sesudahnya). Sampai itu, tampilan menunjukkan keadaan kosong yang jujur.
 
 ---
