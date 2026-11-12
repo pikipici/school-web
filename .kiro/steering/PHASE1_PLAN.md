@@ -63,7 +63,7 @@ Waktu disimpan UTC, ditampilkan WIB.
 | Task | Isi | Uji |
 |---|---|---|
 | 1.1 **DONE** | Database uji terpisah di `cbt-vps` (`informatika_monitoring_test`) dan pembantu uji integrasi | Uji koneksi lulus |
-| 1.2 | Migrasi 0001–0003 + sqlc | `goose up/down`, `sqlc generate`, uji skema |
+| 1.2 **DONE** | Migrasi 0001–0003 + sqlc | `goose up/down`, `sqlc generate`, uji skema |
 | 1.3 | Paket sandi (Argon2id, kebijakan sandi) | TDD: hash cocok, salah ditolak, sandi lemah ditolak |
 | 1.4 | Paket sesi (buat, cek idle dan absolut, hapus) | TDD dengan jam palsu |
 | 1.5 | Batas percobaan login | TDD: kunci, pulih, per IP dan per akun |
@@ -132,3 +132,7 @@ Semua keputusan rencana sudah dijawab. Yang tersisa: persetujuan memulai Task 1.
 o non-test Go files. GREEN di cbt-vps: 3 uji lulus (validasi DSN, koneksi, reset skema), go vet dan go build ./... hijau, gofmt bersih. Role informatika_monitoring_test (bukan superuser, tanpa CREATEDB/CREATEROLE) memiliki database uji sendiri; tidak punya akses ke database produksi. Kredensial ada di `/home/ubuntu/.informatika-monitoring-test.env` (mode 0600, di luar repo).
 - Pembantu `backend/internal/testdb`: menolak nama database yang tidak berakhiran `_test`; tanpa `TEST_DATABASE_URL` uji dilewati, dan gagal bila `REQUIRE_TEST_DB=1`.
 - **Untuk Task 1.10:** gate deploy harus memuat file env uji dan memasang `REQUIRE_TEST_DB=1` agar uji integrasi tidak lolos diam-diam.
+- **Task 1.2 selesai (13 Nov 2026).** RED: `goose up` gagal tanpa migrasi (5 uji gagal). GREEN di `cbt-vps`: 5 uji skema lulus (tabel ada, constraint username/hash/kedaluwarsa, cascade sesi, audit log append-only dan tetap ada setelah user dihapus, down-to 0 lalu up). `go test ./...` lulus 3 kali berturut-turut, `go vet`, `go build`, `gofmt`, `sqlc generate` hijau.
+- Temuan saat GREEN: `go test ./...` menjalankan paket paralel pada satu database uji sehingga reset skema saling bertabrakan. Diperbaiki dengan advisory lock Postgres di `testdb.Open` yang ditahan selama satu uji.
+- Migrasi **belum dijalankan di database produksi**. Deploy berikutnya akan menjalankannya, jadi Task 1.10 (cadangan `pg_dump`) wajib selesai sebelum deploy apa pun.
+- Query sqlc untuk user/sesi/audit ditulis bersama task yang memakainya (1.3–1.8), bukan di muka.

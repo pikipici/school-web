@@ -20,6 +20,10 @@ const (
 	envURL     = "TEST_DATABASE_URL"
 	envRequire = "REQUIRE_TEST_DB"
 	suffix     = "_test"
+
+	// lockKey is an arbitrary constant shared by every test using this package.
+	lockKey  int64 = 0x1F0A11E57DB
+	lockWait       = 2 * time.Minute
 )
 
 // ValidateTestDSN reports whether dsn points to a database reserved for tests.
@@ -66,11 +70,35 @@ func Open(t testing.TB) *pgxpool.Pool {
 	if err != nil {
 		t.Fatal("open test database pool failed")
 	}
-	t.Cleanup(pool.Close)
 
 	if err := pool.Ping(ctx); err != nil {
+		pool.Close()
 		t.Fatal("ping test database failed")
 	}
+
+	// `go test ./...` runs packages in parallel against this one database.
+	// Hold a session-level advisory lock for the whole test so tests that
+	// reset the schema never overlap across packages.
+	lockCtx, lockCancel := context.WithTimeout(context.Background(), lockWait)
+	defer lockCancel()
+	lockConn, err := pool.Acquire(lockCtx)
+	if err != nil {
+		pool.Close()
+		t.Fatal("acquire test database lock connection failed")
+	}
+	if _, err := lockConn.Exec(lockCtx, "select pg_advisory_lock($1)", lockKey); err != nil {
+		lockConn.Release()
+		pool.Close()
+		t.Fatal("waiting for test database lock timed out")
+	}
+
+	t.Cleanup(func() {
+		unlockCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		_, _ = lockConn.Exec(unlockCtx, "select pg_advisory_unlock($1)", lockKey)
+		lockConn.Release()
+		pool.Close()
+	})
 	return pool
 }
 
