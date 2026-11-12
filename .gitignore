@@ -21,6 +21,8 @@ coverage/
 /bin/
 /public
 /releases/
+/backups/
+*.dump
 *.pid
 *.log
 

@@ -1,6 +1,9 @@
 SHELL := /bin/sh
 
-.PHONY: test-backend vet-backend build-backend build-adminctl lint-frontend typecheck-frontend test-frontend build-frontend verify deploy
+.PHONY: test-deploy test-backend vet-backend build-backend build-adminctl lint-frontend typecheck-frontend test-frontend build-frontend verify deploy
+
+test-deploy:
+	bash deploy/tests/test_deploy_functions.sh
 
 test-backend:
 	cd backend && go test ./... -count=1
@@ -26,7 +29,7 @@ test-frontend:
 build-frontend:
 	cd frontend && npm run build
 
-verify: test-backend vet-backend build-backend build-adminctl lint-frontend typecheck-frontend test-frontend build-frontend
+verify: test-deploy test-backend vet-backend build-backend build-adminctl lint-frontend typecheck-frontend test-frontend build-frontend
 
 deploy:
 	bash deploy/deploy.sh

@@ -8,6 +8,8 @@ APP_PORT="${APP_PORT:-8300}"
 HEALTH_ATTEMPTS="${HEALTH_ATTEMPTS:-10}"
 HEALTH_RETRY_SECONDS="${HEALTH_RETRY_SECONDS:-2}"
 MIN_DISK_MB="${MIN_DISK_MB:-500}"
+BACKUPS_TO_KEEP="${BACKUPS_TO_KEEP:-10}"
+TEST_ENV_FILE="${TEST_ENV_FILE:-${HOME:-/nonexistent}/.informatika-monitoring-test.env}"
 
 mode=dispatch
 case "${1:-}" in
@@ -37,6 +39,10 @@ BUILD_ROOT=""
 SOURCE_HEAD=""
 RELEASE_ID=""
 DB_DSN=""
+TEST_DB_DSN=""
+BACKUP_FILE=""
+BACKUP_DIR="$ROOT_DIR/backups"
+ADMIN_COOKIE_SECURE=""
 APP_ADDR=""
 PUBLIC_DIR=""
 OLD_BIN_TARGET=""
@@ -49,12 +55,12 @@ cleanup() {
 }
 trap cleanup EXIT
 
-for value_name in APP_PORT HEALTH_ATTEMPTS HEALTH_RETRY_SECONDS MIN_DISK_MB; do
+for value_name in APP_PORT HEALTH_ATTEMPTS HEALTH_RETRY_SECONDS MIN_DISK_MB BACKUPS_TO_KEEP; do
   value="${!value_name}"
   [[ "$value" =~ ^[0-9]+$ ]] || fail "$value_name must be a non-negative integer"
 done
 (( APP_PORT >= 1 && APP_PORT <= 65535 )) || fail "APP_PORT must be between 1 and 65535"
-(( HEALTH_ATTEMPTS >= 1 && HEALTH_RETRY_SECONDS >= 1 && MIN_DISK_MB >= 1 )) || fail "health and disk values must be positive"
+(( HEALTH_ATTEMPTS >= 1 && HEALTH_RETRY_SECONDS >= 1 && MIN_DISK_MB >= 1 && BACKUPS_TO_KEEP >= 1 )) || fail "health, disk, and backup values must be positive"
 [[ "$SERVICE_NAME" =~ ^[A-Za-z0-9_.@-]+\.service$ ]] || fail "invalid SERVICE_NAME"
 
 parse_environment() {
@@ -66,7 +72,7 @@ parse_environment() {
   while IFS= read -r line || [[ -n "$line" ]]; do
     line="${line%$'\r'}"
     [[ -z "$line" || "$line" =~ ^[[:space:]]*# ]] && continue
-    [[ "$line" =~ ^(APP_ADDR|PUBLIC_DIR|DATABASE_URL|GOOSE_DBSTRING)=(.*)$ ]] || fail ".env contains unsupported or malformed assignment"
+    [[ "$line" =~ ^(APP_ADDR|PUBLIC_DIR|DATABASE_URL|GOOSE_DBSTRING|ADMIN_COOKIE_SECURE)=(.*)$ ]] || fail ".env contains unsupported or malformed assignment"
     key="${BASH_REMATCH[1]}"; raw="${BASH_REMATCH[2]}"
     if [[ "$raw" =~ ^\'([^\']*)\'$ ]]; then value="${BASH_REMATCH[1]}"
     elif [[ "$raw" =~ ^\"([^\"\\]*)\"$ ]]; then value="${BASH_REMATCH[1]}"
@@ -76,6 +82,10 @@ parse_environment() {
     case "$key" in
       APP_ADDR) [[ -z "$APP_ADDR" ]] || fail "duplicate APP_ADDR"; APP_ADDR="$value" ;;
       PUBLIC_DIR) [[ -z "$PUBLIC_DIR" ]] || fail "duplicate PUBLIC_DIR"; PUBLIC_DIR="$value" ;;
+      ADMIN_COOKIE_SECURE)
+        [[ -z "$ADMIN_COOKIE_SECURE" ]] || fail "duplicate ADMIN_COOKIE_SECURE"
+        [[ "${value,,}" =~ ^(true|false|1|0)$ ]] || fail "ADMIN_COOKIE_SECURE must be true, false, 1, or 0"
+        ADMIN_COOKIE_SECURE="${value,,}" ;;
       DATABASE_URL|GOOSE_DBSTRING)
         [[ -z "$DB_DSN" ]] || fail "define only one of DATABASE_URL or GOOSE_DBSTRING"
         DB_DSN="$value" ;;
@@ -88,6 +98,70 @@ parse_environment() {
 
 sudo_systemctl() { sudo -n systemctl "$@" "$SERVICE_NAME"; }
 
+# Runs "$@" with libpq PG* variables derived from $DB_DSN, so the DSN and its
+# password never appear on a command line (visible in `ps`) or in logs.
+with_pg_env() {
+  DB_DSN="$DB_DSN" python3 -c '
+import os
+import sys
+import urllib.parse
+
+uri = urllib.parse.urlsplit(os.environ["DB_DSN"])
+if uri.scheme not in {"postgres", "postgresql"} or not uri.hostname or not uri.username or not uri.path.strip("/"):
+    raise SystemExit("unsupported PostgreSQL DSN")
+query_pairs = urllib.parse.parse_qsl(uri.query, keep_blank_values=True)
+query = dict(query_pairs)
+if len(query_pairs) != len(query) or set(query) - {"sslmode"}:
+    raise SystemExit("unsupported or duplicate PostgreSQL DSN query parameter")
+env = os.environ.copy()
+env.update({
+    "PGHOST": uri.hostname,
+    "PGPORT": str(uri.port or 5432),
+    "PGDATABASE": urllib.parse.unquote(uri.path.lstrip("/")),
+    "PGUSER": urllib.parse.unquote(uri.username),
+    "PGPASSWORD": urllib.parse.unquote(uri.password or ""),
+})
+if "sslmode" in query:
+    env["PGSSLMODE"] = query["sslmode"]
+os.execvpe(sys.argv[1], sys.argv[1:], env)
+' "$@"
+}
+
+# Database name of a postgres:// URL (no decoding; plain names only).
+dsn_database_name() {
+  local rest="${1#*://}"
+  rest="${rest#*/}"
+  printf '%s' "${rest%%\?*}"
+}
+
+# Integration tests reset their database, so they may only ever run against a
+# dedicated database whose name ends in _test and differs from production.
+load_test_database() {
+  local uid owner mode_bits line key raw value test_db prod_db count=0
+  [[ -f "$TEST_ENV_FILE" && ! -L "$TEST_ENV_FILE" ]] || fail "test database file missing: create $TEST_ENV_FILE (mode 600) containing TEST_DATABASE_URL so integration tests can run"
+  uid="$(id -u)"; owner="$(stat -c %u "$TEST_ENV_FILE")"; mode_bits="$(stat -c %a "$TEST_ENV_FILE")"
+  [[ "$owner" == "$uid" ]] || fail "test database file must be owned by deployment user uid $uid"
+  (( (8#$mode_bits & 8#077) == 0 )) || fail "test database file must not grant group/other permissions (use chmod 600)"
+  while IFS= read -r line || [[ -n "$line" ]]; do
+    line="${line%$'\r'}"
+    [[ -z "$line" || "$line" =~ ^[[:space:]]*# ]] && continue
+    [[ "$line" =~ ^(TEST_DATABASE_URL)=(.*)$ ]] || fail "test database file contains an unsupported or malformed assignment"
+    key="${BASH_REMATCH[1]}"; raw="${BASH_REMATCH[2]}"
+    if [[ "$raw" =~ ^\'([^\']*)\'$ ]]; then value="${BASH_REMATCH[1]}"
+    elif [[ "$raw" =~ ^\"([^\"\\]*)\"$ ]]; then value="${BASH_REMATCH[1]}"
+    elif [[ "$raw" =~ ^[^[:space:]\#\'\"\\]*$ ]]; then value="$raw"
+    else fail "test database value is outside the supported literal syntax"
+    fi
+    count=$((count + 1))
+  done < "$TEST_ENV_FILE"
+  (( count == 1 )) || fail "test database file must define TEST_DATABASE_URL exactly once"
+  [[ "$value" =~ ^postgres(ql)?://[^/?#[:space:]]+/[A-Za-z0-9_]+(\?[^[:space:]]*)?$ ]] || fail "TEST_DATABASE_URL must be a postgres:// URL with a plain database name"
+  test_db="$(dsn_database_name "$value")"
+  prod_db="$(dsn_database_name "$DB_DSN")"
+  [[ "$test_db" == *_test ]] || fail "test database name must end in _test"
+  [[ "$test_db" != "$prod_db" ]] || fail "test database must not be the production database"
+  TEST_DB_DSN="$value"
+}
 check_port_owner() {
   local listeners main_pid cgroup pid
   listeners="$(sudo -n ss -H -ltnp "sport = :$APP_PORT")" || fail "cannot inspect port $APP_PORT with sudo -n ss"
@@ -109,44 +183,16 @@ preflight() {
   log "=== PRE-FLIGHT ==="
   [[ "$mode" == check || "$ROOT_DIR" == "$REMOTE_DIR" ]] || fail "remote checkout mismatch: expected $REMOTE_DIR"
   local cmd dirty available_mb root_dev releases_parent_dev
-  for cmd in git go node npm sqlc goose psql curl python3 sudo systemctl ss stat df mktemp tar sed sort grep readlink ln mv install timeout id cut cp chmod date; do require_command "$cmd"; done
+  for cmd in git go node npm sqlc goose psql pg_dump pg_restore curl python3 sudo systemctl ss stat df mktemp tar sed sort grep readlink ln mv install timeout id cut cp chmod date; do require_command "$cmd"; done
   parse_environment
+  load_test_database
   dirty="$(git -C "$ROOT_DIR" status --porcelain)"; [[ -z "$dirty" ]] || fail "working tree is dirty; preserve or commit changes before deployment"
   SOURCE_HEAD="$(git -C "$ROOT_DIR" rev-parse --verify HEAD)"
   git -C "$ROOT_DIR" diff --quiet && git -C "$ROOT_DIR" diff --cached --quiet || fail "working tree is dirty"
   sudo_systemctl show --property=MainPID --value >/dev/null || fail "sudoers must permit systemctl show for $SERVICE_NAME"
   sudo -n ss -H -ltnp "sport = :$APP_PORT" >/dev/null || fail "sudoers must permit ss listener inspection"
   BUILD_ROOT="$(mktemp -d "${TMPDIR:-/tmp}/informatika-deploy.XXXXXX")"
-  DB_DSN="$DB_DSN" python3 - <<'PY' || fail "database connectivity check failed"
-import os
-import subprocess
-import urllib.parse
-
-uri = urllib.parse.urlsplit(os.environ["DB_DSN"])
-if uri.scheme not in {"postgres", "postgresql"} or not uri.hostname or not uri.username or not uri.path.strip("/"):
-    raise SystemExit("unsupported PostgreSQL DSN")
-env = os.environ.copy()
-env.update({
-    "PGHOST": uri.hostname,
-    "PGPORT": str(uri.port or 5432),
-    "PGDATABASE": uri.path.lstrip("/"),
-    "PGUSER": urllib.parse.unquote(uri.username),
-    "PGPASSWORD": urllib.parse.unquote(uri.password or ""),
-})
-query_pairs = urllib.parse.parse_qsl(uri.query, keep_blank_values=True)
-query = dict(query_pairs)
-if len(query_pairs) != len(query) or set(query) - {"sslmode"}:
-    raise SystemExit("unsupported or duplicate PostgreSQL DSN query parameter")
-env["PGDATABASE"] = urllib.parse.unquote(uri.path.lstrip("/"))
-if "sslmode" in query:
-    env["PGSSLMODE"] = query["sslmode"]
-subprocess.run(
-    ["timeout", "5", "psql", "-X", "-v", "ON_ERROR_STOP=1", "-Atqc", "SELECT 1"],
-    env=env,
-    check=True,
-    stdout=subprocess.DEVNULL,
-)
-PY
+  with_pg_env timeout 5 psql -X -v ON_ERROR_STOP=1 -Atqc "SELECT 1" >/dev/null || fail "database connectivity check failed"
   if find "$ROOT_DIR/backend/sql/migrations" -maxdepth 1 -type f -name '*.sql' -print -quit | grep -q .; then
     GOOSE_DRIVER=postgres GOOSE_DBSTRING="$DB_DSN" timeout 5 goose -dir "$ROOT_DIR/backend/sql/migrations" status >/dev/null || fail "goose status failed"
   else
@@ -167,9 +213,9 @@ build_and_verify() {
   local src="$BUILD_ROOT/source"
   mkdir -p "$src" "$BUILD_ROOT/npm-cache" "$BUILD_ROOT/go-cache" "$BUILD_ROOT/go-mod-cache"
   git -C "$ROOT_DIR" archive --format=tar "$SOURCE_HEAD" | tar -xf - -C "$src"
-  (cd "$src/backend" && GOCACHE="$BUILD_ROOT/go-cache" GOMODCACHE="$BUILD_ROOT/go-mod-cache" sqlc generate && go test ./... -count=1 && go vet ./... && go build -o "$BUILD_ROOT/api" ./cmd/api)
-  [[ -x "$BUILD_ROOT/api" ]] || fail "backend binary was not created"
-  (cd "$src/frontend" && npm_config_cache="$BUILD_ROOT/npm-cache" npm ci && npm run lint && npm run typecheck && npm run build)
+  (cd "$src/backend" && GOCACHE="$BUILD_ROOT/go-cache" GOMODCACHE="$BUILD_ROOT/go-mod-cache" sqlc generate && TEST_DATABASE_URL="$TEST_DB_DSN" REQUIRE_TEST_DB=1 go test ./... -count=1 && go vet ./... && go build -o "$BUILD_ROOT/api" ./cmd/api && go build -o "$BUILD_ROOT/adminctl" ./cmd/adminctl)
+  [[ -x "$BUILD_ROOT/api" && -x "$BUILD_ROOT/adminctl" ]] || fail "backend binaries were not created"
+  (cd "$src/frontend" && npm_config_cache="$BUILD_ROOT/npm-cache" npm ci && npm run lint && npm run typecheck && npm test && npm run build)
   [[ -f "$src/frontend/out/index.html" ]] || fail "frontend static export is missing"
   log "all gates passed in temporary source pinned to $SOURCE_HEAD"
 }
@@ -190,6 +236,23 @@ atomic_link() {
   mv -Tf -- "$tmp" "$link"
 }
 
+# Writes a verified, owner-only custom-format dump of the application database.
+backup_database() {
+  local dest="$1" partial="$1.partial"
+  rm -f -- "$partial"
+  (umask 077 && with_pg_env pg_dump --format=custom --no-owner --no-privileges --file="$partial") || { rm -f -- "$partial"; return 1; }
+  [[ -s "$partial" ]] || { rm -f -- "$partial"; return 1; }
+  pg_restore --list "$partial" >/dev/null || { rm -f -- "$partial"; return 1; }
+  chmod 0600 -- "$partial"
+  mv -f -- "$partial" "$dest"
+}
+
+# Keeps only the newest $BACKUPS_TO_KEEP pre-deploy dumps.
+prune_backups() {
+  local -a old
+  mapfile -t old < <(find "$BACKUP_DIR" -maxdepth 1 -type f -name 'pre-*.dump' -printf '%T@ %p\n' | sort -rn | tail -n +"$((BACKUPS_TO_KEEP + 1))" | cut -d' ' -f2-)
+  ((${#old[@]} == 0)) || rm -f -- "${old[@]}"
+}
 rollback() {
   local reason="$1" ok=true
   [[ "$ROLLING_BACK" == false ]] || exit 1
@@ -201,6 +264,7 @@ rollback() {
   if [[ "$ok" == true ]]; then poll_ready || ok=false; fi
   if [[ "$ok" == true ]]; then log "rollback restored prior links and verified readiness"; else log "ERROR: rollback did not restore a verified healthy service" >&2; fi
   log "database migrations are forward-only; inspect migration state"
+  [[ -z "$BACKUP_FILE" ]] || log "pre-deploy database backup: $BACKUP_FILE (restore steps: docs/DEPLOYMENT.md)"
   exit 1
 }
 
@@ -220,9 +284,19 @@ deploy_release() {
   [[ ! -e "$BIN_DIR/current" || -L "$BIN_DIR/current" ]] || fail "$BIN_DIR/current must be a symlink"
   [[ ! -e "$PUBLIC_LINK" || -L "$PUBLIC_LINK" ]] || fail "$PUBLIC_LINK must be a symlink"
 
+  # Back up before anything changes. Failure here aborts with nothing modified.
+  if find "$ROOT_DIR/backend/sql/migrations" -maxdepth 1 -type f -name '*.sql' -print -quit | grep -q .; then
+    mkdir -p -m 0700 "$BACKUP_DIR"
+    BACKUP_FILE="$BACKUP_DIR/pre-$RELEASE_ID.dump"
+    backup_database "$BACKUP_FILE" || { BACKUP_FILE=""; fail "database backup failed; nothing was changed"; }
+    log "database backup written: $BACKUP_FILE ($(stat -c %s "$BACKUP_FILE") bytes)"
+    prune_backups
+  fi
+
   MUTATION_STARTED=true
   mkdir -p "$BIN_DIR" "$release_dir/bin" "$release_dir/public"
   install -m 0755 "$BUILD_ROOT/api" "$release_dir/bin/informatika-monitoring-api"
+  install -m 0755 "$BUILD_ROOT/adminctl" "$release_dir/bin/adminctl"
   cp -a "$source_out/." "$release_dir/public/"
   chmod -R a-w "$release_dir"
   if find "$ROOT_DIR/backend/sql/migrations" -maxdepth 1 -type f -name '*.sql' -print -quit | grep -q .; then
@@ -248,6 +322,10 @@ deploy_release() {
 preflight
 build_and_verify
 if [[ "$mode" == check ]]; then
+  if find "$ROOT_DIR/backend/sql/migrations" -maxdepth 1 -type f -name '*.sql' -print -quit | grep -q .; then
+    backup_database "$BUILD_ROOT/rehearsal.dump" || fail "backup rehearsal failed"
+    log "backup rehearsal passed ($(stat -c %s "$BUILD_ROOT/rehearsal.dump") bytes, discarded)"
+  fi
   log "CHECK ONLY: used temporary source/build/cache; no migration, release write, symlink swap, restart, or runtime mutation performed"
   exit 0
 fi
