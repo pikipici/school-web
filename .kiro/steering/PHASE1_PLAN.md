@@ -64,7 +64,7 @@ Waktu disimpan UTC, ditampilkan WIB.
 |---|---|---|
 | 1.1 **DONE** | Database uji terpisah di `cbt-vps` (`informatika_monitoring_test`) dan pembantu uji integrasi | Uji koneksi lulus |
 | 1.2 **DONE** | Migrasi 0001–0003 + sqlc | `goose up/down`, `sqlc generate`, uji skema |
-| 1.3 | Paket sandi (Argon2id, kebijakan sandi) | TDD: hash cocok, salah ditolak, sandi lemah ditolak |
+| 1.3 **DONE** | Paket sandi (Argon2id, kebijakan sandi) | TDD: hash cocok, salah ditolak, sandi lemah ditolak |
 | 1.4 | Paket sesi (buat, cek idle dan absolut, hapus) | TDD dengan jam palsu |
 | 1.5 | Batas percobaan login | TDD: kunci, pulih, per IP dan per akun |
 | 1.6 | Handler login/logout/me + middleware auth dan CSRF | TDD HTTP: 401, 403 CSRF, cookie flag |
@@ -136,3 +136,6 @@ o non-test Go files. GREEN di cbt-vps: 3 uji lulus (validasi DSN, koneksi, reset
 - Temuan saat GREEN: `go test ./...` menjalankan paket paralel pada satu database uji sehingga reset skema saling bertabrakan. Diperbaiki dengan advisory lock Postgres di `testdb.Open` yang ditahan selama satu uji.
 - Migrasi **belum dijalankan di database produksi**. Deploy berikutnya akan menjalankannya, jadi Task 1.10 (cadangan `pg_dump`) wajib selesai sebelum deploy apa pun.
 - Query sqlc untuk user/sesi/audit ditulis bersama task yang memakainya (1.3–1.8), bukan di muka.
+- **Task 1.3 selesai (13 Nov 2026).** RED: `no non-test Go files`. GREEN di `cbt-vps`: uji hash PHC, salt acak, verify benar/salah/unicode, 9 encoding berbahaya ditolak (memori/iterasi absurd, base64 rusak, algoritma lain), rehash otomatis bila parameter lebih lemah, `DummyVerify` untuk meratakan waktu akun tak dikenal, kebijakan sandi (min 12 karakter, maks 128 byte, tidak memuat username, bukan sandi umum, minimal 5 karakter berbeda). `go test ./...` lulus 2 kali berturut-turut, `go vet`, `go build`, `gofmt`, `sqlc generate` hijau.
+- Dependensi baru: `golang.org/x/crypto v0.59.0` (terpin); `x/sync` dan `x/text` naik versi sebagai syarat, `go mod verify` OK. Parameter produksi: 64 MiB, 3 iterasi, 2 lajur.
+- **Untuk Task 1.5/1.6:** tiap hash memakai 64 MiB RAM. Batasi hash serentak (mis. semaphore 2–4) di handler login agar banjir login tidak menghabiskan memori VPS.
