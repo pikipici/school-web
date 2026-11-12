@@ -46,7 +46,7 @@
 - Backend exposes `/healthz`, safe `/readyz`, and honest zero-state `/api/v1/public/summary`; unknown API routes return JSON 404.
 - Readiness uses a fake-Pinger-tested boundary. Without configured DB it honestly returns 503; real PostgreSQL smoke remains pending Task 0.10.
 - GitHub `origin` configured and `main` pushed to `pikipici/school-web`.
-- `cbt-vps` build-only workspace exists at `/home/ubuntu/informatika-monitoring`; no runtime, DB, `.env`, bare deploy repo, or systemd service exists yet.
+- `cbt-vps` now has a bare repo, Git checkout, least-privilege PostgreSQL role/database, `.env` mode 0600, systemd service, immutable release, and port 8300 runtime. Runtime evidence passed at HEAD `6019fe8`; latest hardening through `073db1c` is pushed but not yet applied because the apply command was denied.
 - Toolchain installed for remote verification: Go 1.27.4, Node 26.13.1 LTS, npm 11.20.0.
 - VPS was previously cleaned of the old Crypto Station project.
 

@@ -38,7 +38,7 @@
 | 0.7 | Goose/sqlc/environment skeleton | DONE | `45f03b4` | sqlc v1.29 compile/generate, Go tests/vet/build PASS; environment boundary review PASS; Compose static review only (Docker unavailable) |
 | 0.8 | OpenAPI dan Makefile | DONE | `d332215` | OpenAPI YAML parse; remote `make verify` PASS; independent review PASS |
 | 0.9 | Hardened LMS-style deploy script | DONE | `a0bfb2f` | Shell syntax, isolated remote `--check`, all build gates, non-mutation assertions, and independent re-review PASS |
-| 0.10 | Provision `cbt-vps` runtime workspace | PENDING APPROVAL | — | DB, `.env`, bare repo, systemd, dan port belum dibuat |
+| 0.10 | Provision `cbt-vps` runtime workspace | IN PROGRESS / PARTIAL | — | Bare repo, Git checkout, least-privilege DB/role, `.env` 0600, systemd runtime, and port 8300 verified; latest unit hardening commit `073db1c` is pushed but not applied because the apply command was denied |
 | 0.11 | Remote baseline deployment dan smoke | PENDING APPROVAL | — | Belum deploy |
 | 0.12 | Antislop Delivery Gate dan phase close | PENDING | — | Menunggu seluruh gate sebelumnya |
 
@@ -399,13 +399,13 @@ Still enforced:
 
 ## Current Next Step
 
-Task 0.10 — provisioning checkpoint, blocked pending explicit approval:
+Task 0.10 — provisioning checkpoint partially complete:
 
-1. Re-inspect OS, disk, ports, PostgreSQL, toolchain, systemd, and current remote workspace state.
-2. Create the bare deploy repository and proper Git checkout without discarding unexpected remote state.
-3. Provision the least-privilege PostgreSQL role/database and restrictive `.env`.
-4. Install the reviewed systemd unit and narrow sudo boundary.
-5. Activate runtime only after all pre-flight/build/migration gates pass; public domain remains out of scope.
+1. Bare repo, Git checkout, PostgreSQL role/database, restrictive `.env`, systemd service, immutable release, and port 8300 runtime are present.
+2. Runtime at deployed HEAD `6019fe8` passed health, readiness, root marker, service ownership, and DB-role verification.
+3. Deploy fixes and additional hardening are pushed through `073db1c`.
+4. Applying the latest unit/source hardening on `cbt-vps` was denied, so do not mark Task 0.10 complete or Task 0.11 deployed at the latest HEAD.
+5. Next approved action is to fast-forward the checkout, install the updated unit, restart, and repeat full evidence capture; public domain remains out of scope.
 
 ## Update Rule
 
