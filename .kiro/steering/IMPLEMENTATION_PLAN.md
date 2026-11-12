@@ -162,7 +162,7 @@ cd backend && go test ./... -count=1 && go vet ./... && go build ./cmd/api
 
 **Commit:** `feat(api): add PostgreSQL readiness check`.
 
-### Task 0.4 — Scaffold Next.js static frontend `[ ]`
+### Task 0.4 — Scaffold Next.js static frontend `[x]`
 
 **Objective:** Establish a production-exportable UI-only frontend with no direct database or server action.
 
@@ -483,10 +483,10 @@ BRANCH=main
 
 ## 8. Current Next Step
 
-**CHECKPOINT AFTER TASK 0.3.**
+**CHECKPOINT AFTER TASK 0.4.**
 
-1. Commit the verified readiness boundary.
-2. Start Task 0.4: scaffold Next.js App Router + TypeScript + Tailwind with static export in `frontend/`.
-3. Implement only the honest public foundation from `DESIGN.md`; no fake student rows, KPI claims, generated visual assets, auth, or business CRUD.
-4. Run `npm ci`, lint, typecheck, and static build on `cbt-vps`; verify `out/index.html` exists.
+1. Commit the verified Next.js static public foundation.
+2. Start Task 0.5: wire the typed frontend API client to `GET /api/v1/public/summary`.
+3. Add explicit loading, honest zero, error, and success states without moving business logic into Next.js.
+4. Verify the frontend gates and development rewrite against Go on `cbt-vps`.
 5. Real DB, `.env`, bare deploy repo, systemd, port binding, and runtime activation remain out of scope.

@@ -7,9 +7,9 @@
 ## Ringkasan
 
 - Fase aktif: **Fase 0 — Foundation**
-- Progress task: **3/12 selesai (25%)**
-- Task terakhir selesai: **0.3 — PostgreSQL readiness boundary**
-- Next task: **0.4 — Next.js static frontend**
+- Progress task: **4/12 selesai (33%)**
+- Task terakhir selesai: **0.4 — Next.js static frontend**
+- Next task: **0.5 — Typed frontend API client**
 - Local branch: `main`
 - Local HEAD: `95609ab`
 - Working tree: bersih saat status ini dibuat
@@ -32,7 +32,7 @@
 | 0.1 | Repository hygiene | DONE | `31d11c8` | Git `main`, ignore rules, DESIGN lint, diff check |
 | 0.2 | Go router foundation | DONE | `258bf9a` | RED tercatat; targeted/full tests, vet, build PASS; independent review PASS |
 | 0.3 | PostgreSQL readiness boundary | DONE | `95609ab` | RED tercatat; fake-Pinger tests, full tests, vet, build PASS; final independent review PASS |
-| 0.4 | Next.js static frontend | PENDING | — | Belum dimulai |
+| 0.4 | Next.js static frontend | DONE | task commit | npm ci, lint, typecheck, static build, out/index.html, production audit PASS; independent review PASS |
 | 0.5 | Typed frontend API client | PENDING | — | Belum dimulai |
 | 0.6 | Go static export serving | PENDING | — | Belum dimulai |
 | 0.7 | Goose/sqlc/environment skeleton | PENDING | — | Belum dimulai |
@@ -220,14 +220,13 @@ Still enforced:
 
 ## Current Next Step
 
-Task 0.4 — scaffold Next.js App Router + TypeScript + Tailwind under `frontend/`:
+Task 0.5 — wire the typed frontend API client:
 
-1. Configure `output: "export"`.
-2. Build the honest public foundation from `DESIGN.md`.
-3. Do not add fake student rows, fake KPI statistics, generated imagery, auth, or CRUD.
-4. Run `npm ci`, lint, typecheck, and `npm run build` on `cbt-vps`.
-5. Verify `frontend/out/index.html` exists.
-6. Run independent review before commit.
+1. Call relative `GET /api/v1/public/summary` through the development rewrite.
+2. Add explicit loading, honest zero, error, and success states.
+3. Keep all business logic in Go and do not add direct database access.
+4. Run lint, typecheck, build, and a Go-through-rewrite smoke on `cbt-vps`.
+5. Run independent review before commit.
 
 ## Update Rule
 

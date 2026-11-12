@@ -42,7 +42,7 @@
 ## Current state
 
 - Fase 0 plan approved for progress on 2026-11-12.
-- Tasks 0.1–0.3 complete: repository baseline, Go HTTP foundation, and tested readiness boundary.
+- Tasks 0.1–0.4 complete: repository baseline, Go HTTP foundation, tested readiness boundary, and Next.js static public foundation.
 - Backend exposes `/healthz`, safe `/readyz`, and honest zero-state `/api/v1/public/summary`; unknown API routes return JSON 404.
 - Readiness uses a fake-Pinger-tested boundary. Without configured DB it honestly returns 503; real PostgreSQL smoke remains pending Task 0.10.
 - No GitHub remote configured.
@@ -56,7 +56,7 @@
   - [x] 0.1 Repository hygiene
   - [x] 0.2 Go router foundation
   - [x] 0.3 PostgreSQL readiness
-  - [ ] 0.4 Next.js static frontend
+  - [x] 0.4 Next.js static frontend
   - [ ] 0.5 Typed API client
   - [ ] 0.6 Go static serving
   - [ ] 0.7 Goose/sqlc/env skeleton
@@ -93,4 +93,4 @@ npm run build
 
 ## Current next step
 
-Commit Task 0.3, then scaffold Task 0.4 Next.js static frontend from `DESIGN.md`. Validate npm install, lint, typecheck, and static build only on `cbt-vps`. Real DB, `.env`, bare deploy repo, systemd, port, and runtime provisioning remain pending Task 0.10.
+Commit Task 0.4, then wire Task 0.5 typed frontend API client with loading, honest zero, error, and success states. Validate lint, typecheck, static build, and the Go development rewrite only on `cbt-vps`. Real DB, `.env`, bare deploy repo, systemd, port, and runtime provisioning remain pending Task 0.10.
