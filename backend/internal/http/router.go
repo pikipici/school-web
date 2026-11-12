@@ -4,11 +4,13 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/pikipici/informatika-monitoring/backend/internal/health"
+	"github.com/pikipici/informatika-monitoring/backend/internal/web"
 )
 
 type errorEnvelope struct {
@@ -21,14 +23,22 @@ type errorDetail struct {
 }
 
 func NewRouter() http.Handler {
-	return newRouter(nil)
+	return newRouter(nil, "")
 }
 
 func NewRouterWithPinger(pinger health.Pinger) http.Handler {
-	return newRouter(pinger)
+	return newRouter(pinger, "")
 }
 
-func newRouter(pinger health.Pinger) http.Handler {
+func NewRouterWithPublicDir(publicDir string) http.Handler {
+	return newRouter(nil, publicDir)
+}
+
+func NewRouterWithPingerAndPublicDir(pinger health.Pinger, publicDir string) http.Handler {
+	return newRouter(pinger, publicDir)
+}
+
+func newRouter(pinger health.Pinger, publicDir string) http.Handler {
 	router := chi.NewRouter()
 	router.Use(middleware.RequestID)
 	router.Use(requestIDHeader)
@@ -38,7 +48,15 @@ func newRouter(pinger health.Pinger) http.Handler {
 	readiness := health.NewService(pinger)
 	router.Get("/readyz", readyz(readiness))
 	router.Get("/api/v1/public/summary", publicSummary)
-	router.NotFound(notFound)
+	router.HandleFunc("/api/v1", notFound)
+	router.HandleFunc("/api/v1/", notFound)
+	router.HandleFunc("/api/v1/*", notFound)
+	if strings.TrimSpace(publicDir) == "" {
+		router.NotFound(notFound)
+	} else {
+		static := web.New(publicDir)
+		router.NotFound(static.ServeHTTP)
+	}
 
 	return router
 }

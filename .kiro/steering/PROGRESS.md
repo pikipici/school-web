@@ -7,9 +7,9 @@
 ## Ringkasan
 
 - Fase aktif: **Fase 0 — Foundation**
-- Progress task: **5/12 selesai (42%)**
-- Task terakhir selesai: **0.5 — Typed frontend API client**
-- Next task: **0.6 — Go static export serving**
+- Progress task: **6/12 selesai (50%)**
+- Task terakhir selesai: **0.6 — Go static export serving**
+- Next task: **0.7 — Goose/sqlc/environment skeleton**
 - Local branch: `main`
 - Local HEAD: `95609ab`
 - Working tree: bersih saat status ini dibuat
@@ -34,7 +34,7 @@
 | 0.3 | PostgreSQL readiness boundary | DONE | `95609ab` | RED tercatat; fake-Pinger tests, full tests, vet, build PASS; final independent review PASS |
 | 0.4 | Next.js static frontend | DONE | task commit | npm ci, lint, typecheck, static build, out/index.html, production audit PASS; independent review PASS |
 | 0.5 | Typed frontend API client | DONE | task commit | lint, typecheck, static build, production audit, and real Go-through-Next rewrite smoke PASS; independent review PASS |
-| 0.6 | Go static export serving | PENDING | — | Belum dimulai |
+| 0.6 | Go static export serving | DONE | task commit | strict RED; targeted/full tests, vet, build, real-binary static smoke PASS; independent security review blockers fixed |
 | 0.7 | Goose/sqlc/environment skeleton | PENDING | — | Belum dimulai |
 | 0.8 | OpenAPI dan Makefile | PENDING | — | Belum dimulai |
 | 0.9 | Hardened LMS-style deploy script | PENDING | — | Belum dimulai |
@@ -219,12 +219,12 @@ Still enforced:
 
 ## Current Next Step
 
-Task 0.6 — serve the static export from Go:
+Task 0.7 — add Goose/sqlc and environment skeleton:
 
-1. Write RED tests for `/`, extensionless routes, frontend 404, API isolation, and path traversal.
-2. Implement a safe static resolver under `backend/internal/web`.
-3. Preserve JSON 404 behavior for unknown `/api/v1/*` routes.
-4. Run targeted/full Go tests, vet, build, and static route smoke on `cbt-vps`.
+1. Add empty migration/query directories and deterministic sqlc configuration.
+2. Add backend/frontend/root environment examples without real credentials.
+3. Add optional development PostgreSQL Compose configuration without provisioning the VPS database.
+4. Run `sqlc compile` and existing verification gates on `cbt-vps`.
 5. Run independent review before commit.
 
 ## Update Rule

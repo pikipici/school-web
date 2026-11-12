@@ -226,7 +226,7 @@ cd frontend && npm run typecheck && npm run lint && npm run build
 
 **Commit:** `feat(web): connect public summary to Go API`.
 
-### Task 0.6 — Serve static export from Go `[ ]`
+### Task 0.6 — Serve static export from Go `[x]`
 
 **Objective:** Make the production Go binary own both API and frontend routes.
 
@@ -483,10 +483,10 @@ BRANCH=main
 
 ## 8. Current Next Step
 
-**CHECKPOINT AFTER TASK 0.5.**
+**CHECKPOINT AFTER TASK 0.6.**
 
-1. Commit the verified typed frontend API client and runtime states.
-2. Start Task 0.6 with RED tests for static export serving from Go.
-3. Keep missing `/api/v1/*` routes as JSON 404 and never fall through to HTML.
-4. Verify extensionless routes, frontend 404, path traversal rejection, and cache policy on `cbt-vps`.
+1. Commit and push the verified Go static-export serving boundary.
+2. Start Task 0.7: add Goose/sqlc and environment skeleton without business schema.
+3. Keep `DATABASE_URL` backend-only and all examples free of real credentials.
+4. Verify sqlc configuration and environment boundaries on `cbt-vps`.
 5. Real DB, `.env`, bare deploy repo, systemd, port binding, and runtime activation remain out of scope.

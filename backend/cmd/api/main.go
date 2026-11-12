@@ -46,7 +46,7 @@ func run() error {
 
 	server := &http.Server{
 		Addr:              cfg.Address,
-		Handler:           httpapi.NewRouterWithPinger(pinger),
+		Handler:           httpapi.NewRouterWithPingerAndPublicDir(pinger, cfg.PublicDir),
 		ReadHeaderTimeout: 5 * time.Second,
 		ReadTimeout:       15 * time.Second,
 		WriteTimeout:      15 * time.Second,
