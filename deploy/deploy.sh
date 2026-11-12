@@ -117,7 +117,37 @@ preflight() {
   sudo_systemctl show --property=MainPID --value >/dev/null || fail "sudoers must permit systemctl show for $SERVICE_NAME"
   sudo -n ss -H -ltnp "sport = :$APP_PORT" >/dev/null || fail "sudoers must permit ss listener inspection"
   BUILD_ROOT="$(mktemp -d "${TMPDIR:-/tmp}/informatika-deploy.XXXXXX")"
-  GOOSE_DRIVER=postgres GOOSE_DBSTRING="$DB_DSN" timeout 5 goose -dir "$ROOT_DIR/backend/sql/migrations" status >/dev/null || fail "database connectivity and goose status check failed"
+  DB_DSN="$DB_DSN" python3 - <<'PY' || fail "database connectivity check failed"
+import os
+import subprocess
+import urllib.parse
+
+uri = urllib.parse.urlsplit(os.environ["DB_DSN"])
+if uri.scheme not in {"postgres", "postgresql"} or not uri.hostname or not uri.username or not uri.path.strip("/"):
+    raise SystemExit("unsupported PostgreSQL DSN")
+env = os.environ.copy()
+env.update({
+    "PGHOST": uri.hostname,
+    "PGPORT": str(uri.port or 5432),
+    "PGDATABASE": uri.path.lstrip("/"),
+    "PGUSER": urllib.parse.unquote(uri.username),
+    "PGPASSWORD": urllib.parse.unquote(uri.password or ""),
+})
+query = dict(urllib.parse.parse_qsl(uri.query, keep_blank_values=True))
+if "sslmode" in query:
+    env["PGSSLMODE"] = query["sslmode"]
+subprocess.run(
+    ["timeout", "5", "psql", "-X", "-v", "ON_ERROR_STOP=1", "-Atqc", "SELECT 1"],
+    env=env,
+    check=True,
+    stdout=subprocess.DEVNULL,
+)
+PY
+  if find "$ROOT_DIR/backend/sql/migrations" -maxdepth 1 -type f -name '*.sql' -print -quit | grep -q .; then
+    GOOSE_DRIVER=postgres GOOSE_DBSTRING="$DB_DSN" timeout 5 goose -dir "$ROOT_DIR/backend/sql/migrations" status >/dev/null || fail "goose status failed"
+  else
+    log "no Goose migration files yet; connectivity verified"
+  fi
   available_mb="$(df -Pm "$ROOT_DIR" | sed -n '2{s/  */ /g;p}' | cut -d' ' -f4)"
   [[ "$available_mb" =~ ^[0-9]+$ ]] || fail "could not determine free disk space"
   (( available_mb >= MIN_DISK_MB )) || fail "free disk ${available_mb}MB is below ${MIN_DISK_MB}MB"
@@ -190,7 +220,11 @@ deploy_release() {
   install -m 0755 "$BUILD_ROOT/api" "$release_dir/bin/informatika-monitoring-api"
   cp -a "$source_out/." "$release_dir/public/"
   chmod -R a-w "$release_dir"
-  GOOSE_DRIVER=postgres GOOSE_DBSTRING="$DB_DSN" goose -dir "$ROOT_DIR/backend/sql/migrations" up
+  if find "$ROOT_DIR/backend/sql/migrations" -maxdepth 1 -type f -name '*.sql' -print -quit | grep -q .; then
+    GOOSE_DRIVER=postgres GOOSE_DBSTRING="$DB_DSN" goose -dir "$ROOT_DIR/backend/sql/migrations" up
+  else
+    log "no Goose migration files; skipping migration step"
+  fi
   atomic_link "$release_dir/bin" "$BIN_DIR/current"
   atomic_link "$release_dir/public" "$PUBLIC_LINK"
   sudo_systemctl restart
@@ -199,7 +233,11 @@ deploy_release() {
   MUTATION_STARTED=false
   trap - ERR
   log "deployed immutable release $RELEASE_ID; previous release targets retained"
-  GOOSE_DRIVER=postgres GOOSE_DBSTRING="$DB_DSN" goose -dir "$ROOT_DIR/backend/sql/migrations" version || true
+  if find "$ROOT_DIR/backend/sql/migrations" -maxdepth 1 -type f -name '*.sql' -print -quit | grep -q .; then
+    GOOSE_DRIVER=postgres GOOSE_DBSTRING="$DB_DSN" goose -dir "$ROOT_DIR/backend/sql/migrations" version || true
+  else
+    log "Goose version: no migrations"
+  fi
 }
 
 preflight
