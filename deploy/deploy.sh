@@ -230,7 +230,7 @@ deploy_release() {
   atomic_link "$release_dir/public" "$PUBLIC_LINK"
   sudo_systemctl restart
   poll_ready
-  BASE_URL="http://127.0.0.1:$APP_PORT" "$BUILD_ROOT/source/scripts/smoke.sh"
+  BASE_URL="http://127.0.0.1:$APP_PORT" bash "$BUILD_ROOT/source/scripts/smoke.sh"
   MUTATION_STARTED=false
   trap - ERR
   log "deployed immutable release $RELEASE_ID; previous release targets retained"
