@@ -9,6 +9,7 @@ export default function nextConfig(phase: string): NextConfig {
   return {
     output: "export",
     trailingSlash: true,
+    skipTrailingSlashRedirect: true,
     ...(isDevelopment
       ? {
           async rewrites() {

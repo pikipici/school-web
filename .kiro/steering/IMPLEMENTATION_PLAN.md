@@ -201,7 +201,7 @@ test -f out/index.html
 
 **Commit:** `feat(web): add static public foundation`.
 
-### Task 0.5 — Wire typed frontend API client `[ ]`
+### Task 0.5 — Wire typed frontend API client `[x]`
 
 **Objective:** Prove frontend-to-Go contract without embedding business logic in Next.js.
 
@@ -483,10 +483,10 @@ BRANCH=main
 
 ## 8. Current Next Step
 
-**CHECKPOINT AFTER TASK 0.4.**
+**CHECKPOINT AFTER TASK 0.5.**
 
-1. Commit the verified Next.js static public foundation.
-2. Start Task 0.5: wire the typed frontend API client to `GET /api/v1/public/summary`.
-3. Add explicit loading, honest zero, error, and success states without moving business logic into Next.js.
-4. Verify the frontend gates and development rewrite against Go on `cbt-vps`.
+1. Commit the verified typed frontend API client and runtime states.
+2. Start Task 0.6 with RED tests for static export serving from Go.
+3. Keep missing `/api/v1/*` routes as JSON 404 and never fall through to HTML.
+4. Verify extensionless routes, frontend 404, path traversal rejection, and cache policy on `cbt-vps`.
 5. Real DB, `.env`, bare deploy repo, systemd, port binding, and runtime activation remain out of scope.

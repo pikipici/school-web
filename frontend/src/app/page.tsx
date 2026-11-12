@@ -1,5 +1,7 @@
 import Link from "next/link";
 
+import { ProjectSummary } from "@/components/public/ProjectSummary";
+
 const lanes = [
   {
     number: "01",
@@ -72,13 +74,7 @@ export default function Home() {
             ))}
           </ol>
 
-          <div className="empty-state" role="status">
-            <span className="empty-icon" aria-hidden="true">—</span>
-            <div>
-              <h3>Belum ada data kelompok untuk ditampilkan</h3>
-              <p>Daftar monitoring akan muncul setelah guru menyiapkan kelas dan kelompok.</p>
-            </div>
-          </div>
+          <ProjectSummary />
         </section>
       </main>
 

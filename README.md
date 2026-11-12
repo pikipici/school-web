@@ -11,7 +11,7 @@ Website untuk memantau pengumpulan dan evaluasi tugas kelompok Informatika kelas
 
 ## Status
 
-Fase 0 foundation sedang berjalan. Task 0.1–0.4 sudah selesai: repository baseline, Go HTTP/readiness foundation, dan Next.js static public foundation. Dokumen sumber:
+Fase 0 foundation sedang berjalan. Task 0.1–0.5 sudah selesai: repository baseline, Go HTTP/readiness foundation, Next.js static public foundation, dan typed public-summary client. Dokumen sumber:
 
 - `PLAN.md` — spesifikasi produk dan arsitektur.
 - `DESIGN.md` — arah visual dan accessibility.
