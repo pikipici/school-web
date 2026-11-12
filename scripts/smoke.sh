@@ -21,7 +21,7 @@ index = (root / "index.html").read_text(encoding="utf-8")
 
 assert health == {"status": "ok"}, health
 assert ready == {"status": "ok", "database": "ok"}, ready
-assert "Monitoring Tugas" in index, "frontend marker not found"
+assert "Papan Progres Informatika" in index, "frontend marker not found"
 PY
 
 printf '[smoke] health, readiness, and frontend marker: PASS\n'
