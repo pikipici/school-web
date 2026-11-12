@@ -18,6 +18,7 @@ import (
 	"golang.org/x/term"
 
 	"github.com/pikipici/informatika-monitoring/backend/internal/adminctl"
+	"github.com/pikipici/informatika-monitoring/backend/internal/audit"
 	"github.com/pikipici/informatika-monitoring/backend/internal/auth/password"
 	"github.com/pikipici/informatika-monitoring/backend/internal/auth/session"
 	"github.com/pikipici/informatika-monitoring/backend/internal/auth/users"
@@ -68,6 +69,7 @@ func run() int {
 		Users:    users.New(pool, nil),
 		Sessions: session.New(pool, session.Options{}),
 		Hasher:   hasher,
+		Audit:    audit.New(pool, nil),
 	})
 }
 

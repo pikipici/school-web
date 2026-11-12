@@ -11,6 +11,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/pikipici/informatika-monitoring/backend/internal/adminctl"
+	"github.com/pikipici/informatika-monitoring/backend/internal/audit"
 	"github.com/pikipici/informatika-monitoring/backend/internal/auth/password"
 	"github.com/pikipici/informatika-monitoring/backend/internal/auth/session"
 	"github.com/pikipici/informatika-monitoring/backend/internal/auth/users"
@@ -42,6 +43,7 @@ func newFixture(t *testing.T) *fixture {
 			Users:    users.New(pool, nil),
 			Sessions: session.New(pool, session.Options{}),
 			Hasher:   hasher,
+			Audit:    audit.New(pool, nil),
 		},
 	}
 }
@@ -342,5 +344,74 @@ func TestOversizedStdinIsRejected(t *testing.T) {
 	}
 	if f.userCount() != 0 {
 		t.Fatal("user created from oversized input")
+	}
+}
+
+type auditRow struct {
+	actor   *int64
+	action  string
+	outcome string
+	detail  string
+}
+
+func (f *fixture) auditRows() []auditRow {
+	f.t.Helper()
+	r, err := f.pool.Query(f.ctx(), "select actor_user_id, action, outcome, detail::text from audit_log order by id")
+	if err != nil {
+		f.t.Fatal(err)
+	}
+	defer r.Close()
+	var out []auditRow
+	for r.Next() {
+		var x auditRow
+		if err := r.Scan(&x.actor, &x.action, &x.outcome, &x.detail); err != nil {
+			f.t.Fatal(err)
+		}
+		out = append(out, x)
+	}
+	return out
+}
+
+func TestAccountChangesAreAudited(t *testing.T) {
+	f := newFixture(t)
+
+	f.run(goodPassword+"\n", "create-admin", "--username", "fikri", "--password-stdin")   // success
+	f.run(goodPassword+"\n", "create-admin", "--username", "guru2", "--password-stdin")   // failure: admin exists
+	f.run(newPassword+"\n", "reset-password", "--username", "fikri", "--password-stdin")  // success
+	f.run(newPassword+"\n", "reset-password", "--username", "nobody", "--password-stdin") // failure: not found
+	f.run("short\n", "reset-password", "--username", "fikri", "--password-stdin")         // rejected input: nothing changed, nothing audited
+	f.run("", "create-admin", "--username", "fikri", "--password", "x")                   // usage error: not audited
+
+	want := []struct {
+		action, outcome string
+		hasActor        bool
+	}{
+		{"admin.created", "success", true},
+		{"admin.created", "failure", false},
+		{"admin.password_reset", "success", true},
+		{"admin.password_reset", "failure", false},
+	}
+	got := f.auditRows()
+	if len(got) != len(want) {
+		t.Fatalf("audit rows = %d (%+v); want %d", len(got), got, len(want))
+	}
+	for i, w := range want {
+		g := got[i]
+		if g.action != w.action || g.outcome != w.outcome || (g.actor != nil) != w.hasActor {
+			t.Errorf("row %d = %+v; want %+v", i, g, w)
+		}
+		if !strings.Contains(g.detail, `"via": "cli"`) {
+			t.Errorf("row %d detail %q should mark the CLI as the source", i, g.detail)
+		}
+	}
+
+	var dump string
+	if err := f.pool.QueryRow(f.ctx(), "select string_agg(detail::text, ' ') from audit_log").Scan(&dump); err != nil {
+		t.Fatal(err)
+	}
+	for _, secret := range []string{goodPassword, newPassword, "argon2"} {
+		if strings.Contains(dump, secret) {
+			t.Fatalf("audit table contains secret material %q", secret)
+		}
 	}
 }

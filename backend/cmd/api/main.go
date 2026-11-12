@@ -12,6 +12,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/pikipici/informatika-monitoring/backend/internal/audit"
 	"github.com/pikipici/informatika-monitoring/backend/internal/auth/password"
 	"github.com/pikipici/informatika-monitoring/backend/internal/auth/ratelimit"
 	"github.com/pikipici/informatika-monitoring/backend/internal/auth/session"
@@ -60,6 +61,7 @@ func run() error {
 			Hasher:       hasher,
 			Gate:         ratelimit.NewGate(2),
 			SecureCookie: cfg.AdminCookieSecure,
+			Audit:        audit.New(pool, nil),
 		})
 		go purgeSessions(ctx, sessions)
 	}

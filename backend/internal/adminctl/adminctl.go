@@ -12,6 +12,7 @@ import (
 	"io"
 	"strings"
 
+	"github.com/pikipici/informatika-monitoring/backend/internal/audit"
 	"github.com/pikipici/informatika-monitoring/backend/internal/auth/password"
 	"github.com/pikipici/informatika-monitoring/backend/internal/auth/session"
 	"github.com/pikipici/informatika-monitoring/backend/internal/auth/users"
@@ -40,6 +41,18 @@ type Deps struct {
 	Users    *users.Store
 	Sessions *session.Service
 	Hasher   *password.Hasher
+	// Audit is optional; when set, account changes are written to the audit log.
+	Audit audit.Recorder
+}
+
+func (d Deps) record(ctx context.Context, e audit.Event) {
+	if d.Audit != nil {
+		if e.Detail == nil {
+			e.Detail = map[string]string{}
+		}
+		e.Detail["via"] = "cli"
+		d.Audit.Record(ctx, e)
+	}
 }
 
 const usage = `adminctl - kelola akun admin di server
@@ -119,14 +132,17 @@ func createAdmin(ctx context.Context, args []string, s Streams, d Deps) int {
 		fmt.Fprintln(s.Stderr, "gagal membuat hash kata sandi")
 		return exitFailure
 	}
-	if _, err := d.Users.CreateFirstAdmin(ctx, o.username, hash); err != nil {
+	id, err := d.Users.CreateFirstAdmin(ctx, o.username, hash)
+	if err != nil {
 		if errors.Is(err, users.ErrAdminExists) {
+			d.record(ctx, audit.Event{Action: "admin.created", Outcome: "failure", Detail: map[string]string{"username": o.username, "reason": "admin_exists"}})
 			fmt.Fprintln(s.Stderr, "akun admin sudah ada; gunakan reset-password untuk mengganti kata sandi")
 			return exitFailure
 		}
 		fmt.Fprintln(s.Stderr, "gagal menyimpan akun admin; periksa koneksi database")
 		return exitFailure
 	}
+	d.record(ctx, audit.Event{Action: "admin.created", Outcome: "success", UserID: &id, Detail: map[string]string{"username": o.username}})
 	fmt.Fprintf(s.Stdout, "Admin %q dibuat.\n", o.username)
 	return exitOK
 }
@@ -143,6 +159,7 @@ func resetPassword(ctx context.Context, args []string, s Streams, d Deps) int {
 
 	user, err := d.Users.FindByUsername(ctx, o.username)
 	if errors.Is(err, users.ErrNotFound) {
+		d.record(ctx, audit.Event{Action: "admin.password_reset", Outcome: "failure", Detail: map[string]string{"username": o.username, "reason": "not_found"}})
 		fmt.Fprintln(s.Stderr, "akun tidak ditemukan")
 		return exitFailure
 	}
@@ -173,6 +190,8 @@ func resetPassword(ctx context.Context, args []string, s Streams, d Deps) int {
 		fmt.Fprintln(s.Stderr, "kata sandi sudah diganti, tetapi sesi lama GAGAL diakhiri; jalankan perintah ini lagi")
 		return exitFailure
 	}
+	uid := user.ID
+	d.record(ctx, audit.Event{Action: "admin.password_reset", Outcome: "success", UserID: &uid, Detail: map[string]string{"username": o.username}})
 	fmt.Fprintf(s.Stdout, "Kata sandi %q diganti dan semua sesi diakhiri.\n", o.username)
 	return exitOK
 }

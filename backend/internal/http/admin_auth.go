@@ -17,6 +17,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/pikipici/informatika-monitoring/backend/internal/audit"
 	"github.com/pikipici/informatika-monitoring/backend/internal/auth/password"
 	"github.com/pikipici/informatika-monitoring/backend/internal/auth/ratelimit"
 	"github.com/pikipici/informatika-monitoring/backend/internal/auth/session"
@@ -36,20 +37,11 @@ const (
 // never be persisted.
 var validUsername = regexp.MustCompile(`^[a-z0-9._-]{3,32}$`)
 
-// AuditEvent describes one security-relevant action. Detail must never hold
-// passwords, tokens, or other free-form user input.
-type AuditEvent struct {
-	Action  string
-	Outcome string // "success" or "failure"
-	UserID  *int64
-	IP      string
-	Detail  map[string]string
-}
-
-// AuditRecorder persists audit events. Implementations must not fail the request.
-type AuditRecorder interface {
-	Record(ctx context.Context, e AuditEvent)
-}
+// AuditEvent and AuditRecorder are the audit package's types; handlers report to them.
+type (
+	AuditEvent    = audit.Event
+	AuditRecorder = audit.Recorder
+)
 
 // AdminAuthConfig wires the admin authentication handlers.
 type AdminAuthConfig struct {

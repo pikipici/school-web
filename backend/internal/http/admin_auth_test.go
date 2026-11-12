@@ -13,6 +13,7 @@ import (
 
 	"github.com/jackc/pgx/v5/pgxpool"
 
+	"github.com/pikipici/informatika-monitoring/backend/internal/audit"
 	"github.com/pikipici/informatika-monitoring/backend/internal/auth/password"
 	"github.com/pikipici/informatika-monitoring/backend/internal/auth/ratelimit"
 	"github.com/pikipici/informatika-monitoring/backend/internal/auth/session"
@@ -70,6 +71,7 @@ type fixtureOpts struct {
 	hashWait     time.Duration
 	storedHasher *password.Hasher // hasher used to create the stored hash
 	loginHasher  *password.Hasher // hasher configured on the handler
+	persistAudit bool             // write audit events to the audit_log table instead of the in-memory recorder
 }
 
 func cheapParams() password.Params {
@@ -115,7 +117,11 @@ func newFixture(t *testing.T, o fixtureOpts) *fixture {
 		t.Fatal(err)
 	}
 
-	audit := &recorder{}
+	rec := &recorder{}
+	var sink httpapi.AuditRecorder = rec
+	if o.persistAudit {
+		sink = audit.New(pool, clk.Now)
+	}
 	auth := httpapi.NewAdminAuth(httpapi.AdminAuthConfig{
 		Users:        users.New(pool, clk.Now),
 		Sessions:     session.New(pool, session.Options{Now: clk.Now}),
@@ -124,7 +130,7 @@ func newFixture(t *testing.T, o fixtureOpts) *fixture {
 		Gate:         o.gate,
 		HashWait:     o.hashWait,
 		SecureCookie: o.secure,
-		Audit:        audit,
+		Audit:        sink,
 	})
 	o2 := origin
 	if o.secure {
@@ -132,7 +138,7 @@ func newFixture(t *testing.T, o fixtureOpts) *fixture {
 	}
 	return &fixture{
 		origin: o2,
-		t:      t, pool: pool, clk: clk, hasher: o.loginHasher, auth: auth, audit: audit, userID: uid,
+		t:      t, pool: pool, clk: clk, hasher: o.loginHasher, auth: auth, audit: rec, userID: uid,
 		handler: httpapi.NewRouterWithDeps(httpapi.Deps{Admin: auth}),
 	}
 }
@@ -670,6 +676,67 @@ func TestAuditEvents(t *testing.T) {
 			if strings.Contains(strings.ToLower(v), "hunter2") || strings.Contains(v, goodPassword) || strings.Contains(v, "wrong-password") {
 				t.Fatalf("audit detail %q leaks input: %q", k, v)
 			}
+		}
+	}
+}
+
+func TestAuditTrailIsPersistedWithoutSecrets(t *testing.T) {
+	f := newFixture(t, fixtureOpts{persistAudit: true})
+
+	f.login("fikri", "wrong-password-value")
+	f.login("Hunter2 secret pass!", "whatever-else")
+	rec := f.login("fikri", goodPassword)
+	cookie := sessionCookie(t, rec)
+	csrf := decode[authData](t, rec).Data.CSRFToken
+	f.do(req{method: "POST", path: logoutPath, cookie: cookie, origin: origin, csrf: csrf})
+
+	rows, err := f.pool.Query(context.Background(),
+		"select action, outcome, actor_user_id, host(ip) from audit_log order by id")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer rows.Close()
+	type got struct {
+		action, outcome string
+		actor           *int64
+		ip              *string
+	}
+	var all []got
+	for rows.Next() {
+		var g got
+		if err := rows.Scan(&g.action, &g.outcome, &g.actor, &g.ip); err != nil {
+			t.Fatal(err)
+		}
+		all = append(all, g)
+	}
+	wantActions := []string{"auth.login", "auth.login", "auth.login", "auth.logout"}
+	wantOutcomes := []string{"failure", "failure", "success", "success"}
+	if len(all) != 4 {
+		t.Fatalf("audit rows = %d (%+v); want 4", len(all), all)
+	}
+	for i := range all {
+		if all[i].action != wantActions[i] || all[i].outcome != wantOutcomes[i] {
+			t.Errorf("row %d = %s/%s; want %s/%s", i, all[i].action, all[i].outcome, wantActions[i], wantOutcomes[i])
+		}
+		if all[i].ip == nil || *all[i].ip != "203.0.113.7" {
+			t.Errorf("row %d ip = %v; want 203.0.113.7", i, all[i].ip)
+		}
+	}
+	if all[2].actor == nil || *all[2].actor != f.userID || all[3].actor == nil || *all[3].actor != f.userID {
+		t.Error("successful login/logout must record the actor")
+	}
+	if all[0].actor != nil || all[1].actor != nil {
+		t.Error("failed logins must not claim an actor")
+	}
+
+	var dump string
+	if err := f.pool.QueryRow(context.Background(),
+		"select string_agg(a::text, ' ') from audit_log a").Scan(&dump); err != nil {
+		t.Fatal(err)
+	}
+	for _, secret := range []string{goodPassword, "wrong-password-value", "whatever-else", "Hunter2", "argon2", cookie.Value, csrf} {
+		if strings.Contains(dump, secret) {
+			t.Fatalf("audit table contains %q", secret)
 		}
 	}
 }

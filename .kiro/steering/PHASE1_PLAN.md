@@ -69,7 +69,7 @@ Waktu disimpan UTC, ditampilkan WIB.
 | 1.5 **DONE** | Batas percobaan login | TDD: kunci, pulih, per IP dan per akun |
 | 1.6 **DONE** | Handler login/logout/me + middleware auth dan CSRF | TDD HTTP: 401, 403 CSRF, cookie flag |
 | 1.7 **DONE** | CLI `adminctl` (buat, reset sandi) | Uji; sandi dari prompt atau stdin, tidak lewat argumen |
-| 1.8 | Audit log pada login/logout | Uji: tidak ada rahasia di log |
+| 1.8 **DONE** | Audit log pada login/logout | Uji: tidak ada rahasia di log |
 | 1.9 | Frontend `/admin/login` dan `/admin` | lint, typecheck, build; keadaan loading/error/sukses |
 | 1.10 | Deploy: cadangan `pg_dump` sebelum migrasi, migrasi pertama, smoke baru | `deploy --check`, lalu deploy |
 | 1.11 | Gerbang penutupan + `docs/F1_ACCEPTANCE.md` | Semua gate, cek browser nyata |
@@ -155,3 +155,7 @@ o non-test Go files. GREEN di cbt-vps: 3 uji lulus (validasi DSN, koneksi, reset
 - **Untuk Task 1.10:** skrip deploy saat ini hanya membangun `cmd/api`; harus ikut membangun `adminctl` ke direktori rilis (`bin/adminctl`) dan runbook menjelaskan cara pakai: `set -a; . /home/ubuntu/informatika-monitoring/.env; set +a; bin/current/adminctl create-admin --username fikri`. Pembuatan akun admin dilakukan setelah migrasi produksi pertama.
 - Batas diketahui: dua `create-admin` yang benar-benar serentak dengan username berbeda bisa lolos keduanya (kecil kemungkinannya; operasi manual oleh satu operator).
 - Audit CLI (`admin.created`, `admin.password_reset`) ditambahkan di Task 1.8 bersama penyimpan `audit_log`.
+- **Task 1.8 selesai (13 Nov 2026).** RED: `no non-test Go files`. GREEN di `cbt-vps` dengan database uji nyata: 7 uji `audit` + 1 uji persistensi HTTP + 1 uji audit CLI; seluruh suite lulus 2 kali dan dengan `-race`; vet/build/gofmt/sqlc hijau. Uji mutan (`Record` dijadikan no-op) membuat tepat dua uji audit gagal, jadi uji menjaga perilaku sebenarnya.
+- `internal/audit.Store.Record` tidak pernah menggagalkan pemanggil (kegagalan hanya dicatat tanpa isi event); tetap menulis walau konteks request sudah dibatalkan; event cacat (aksi/hasil di luar format) dibuang; IP tak valid menjadi NULL tanpa membuang event; kunci detail yang mirip rahasia (password, token, secret, cookie, hash, csrf, authorization, credential, api key) dibuang apa pun yang dikirim pemanggil; maksimal 10 kunci, nilai maksimal 200 byte. Tipe audit di `httpapi` kini alias ke paket `audit`.
+- Peristiwa yang tercatat: `auth.login` (sukses/gagal), `auth.login_blocked`, `auth.logout`, `admin.created` (sukses/gagal karena admin sudah ada), `admin.password_reset` (sukses/gagal karena akun tak ditemukan) dengan `via=cli` untuk CLI. Input yang ditolak sebelum mengubah apa pun (sandi lemah, salah pakai) tidak dicatat. Terbukti tidak ada sandi, hash, token sesi, token CSRF, atau salah ketik username di tabel.
+- Terpasang di `cmd/api` dan `cmd/adminctl`.
