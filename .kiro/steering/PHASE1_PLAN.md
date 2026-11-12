@@ -87,7 +87,12 @@ Setiap task: uji gagal dulu (RED), lalu implementasi, lalu go test/vet/build di 
 ## Keputusan user (13 Nov 2026)
 
 1. **Domain**: `fikriramaaulia.online`. Cek DNS (hanya baca): domain ini memakai Cloudflare (IP `104.21.15.63`, `172.67.161.194`) dan **belum menunjuk ke VPS** (`43.134.111.212`). Port 80/443 di VPS bebas; Caddy/Nginx belum terpasang; `sudo` tanpa sandi tersedia.
-2. Username, masa sesi, dan 2FA: **belum dijawab**.
+2. **Alamat web**: apex `fikriramaaulia.online` langsung.
+3. **Username admin**: `fikri`.
+4. **Masa sesi**: idle 30 menit, maksimal 12 jam (disetujui).
+5. **2FA (TOTP)**: ditunda ke fase berikutnya.
+
+Catatan: apex saat ini masih lewat Cloudflare dan belum menunjuk ke VPS. Mengubahnya ke VPS akan mengganti apa pun yang tampil di alamat itu sekarang; user yang mengubah DNS (H2).
 
 ### Rencana HTTPS (perlu persetujuan sebelum menyentuh VPS atau DNS)
 
@@ -104,11 +109,9 @@ Selama H1–H6 belum selesai, `/admin` tidak boleh dibuka ke publik; akses admin
 
 ## Keputusan yang masih saya butuhkan dari user
 
+Semua keputusan rencana sudah dijawab. Yang tersisa: persetujuan memulai Task 1.1, serta H2–H4 (DNS, mode Cloudflare, firewall) oleh user.
 
-1. **Domain dan HTTPS**: punya domain? Disarankan Caddy (HTTPS otomatis) di depan port 8300. Tanpa itu, admin hanya via tunnel SSH.
-2. **Username admin**: apa yang dipakai?
-3. **Masa sesi**: setuju idle 30 menit dan maksimal 12 jam?
-4. **2FA (TOTP)**: ditambahkan sekarang, atau Fase berikutnya? Usulan saya: berikutnya.
+
 
 ## Gerbang selesai Fase 1
 
