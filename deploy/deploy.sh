@@ -194,7 +194,8 @@ preflight() {
   BUILD_ROOT="$(mktemp -d "${TMPDIR:-/tmp}/informatika-deploy.XXXXXX")"
   with_pg_env timeout 5 psql -X -v ON_ERROR_STOP=1 -Atqc "SELECT 1" >/dev/null || fail "database connectivity check failed"
   if find "$ROOT_DIR/backend/sql/migrations" -maxdepth 1 -type f -name '*.sql' -print -quit | grep -q .; then
-    GOOSE_DRIVER=postgres GOOSE_DBSTRING="$DB_DSN" timeout 5 goose -dir "$ROOT_DIR/backend/sql/migrations" status >/dev/null || fail "goose status failed"
+    # `goose status` would create the goose_db_version table, so a check-only run must use `validate`, which never connects.
+    timeout 10 goose -dir "$ROOT_DIR/backend/sql/migrations" validate >/dev/null || fail "goose validate failed"
   else
     log "no Goose migration files yet; connectivity verified"
   fi
