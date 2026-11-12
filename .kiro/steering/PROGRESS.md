@@ -11,7 +11,7 @@
 - Task terakhir selesai: **0.7 — Goose/sqlc/environment skeleton**
 - Next task: **0.8 — OpenAPI dan Makefile**
 - Local branch: `main`
-- Local HEAD: `95609ab`
+- Local HEAD: `45f03b4`
 - Working tree: bersih saat status ini dibuat
 - Runtime aplikasi: **belum diaktifkan**
 - Real database: **belum dibuat**
@@ -32,10 +32,10 @@
 | 0.1 | Repository hygiene | DONE | `31d11c8` | Git `main`, ignore rules, DESIGN lint, diff check |
 | 0.2 | Go router foundation | DONE | `258bf9a` | RED tercatat; targeted/full tests, vet, build PASS; independent review PASS |
 | 0.3 | PostgreSQL readiness boundary | DONE | `95609ab` | RED tercatat; fake-Pinger tests, full tests, vet, build PASS; final independent review PASS |
-| 0.4 | Next.js static frontend | DONE | task commit | npm ci, lint, typecheck, static build, out/index.html, production audit PASS; independent review PASS |
-| 0.5 | Typed frontend API client | DONE | task commit | lint, typecheck, static build, production audit, and real Go-through-Next rewrite smoke PASS; independent review PASS |
-| 0.6 | Go static export serving | DONE | task commit | strict RED; targeted/full tests, vet, build, real-binary static smoke PASS; independent security review blockers fixed |
-| 0.7 | Goose/sqlc/environment skeleton | DONE | task commit | sqlc v1.29 compile/generate, Go tests/vet/build PASS; environment boundary review PASS; Compose static review only (Docker unavailable) |
+| 0.4 | Next.js static frontend | DONE | `fe684f1` | npm ci, lint, typecheck, static build, out/index.html, production audit PASS; independent review PASS |
+| 0.5 | Typed frontend API client | DONE | `b0c4aee` | lint, typecheck, static build, production audit, and real Go-through-Next rewrite smoke PASS; independent review PASS |
+| 0.6 | Go static export serving | DONE | `700762a` | strict RED; targeted/full tests, vet, build, real-binary static smoke PASS; independent security review blockers fixed |
+| 0.7 | Goose/sqlc/environment skeleton | DONE | `45f03b4` | sqlc v1.29 compile/generate, Go tests/vet/build PASS; environment boundary review PASS; Compose static review only (Docker unavailable) |
 | 0.8 | OpenAPI dan Makefile | PENDING | — | Belum dimulai |
 | 0.9 | Hardened LMS-style deploy script | PENDING | — | Belum dimulai |
 | 0.10 | Provision `cbt-vps` runtime workspace | PENDING APPROVAL | — | DB, `.env`, bare repo, systemd, dan port belum dibuat |
@@ -143,6 +143,123 @@ Commit:
 95609ab feat(api): add PostgreSQL readiness boundary
 ```
 
+### Task 0.4 — Next.js static frontend
+
+Implemented:
+
+- Next.js App Router + TypeScript + Tailwind dengan `output: "export"`.
+- Fondasi UI publik sesuai `DESIGN.md`, termasuk peringatan pembaruan manual dan tiga jalur status terpisah.
+- Responsive/accessibility baseline, font lokal, metadata Bahasa Indonesia, serta honest empty state tanpa data/KPI palsu.
+
+Remote verification:
+
+```text
+npm ci                  PASS
+npm run lint            PASS
+npm run typecheck       PASS
+npm run build           PASS
+out/index.html          PRESENT
+npm audit --omit=dev    0 vulnerability
+independent review      PASS, no blocker
+```
+
+Commit:
+
+```text
+fe684f1 feat(web): add static public foundation
+```
+
+### Task 0.5 — Typed frontend API client
+
+Implemented:
+
+- Typed relative client untuk `GET /api/v1/public/summary`.
+- Defensive response validation.
+- Accessible loading, error + retry, honest zero, dan success states.
+- Development rewrite ke Go tanpa memindahkan business logic ke Next.js.
+
+Remote verification:
+
+```text
+npm ci / lint / typecheck / build        PASS
+production dependency audit              PASS, 0 vulnerability
+real Go-through-Next rewrite smoke        PASS
+independent review                        PASS, no blocker
+```
+
+Commit:
+
+```text
+b0c4aee feat(web): connect public summary to Go API
+```
+
+### Task 0.6 — Go static export serving
+
+Strict TDD RED:
+
+```text
+internal/web: no non-test Go files
+undefined: httpapi.NewRouterWithPublicDir
+```
+
+Implemented:
+
+- Root, extensionless `.html`, directory-index fallback, dan custom frontend 404.
+- API namespace tetap JSON, termasuk encoded/double-encoded path.
+- Traversal dan stable symlink escape protection.
+- GET/HEAD/range/metadata semantics melalui `http.ServeContent`.
+- HTML `no-store`, hashed `/_next/static` immutable, aset lain `no-cache`.
+- Portable MIME mapping dan `PUBLIC_DIR` runtime wiring.
+
+Review loop:
+
+1. Review menemukan symlink escape, open-after-status, API boundary, cache, dan MIME gaps.
+2. Seluruh blocker direproduksi dengan RED tests lalu diperbaiki.
+3. Regression test memastikan encoded API 404 menghasilkan JSON valid.
+
+Remote verification:
+
+```text
+go test ./internal/web ./internal/http ./internal/config -count=1  PASS
+go test ./... -count=1                                        PASS
+go vet ./...                                                  PASS
+go build ./cmd/api                                            PASS
+real binary + actual Next out static smoke                    PASS
+```
+
+Commit:
+
+```text
+700762a feat(api): serve exported frontend routes
+```
+
+### Task 0.7 — Goose/sqlc/environment skeleton
+
+Implemented:
+
+- Deterministic `sqlc.yaml`, migration/query directories, dan infrastructure-only connectivity query.
+- Root/backend/frontend environment examples tanpa real credentials.
+- `DATABASE_URL` tetap backend-only.
+- Optional local PostgreSQL Compose dengan loopback binding dan app role non-superuser.
+- Generated sqlc output diarahkan ke ignored `backend/internal/dbsql/`.
+
+Remote verification:
+
+```text
+sqlc v1.29 compile/generate  PASS
+go test ./...                PASS
+go vet ./...                 PASS
+go build ./...               PASS
+independent review           PASS, no blocker
+docker compose runtime       NOT RUN — Docker unavailable on cbt-vps
+```
+
+Commit:
+
+```text
+45f03b4 chore(db): add PostgreSQL tooling baseline
+```
+
 ## VPS State
 
 Target:
@@ -187,7 +304,8 @@ Available in source:
   - `totalGroups: 0`
   - `manualUpdate: true`
   - `updatedAt: null`
-- Unknown routes return safe JSON `404`.
+- Unknown API routes return safe JSON `404`.
+- Go serves the exported Next.js frontend with extensionless routing, frontend 404, safe cache policy, and traversal protection.
 
 Not available yet:
 
@@ -196,7 +314,6 @@ Not available yet:
 - Classes/groups CRUD.
 - Real monitoring data.
 - Group portal.
-- Static frontend serving.
 - Deployed runtime.
 
 ## Safety and Scope Status
@@ -215,7 +332,8 @@ Still enforced:
 
 1. Real PostgreSQL smoke waits for Task 0.10 provisioning approval.
 2. Runtime activation waits for Task 0.10.
-3. Public hostname/HTTPS cutover is not yet decided and is not needed for Tasks 0.6–0.9.
+3. Docker is unavailable on `cbt-vps`; optional local Compose has static review only and is not required for Tasks 0.8–0.9.
+4. Public hostname/HTTPS cutover is not yet decided and is not needed for Tasks 0.8–0.9.
 
 ## Current Next Step
 
