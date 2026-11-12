@@ -52,7 +52,7 @@
 
 ## Phase tracker
 
-- [~] Fase 0 — Foundation
+- [x] Fase 0 — Foundation (ditutup 13 Nov 2026 dengan pengecualian)
   - [x] 0.1 Repository hygiene
   - [x] 0.2 Go router foundation
   - [x] 0.3 PostgreSQL readiness
@@ -64,7 +64,7 @@
   - [x] 0.9 Hardened deploy script
   - [x] 0.10 VPS provisioning
   - [x] 0.11 Remote deployment/smoke
-  - [ ] 0.12 Delivery Gate
+  - [x] 0.12 Delivery Gate (pengecualian: cek browser nyata belum)
 - [ ] Fase 1 — Database + admin authentication
 
 ## Commands
@@ -93,4 +93,4 @@ npm run build
 
 ## Current next step
 
-Record Task 0.10–0.11 completion evidence, then execute Task 0.12 Antislop Delivery Gate and create `docs/F0_ACCEPTANCE.md`. Do not enter Fase 1 until the gate passes and the user approves the phase checkpoint.
+Fase 0 ditutup. Web pribadi (Pengumuman, Materi, Progres Tugas) ter-deploy di `cbt-vps` commit `8300336`. Menunggu approval user untuk Fase 1 (database + login admin) dan keputusan aturan lampiran Materi.

@@ -412,7 +412,7 @@ BRANCH=main
 
 **Commit:** `docs: record Fase 0 deployment evidence` if an evidence document is added.
 
-### Task 0.12 — Antislop Delivery Gate and phase close `[ ]`
+### Task 0.12 — Antislop Delivery Gate and phase close `[x]`
 
 **Objective:** Close Fase 0 only after functionality, design, accessibility, and deployment truth are verified.
 
@@ -448,17 +448,17 @@ BRANCH=main
 
 ## 5. Fase 0 Completion Gate
 
-- [ ] Repository initialized and clean.
-- [ ] Go service test/vet/build green.
-- [ ] Next.js lint/typecheck/static build green.
-- [ ] API and static frontend served from one Go binary.
-- [ ] `/healthz` and `/readyz` semantics verified.
-- [ ] PostgreSQL workspace isolated.
-- [ ] Goose/sqlc/OpenAPI baseline valid.
-- [ ] Hardened deploy script proves rollback-ready path.
-- [ ] `cbt-vps` deployed HEAD, systemd, migration, health, readiness, and frontend marker verified.
-- [ ] Antislop Delivery Gate PASS.
-- [ ] No Fase 1 business/auth work leaked into foundation.
+- [x] Repository initialized and clean.
+- [x] Go service test/vet/build green.
+- [x] Next.js lint/typecheck/static build green.
+- [x] API and static frontend served from one Go binary.
+- [x] `/healthz` and `/readyz` semantics verified.
+- [x] PostgreSQL workspace isolated.
+- [x] Goose/sqlc/OpenAPI baseline valid.
+- [x] Hardened deploy script proves rollback-ready path.
+- [x] `cbt-vps` deployed HEAD, systemd, migration, health, readiness, and frontend marker verified.
+- [x] Antislop Delivery Gate: otomatis PASS; cek browser nyata TIDAK diverifikasi (ditutup dengan pengecualian, lihat `docs/F0_ACCEPTANCE.md`).
+- [x] No Fase 1 business/auth work leaked into foundation.
 - [ ] User approves moving to Fase 1.
 
 ## 6. Risks and Mitigations

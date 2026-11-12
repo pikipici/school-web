@@ -2,7 +2,7 @@
 
 > Tanggal: 13 November 2026. Deployed HEAD di `cbt-vps`: `e779d36` (commit setelahnya hanya dokumen).
 >
-> **Verdict: BELUM LULUS PENUH — 1 gate manual terbuka (pemeriksaan browser nyata).** Semua gate otomatis dan kontrak PASS.
+> **Verdict: DITUTUP DENGAN PENGECUALIAN (instruksi user, 13 Nov 2026).** Semua gate otomatis dan kontrak PASS. Cek browser nyata belum dilakukan dan dicatat sebagai risiko terbuka, bukan PASS.
 
 ## Block A — Hard gate
 
@@ -81,4 +81,11 @@ Catatan tidak kritis: Tailwind memberi peringatan "No utility classes detected" 
 
 ## Keputusan penutupan
 
-Fase 0 **belum ditutup**. Tutup setelah item 1 PASS dan item 2–3 diputuskan.
+User menginstruksikan penutupan Fase 0 pada 13 Nov 2026 setelah redesign web pribadi ter-deploy (commit `8300336`, release `20261112T204643Z-830033683d94`, smoke PASS, `/` dan `/progres/` 200).
+
+Ditutup dengan pengecualian yang tercatat:
+
+- Gate browser nyata (360px, menengah, desktop, zoom 200%, keyboard): **tidak diverifikasi**. Wajib dilakukan sebelum Fase 1 dianggap menyentuh UI lagi.
+- 7 advisory npm moderate (dev-only): diterima sementara, ditinjau ulang di Fase 1.
+- Garis `--line` sudah digelapkan ke 3.64:1 (lulus 3:1) pada redesign.
+- Fase 1 menunggu persetujuan eksplisit user.
