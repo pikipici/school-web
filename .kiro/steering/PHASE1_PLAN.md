@@ -71,7 +71,7 @@ Waktu disimpan UTC, ditampilkan WIB.
 | 1.7 **DONE** | CLI `adminctl` (buat, reset sandi) | Uji; sandi dari prompt atau stdin, tidak lewat argumen |
 | 1.8 **DONE** | Audit log pada login/logout | Uji: tidak ada rahasia di log |
 | 1.9 **DONE** | Frontend `/admin/login` dan `/admin` | lint, typecheck, build; keadaan loading/error/sukses |
-| 1.10 **PERSIAPAN SELESAI, DEPLOY BELUM** | Deploy: cadangan `pg_dump` sebelum migrasi, migrasi pertama, smoke baru | `deploy --check`, lalu deploy |
+| 1.10 **DONE** | Deploy: cadangan `pg_dump` sebelum migrasi, migrasi pertama, smoke baru | `deploy --check`, lalu deploy |
 | 1.11 | Gerbang penutupan + `docs/F1_ACCEPTANCE.md` | Semua gate, cek browser nyata |
 
 Setiap task: uji gagal dulu (RED), lalu implementasi, lalu go test/vet/build di VPS, lalu commit.
@@ -173,3 +173,5 @@ o non-test Go files. GREEN di cbt-vps: 3 uji lulus (validasi DSN, koneksi, reset
   - **Bukti ``--check`` di salinan klon sementara di ``cbt-vps`` (commit 0695ffa, cabang ``phase1-deploy-prep``):** exit 0; 11 paket Go lulus tanpa SKIP/FAIL; 33 uji frontend; build; rehearsal cadangan 2664 byte; tabel produksi sebelum dan sesudah identik; layanan tetap pada rilis ``20261112T205548Z-ef9532cfcace``; tidak ada direktori ``backups`` di checkout produksi.
   - **Temuan jujur:** ``--check`` pertama memakai ``goose status``, yang membuat tabel ``goose_db_version`` (1 baris, versi 0) di database produksi. Ini satu-satunya perubahan, tidak berbahaya (``goose up`` akan membuatnya juga), tetapi melanggar janji 'check-only'. Diperbaiki dengan ``goose validate`` (tidak pernah terhubung ke DB); terbukti pada skema uji kosong: 0 tabel terbuat. Tabel ``goose_db_version`` di produksi dibiarkan.
   - Yang belum: deploy nyata (butuh izin), pembuatan akun admin di produksi, ``ADMIN_COOKIE_SECURE`` di ``.env`` produksi tidak perlu diubah selama HTTP.
+- **Task 1.10 — DEPLOY PRODUKSI SELESAI (13 Nov 2026, atas izin eksplisit user).** Commit ``d2e3fca``, rilis ``20261112T232527Z-d2e3fcac4923``. Urutan nyata: semua gerbang lulus (termasuk uji integrasi dengan database uji), cadangan ``backups/pre-20261112T232527Z-d2e3fcac4923.dump`` (2664 byte, 0600) ditulis sebelum mutasi, migrasi 00001–00003 diterapkan (versi 3), tautan diganti atomik, layanan restart, ``/readyz`` ok, smoke baru PASS (halaman publik, formulir login admin, ``/me`` 401 anonim, GET login 405). Tabel produksi kini ``admin_users``, ``admin_sessions``, ``audit_log``, ``goose_db_version``. Log deploy tidak memuat DSN/kata sandi (diperiksa) dan dihapus. ``adminctl`` terpasang di ``bin/current/adminctl``.
+  - **Belum:** akun admin ``fikri`` belum dibuat (butuh user mengetik sandi di terminal server); HTTPS/DNS belum; cek browser nyata.
