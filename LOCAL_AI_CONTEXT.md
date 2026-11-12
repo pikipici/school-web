@@ -42,7 +42,7 @@
 ## Current state
 
 - Fase 0 plan approved for progress on 2026-11-12.
-- Tasks 0.1–0.8 complete: repository baseline, Go HTTP/readiness, Next.js static public foundation/client, secure Go static serving, Goose/sqlc/environment skeleton, OpenAPI, and Makefile verification contract.
+- Tasks 0.1–0.9 complete: repository baseline, Go HTTP/readiness, Next.js static public foundation/client, secure Go static serving, Goose/sqlc/environment skeleton, OpenAPI/Makefile contract, and hardened non-activating deployment tooling.
 - Backend exposes `/healthz`, safe `/readyz`, and honest zero-state `/api/v1/public/summary`; unknown API routes return JSON 404.
 - Readiness uses a fake-Pinger-tested boundary. Without configured DB it honestly returns 503; real PostgreSQL smoke remains pending Task 0.10.
 - GitHub `origin` configured and `main` pushed to `pikipici/school-web`.
@@ -61,7 +61,7 @@
   - [x] 0.6 Go static serving
   - [x] 0.7 Goose/sqlc/env skeleton
   - [x] 0.8 OpenAPI/Makefile
-  - [ ] 0.9 Hardened deploy script
+  - [x] 0.9 Hardened deploy script
   - [ ] 0.10 VPS provisioning
   - [ ] 0.11 Remote deployment/smoke
   - [ ] 0.12 Delivery Gate
@@ -93,4 +93,4 @@ npm run build
 
 ## Current next step
 
-Commit and push Task 0.8, then implement Task 0.9 hardened deploy script, systemd template, deployment documentation, and smoke script without activating runtime. Real DB, `.env`, bare deploy repo, systemd installation, port, and runtime provisioning remain pending Task 0.10.
+Commit and push Task 0.9, then stop at the Task 0.10 approval checkpoint. Real DB, `.env`, bare deploy repo, systemd installation, port 8300, and runtime activation must not be provisioned without explicit approval.

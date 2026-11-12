@@ -320,7 +320,7 @@ cd backend && sqlc compile
 
 **Commit:** `docs: add API and verification contract`.
 
-### Task 0.9 — Create hardened LMS-style deploy script `[ ]`
+### Task 0.9 — Create hardened LMS-style deploy script `[x]`
 
 **Objective:** Adapt the proven LMS deployment pattern without carrying unrelated R2 assumptions.
 
@@ -483,10 +483,10 @@ BRANCH=main
 
 ## 8. Current Next Step
 
-**CHECKPOINT AFTER TASK 0.8.**
+**CHECKPOINT AFTER TASK 0.9.**
 
-1. Commit and push the verified OpenAPI and Makefile contract.
-2. Start Task 0.9: add the hardened deploy script, systemd template, deployment documentation, and smoke script.
-3. Keep Task 0.9 implementation non-activating: no runtime provisioning, restart, or deployment.
-4. Validate shell syntax and safe pre-flight/build/rollback behavior on `cbt-vps` without activating runtime.
-5. Real DB, `.env`, bare deploy repo, systemd installation, port binding, and runtime activation remain pending Task 0.10 approval.
+1. Commit and push the verified hardened deployment tooling.
+2. Stop before Task 0.10 until explicit approval to provision PostgreSQL, `.env`, bare deploy repo, systemd, and port 8300.
+3. On approval, inspect the live VPS state again before any mutation and preserve unexpected state.
+4. Install only the documented least-privilege runtime and sudo boundaries.
+5. Keep public domain/HTTPS cutover out of scope until the baseline runtime smoke is green.

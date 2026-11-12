@@ -11,13 +11,14 @@ Website untuk memantau pengumpulan dan evaluasi tugas kelompok Informatika kelas
 
 ## Status
 
-Fase 0 foundation sedang berjalan. Task 0.1–0.8 sudah selesai: repository baseline, Go HTTP/readiness, Next.js static public foundation/client, static serving dari Go, Goose/sqlc/environment skeleton, serta kontrak OpenAPI dan perintah verifikasi terpadu. Dokumen sumber:
+Fase 0 foundation sedang berjalan. Task 0.1–0.9 sudah selesai: repository baseline, Go HTTP/readiness, Next.js static public foundation/client, static serving dari Go, Goose/sqlc/environment skeleton, kontrak OpenAPI/Makefile, serta hardened deployment tooling yang belum mengaktifkan runtime. Dokumen sumber:
 
 - `PLAN.md` — spesifikasi produk dan arsitektur.
 - `DESIGN.md` — arah visual dan accessibility.
 - `.kiro/steering/IMPLEMENTATION_PLAN.md` — backlog eksekusi Fase 0.
 - `LOCAL_AI_CONTEXT.md` — pointer operasional sesi pengembangan.
 - `docs/openapi.yaml` — kontrak endpoint Go yang sudah tersedia.
+- `docs/DEPLOYMENT.md` — deployment boundary, pre-flight, rollback, dan smoke runbook.
 
 ## Kontrak API fondasi
 
@@ -45,4 +46,4 @@ make build-frontend
 make verify
 ```
 
-`make verify` bersifat fail-fast dan tidak pernah menjalankan deployment. Target `make deploy` hanya menjadi dispatcher eksplisit; target tersebut baru aktif setelah `deploy/deploy.sh` dibuat pada Task 0.9.
+`make verify` bersifat fail-fast dan tidak pernah menjalankan deployment. `make deploy` merupakan dispatcher eksplisit ke `cbt-vps`; gunakan hanya setelah provisioning Task 0.10 disetujui dan selesai.

@@ -7,9 +7,9 @@
 ## Ringkasan
 
 - Fase aktif: **Fase 0 — Foundation**
-- Progress task: **8/12 selesai (67%)**
-- Task terakhir selesai: **0.8 — OpenAPI dan Makefile**
-- Next task: **0.9 — Hardened LMS-style deploy script**
+- Progress task: **9/12 selesai (75%)**
+- Task terakhir selesai: **0.9 — Hardened LMS-style deploy script**
+- Next task: **0.10 — Provision `cbt-vps` runtime workspace (menunggu approval eksplisit)**
 - Local branch: `main`
 - Task 0.8 implementation commit: `d332215`
 - Working tree: bersih saat status ini dibuat
@@ -37,7 +37,7 @@
 | 0.6 | Go static export serving | DONE | `700762a` | strict RED; targeted/full tests, vet, build, real-binary static smoke PASS; independent security review blockers fixed |
 | 0.7 | Goose/sqlc/environment skeleton | DONE | `45f03b4` | sqlc v1.29 compile/generate, Go tests/vet/build PASS; environment boundary review PASS; Compose static review only (Docker unavailable) |
 | 0.8 | OpenAPI dan Makefile | DONE | `d332215` | OpenAPI YAML parse; remote `make verify` PASS; independent review PASS |
-| 0.9 | Hardened LMS-style deploy script | PENDING | — | Belum dimulai |
+| 0.9 | Hardened LMS-style deploy script | DONE | pending commit | Shell syntax, isolated remote `--check`, all build gates, non-mutation assertions, and independent re-review PASS |
 | 0.10 | Provision `cbt-vps` runtime workspace | PENDING APPROVAL | — | DB, `.env`, bare repo, systemd, dan port belum dibuat |
 | 0.11 | Remote baseline deployment dan smoke | PENDING APPROVAL | — | Belum deploy |
 | 0.12 | Antislop Delivery Gate dan phase close | PENDING | — | Menunggu seluruh gate sebelumnya |
@@ -289,6 +289,39 @@ Notes:
 - npm reported seven moderate dependency advisories; this is recorded as a follow-up signal, not silently treated as a clean production audit.
 - Runtime, database, systemd, and port 8300 were not activated or mutated.
 
+### Task 0.9 — Hardened deployment tooling
+
+Implemented:
+
+- Safe local SSH dispatcher and remote `--check` / `--remote` modes.
+- Restricted `.env` parser that never executes shell content and rejects unsafe ownership/permissions.
+- Secret-safe PostgreSQL/Goose invocation, sqlc/Goose pre-flight gates, clean-tree and pinned-HEAD enforcement.
+- Isolated temporary build source/caches so check-only validation does not dirty source or mutate runtime.
+- Immutable release directories with atomic `bin/current` and `public` symlink switches.
+- systemd template, bounded readiness polling, frontend/API smoke script, and verified rollback path design.
+- Deployment runbook including least-privilege sudo boundaries and forward-only migration caveat.
+
+Non-activating remote verification:
+
+```text
+bash -n deploy/deploy.sh       PASS
+bash -n scripts/smoke.sh       PASS
+DB/Goose preflight harness     PASS (mocked; no real DB provisioned)
+sqlc generate                 PASS
+Go test/vet/build              PASS
+npm ci/lint/typecheck/build    PASS
+--check runtime non-mutation   PASS
+independent initial review     blockers found and fixed
+independent final re-review    PASS, no blocker
+```
+
+Notes:
+
+- The first npm attempt hit a transient `ECONNRESET`; the unchanged rerun passed.
+- npm still reports seven moderate dependency advisories.
+- No database, `.env`, systemd installation, release directory, port listener, restart, migration, or runtime activation was performed.
+- Actual migration/restart/rollback exercise remains pending Tasks 0.10–0.11 approval.
+
 ## VPS State
 
 Target:
@@ -366,13 +399,13 @@ Still enforced:
 
 ## Current Next Step
 
-Task 0.9 — add hardened LMS-style deployment tooling without runtime activation:
+Task 0.10 — provisioning checkpoint, blocked pending explicit approval:
 
-1. Add `deploy/deploy.sh`, the systemd unit template, `docs/DEPLOYMENT.md`, and `scripts/smoke.sh`.
-2. Keep all build gates before migration, swap, restart, or any other mutation.
-3. Preserve dirty remote state and prevent secret output.
-4. Add rollback for both binary and static frontend state.
-5. Validate shell syntax and safe non-activating behavior on `cbt-vps`, then run independent review before commit.
+1. Re-inspect OS, disk, ports, PostgreSQL, toolchain, systemd, and current remote workspace state.
+2. Create the bare deploy repository and proper Git checkout without discarding unexpected remote state.
+3. Provision the least-privilege PostgreSQL role/database and restrictive `.env`.
+4. Install the reviewed systemd unit and narrow sudo boundary.
+5. Activate runtime only after all pre-flight/build/migration gates pass; public domain remains out of scope.
 
 ## Update Rule
 

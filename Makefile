@@ -23,5 +23,4 @@ build-frontend:
 verify: test-backend vet-backend build-backend lint-frontend typecheck-frontend build-frontend
 
 deploy:
-	@test -x deploy/deploy.sh || { echo "deploy/deploy.sh belum tersedia; selesaikan Task 0.9 terlebih dahulu." >&2; exit 1; }
-	./deploy/deploy.sh
+	bash deploy/deploy.sh
