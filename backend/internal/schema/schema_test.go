@@ -2,9 +2,6 @@ package schema_test
 
 import (
 	"context"
-	"os"
-	"os/exec"
-	"path/filepath"
 	"strings"
 	"testing"
 	"time"
@@ -14,47 +11,9 @@ import (
 	"github.com/pikipici/informatika-monitoring/backend/internal/testdb"
 )
 
-const migrationsDir = "../../sql/migrations"
+func goose(t *testing.T, args ...string) { t.Helper(); testdb.Goose(t, args...) }
 
-// goose runs the goose CLI against the test database. The DSN is passed via
-// environment so it never appears in the process list or test output.
-func goose(t *testing.T, args ...string) {
-	t.Helper()
-
-	bin, err := exec.LookPath("goose")
-	if err != nil {
-		if os.Getenv("REQUIRE_TEST_DB") == "1" {
-			t.Fatal("goose binary is required but not found in PATH")
-		}
-		t.Skip("goose binary not found; skipping migration test")
-	}
-
-	dir, err := filepath.Abs(migrationsDir)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	cmd := exec.Command(bin, args...)
-	cmd.Env = append(os.Environ(),
-		"GOOSE_DRIVER=postgres",
-		"GOOSE_DBSTRING="+os.Getenv("TEST_DATABASE_URL"),
-		"GOOSE_MIGRATION_DIR="+dir,
-	)
-	out, err := cmd.CombinedOutput()
-	if err != nil {
-		// Output may echo statements but never the DSN (passed via env only).
-		t.Fatalf("goose %s failed: %v\n%s", strings.Join(args, " "), err, out)
-	}
-}
-
-func migrated(t *testing.T) *pgxpool.Pool {
-	t.Helper()
-	pool := testdb.Open(t)
-	testdb.Reset(t, pool)
-	goose(t, "up")
-	return pool
-}
-
+func migrated(t *testing.T) *pgxpool.Pool { t.Helper(); return testdb.OpenMigrated(t) }
 func ctx(t *testing.T) context.Context {
 	t.Helper()
 	c, cancel := context.WithTimeout(context.Background(), 15*time.Second)

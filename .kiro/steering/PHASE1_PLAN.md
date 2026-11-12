@@ -65,7 +65,7 @@ Waktu disimpan UTC, ditampilkan WIB.
 | 1.1 **DONE** | Database uji terpisah di `cbt-vps` (`informatika_monitoring_test`) dan pembantu uji integrasi | Uji koneksi lulus |
 | 1.2 **DONE** | Migrasi 0001–0003 + sqlc | `goose up/down`, `sqlc generate`, uji skema |
 | 1.3 **DONE** | Paket sandi (Argon2id, kebijakan sandi) | TDD: hash cocok, salah ditolak, sandi lemah ditolak |
-| 1.4 | Paket sesi (buat, cek idle dan absolut, hapus) | TDD dengan jam palsu |
+| 1.4 **DONE** | Paket sesi (buat, cek idle dan absolut, hapus) | TDD dengan jam palsu |
 | 1.5 | Batas percobaan login | TDD: kunci, pulih, per IP dan per akun |
 | 1.6 | Handler login/logout/me + middleware auth dan CSRF | TDD HTTP: 401, 403 CSRF, cookie flag |
 | 1.7 | CLI `adminctl` (buat, reset sandi) | Uji; sandi dari prompt atau stdin, tidak lewat argumen |
@@ -139,3 +139,6 @@ o non-test Go files. GREEN di cbt-vps: 3 uji lulus (validasi DSN, koneksi, reset
 - **Task 1.3 selesai (13 Nov 2026).** RED: `no non-test Go files`. GREEN di `cbt-vps`: uji hash PHC, salt acak, verify benar/salah/unicode, 9 encoding berbahaya ditolak (memori/iterasi absurd, base64 rusak, algoritma lain), rehash otomatis bila parameter lebih lemah, `DummyVerify` untuk meratakan waktu akun tak dikenal, kebijakan sandi (min 12 karakter, maks 128 byte, tidak memuat username, bukan sandi umum, minimal 5 karakter berbeda). `go test ./...` lulus 2 kali berturut-turut, `go vet`, `go build`, `gofmt`, `sqlc generate` hijau.
 - Dependensi baru: `golang.org/x/crypto v0.59.0` (terpin); `x/sync` dan `x/text` naik versi sebagai syarat, `go mod verify` OK. Parameter produksi: 64 MiB, 3 iterasi, 2 lajur.
 - **Untuk Task 1.5/1.6:** tiap hash memakai 64 MiB RAM. Batasi hash serentak (mis. semaphore 2–4) di handler login agar banjir login tidak menghabiskan memori VPS.
+- **Task 1.4 selesai (13 Nov 2026).** RED: `no non-test Go files`. GREEN di `cbt-vps` (database uji nyata, jam palsu): 12 uji lulus. Token 32 byte acak, hanya hash SHA-256 yang disimpan (token mentah tidak ada di baris DB); idle 30 menit bergeser saat aktif; batas mutlak 12 jam tetap berlaku walau aktif; `last_seen_at` ditulis paling cepat tiap 1 menit; revoke idempoten; revoke semua sesi satu user tidak menyentuh user lain; purge menghapus sesi idle/kedaluwarsa; hapus user membatalkan sesinya; token cacat ditolak tanpa query DB. Semua kegagalan memakai satu `ErrInvalid`. `go test ./...` lulus 2 kali, vet/build/gofmt/sqlc hijau.
+- Refactor: `testdb` kini punya `Goose` dan `OpenMigrated`; `schema_test` memakainya.
+- Query sqlc sesi: `backend/sql/queries/admin_sessions.sql`. Pembersihan berkala (`PurgeExpired`) belum dijadwalkan; dipasang di Task 1.6 atau 1.10.

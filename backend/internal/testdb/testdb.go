@@ -9,6 +9,9 @@ import (
 	"errors"
 	"net/url"
 	"os"
+	"os/exec"
+	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 	"time"
@@ -116,5 +119,46 @@ func Reset(t testing.TB, pool *pgxpool.Pool) {
 		if _, err := pool.Exec(ctx, stmt); err != nil {
 			t.Fatalf("reset test database: %v", err)
 		}
+	}
+}
+
+// OpenMigrated opens the test database, resets it, and applies every migration.
+func OpenMigrated(t testing.TB) *pgxpool.Pool {
+	t.Helper()
+	pool := Open(t)
+	Reset(t, pool)
+	Goose(t, "up")
+	return pool
+}
+
+// Goose runs the goose CLI against the test database with the repository's
+// migrations. The DSN is passed via environment so it never appears in the
+// process list or test output. The test is skipped when goose is missing,
+// unless REQUIRE_TEST_DB=1, in which case it fails.
+func Goose(t testing.TB, args ...string) {
+	t.Helper()
+
+	bin, err := exec.LookPath("goose")
+	if err != nil {
+		if os.Getenv(envRequire) == "1" {
+			t.Fatal("goose binary is required but not found in PATH")
+		}
+		t.Skip("goose binary not found; skipping migration-based test")
+	}
+
+	_, thisFile, _, ok := runtime.Caller(0)
+	if !ok {
+		t.Fatal("cannot locate migrations directory")
+	}
+	dir := filepath.Join(filepath.Dir(thisFile), "..", "..", "sql", "migrations")
+
+	cmd := exec.Command(bin, args...)
+	cmd.Env = append(os.Environ(),
+		"GOOSE_DRIVER=postgres",
+		"GOOSE_DBSTRING="+os.Getenv(envURL),
+		"GOOSE_MIGRATION_DIR="+dir,
+	)
+	if out, err := cmd.CombinedOutput(); err != nil {
+		t.Fatalf("goose %s failed: %v\n%s", strings.Join(args, " "), err, out)
 	}
 }
