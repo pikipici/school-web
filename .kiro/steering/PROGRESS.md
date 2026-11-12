@@ -7,11 +7,11 @@
 ## Ringkasan
 
 - Fase aktif: **Fase 0 — Foundation**
-- Progress task: **7/12 selesai (58%)**
-- Task terakhir selesai: **0.7 — Goose/sqlc/environment skeleton**
-- Next task: **0.8 — OpenAPI dan Makefile**
+- Progress task: **8/12 selesai (67%)**
+- Task terakhir selesai: **0.8 — OpenAPI dan Makefile**
+- Next task: **0.9 — Hardened LMS-style deploy script**
 - Local branch: `main`
-- Local HEAD: `45f03b4`
+- Local HEAD sebelum commit Task 0.8: `bed3840`
 - Working tree: bersih saat status ini dibuat
 - Runtime aplikasi: **belum diaktifkan**
 - Real database: **belum dibuat**
@@ -36,7 +36,7 @@
 | 0.5 | Typed frontend API client | DONE | `b0c4aee` | lint, typecheck, static build, production audit, and real Go-through-Next rewrite smoke PASS; independent review PASS |
 | 0.6 | Go static export serving | DONE | `700762a` | strict RED; targeted/full tests, vet, build, real-binary static smoke PASS; independent security review blockers fixed |
 | 0.7 | Goose/sqlc/environment skeleton | DONE | `45f03b4` | sqlc v1.29 compile/generate, Go tests/vet/build PASS; environment boundary review PASS; Compose static review only (Docker unavailable) |
-| 0.8 | OpenAPI dan Makefile | PENDING | — | Belum dimulai |
+| 0.8 | OpenAPI dan Makefile | DONE | pending commit | OpenAPI YAML parse; remote `make verify` PASS; independent review PASS |
 | 0.9 | Hardened LMS-style deploy script | PENDING | — | Belum dimulai |
 | 0.10 | Provision `cbt-vps` runtime workspace | PENDING APPROVAL | — | DB, `.env`, bare repo, systemd, dan port belum dibuat |
 | 0.11 | Remote baseline deployment dan smoke | PENDING APPROVAL | — | Belum deploy |
@@ -260,6 +260,35 @@ Commit:
 45f03b4 chore(db): add PostgreSQL tooling baseline
 ```
 
+### Task 0.8 — OpenAPI and Makefile contract
+
+Implemented:
+
+- OpenAPI 3.0.3 contract for `/healthz`, `/readyz`, `/api/v1/public/summary`, request IDs, and the standard JSON error envelope.
+- Root Make targets for separate backend/frontend gates plus fail-fast `make verify`.
+- Explicit `make deploy` dispatcher kept outside verification and guarded until Task 0.9 supplies the script.
+- README API and verification guidance.
+- Backend build output is written to ignored `backend/bin/api`.
+
+Remote verification on an isolated source copy:
+
+```text
+OpenAPI YAML parse          PASS
+make test-backend           PASS
+make vet-backend            PASS
+make build-backend          PASS
+make lint-frontend          PASS
+make typecheck-frontend     PASS
+make build-frontend         PASS
+independent review          PASS, no blocker
+```
+
+Notes:
+
+- `npm ci` was required before the first frontend gate because dependencies were absent in the isolated copy.
+- npm reported seven moderate dependency advisories; this is recorded as a follow-up signal, not silently treated as a clean production audit.
+- Runtime, database, systemd, and port 8300 were not activated or mutated.
+
 ## VPS State
 
 Target:
@@ -337,13 +366,13 @@ Still enforced:
 
 ## Current Next Step
 
-Task 0.8 — add OpenAPI and Makefile contract:
+Task 0.9 — add hardened LMS-style deployment tooling without runtime activation:
 
-1. Document `/healthz`, `/readyz`, `/api/v1/public/summary`, and the standard error envelope.
-2. Add separate backend/frontend verification targets and one fail-fast `make verify` target.
-3. Keep `deploy` as explicit dispatch only; verification must never mutate runtime state.
-4. Validate OpenAPI syntax and run `make verify` on `cbt-vps`.
-5. Run independent review before commit.
+1. Add `deploy/deploy.sh`, the systemd unit template, `docs/DEPLOYMENT.md`, and `scripts/smoke.sh`.
+2. Keep all build gates before migration, swap, restart, or any other mutation.
+3. Preserve dirty remote state and prevent secret output.
+4. Add rollback for both binary and static frontend state.
+5. Validate shell syntax and safe non-activating behavior on `cbt-vps`, then run independent review before commit.
 
 ## Update Rule
 

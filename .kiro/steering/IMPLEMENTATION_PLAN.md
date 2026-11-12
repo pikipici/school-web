@@ -289,7 +289,7 @@ cd backend && sqlc compile
 
 **Commit:** `chore(db): add PostgreSQL tooling baseline`.
 
-### Task 0.8 — Add OpenAPI and Makefile contract `[ ]`
+### Task 0.8 — Add OpenAPI and Makefile contract `[x]`
 
 **Objective:** Give frontend/backend one testable contract and consistent commands.
 
@@ -483,10 +483,10 @@ BRANCH=main
 
 ## 8. Current Next Step
 
-**CHECKPOINT AFTER TASK 0.7.**
+**CHECKPOINT AFTER TASK 0.8.**
 
-1. Commit and push the verified database-tooling and environment skeleton.
-2. Start Task 0.8: add the baseline OpenAPI contract and Makefile verification commands.
-3. Keep deploy dispatch separate from verification and avoid runtime activation.
-4. Validate OpenAPI syntax and `make verify` on `cbt-vps`.
-5. Real DB, `.env`, bare deploy repo, systemd, port binding, and runtime activation remain out of scope.
+1. Commit and push the verified OpenAPI and Makefile contract.
+2. Start Task 0.9: add the hardened deploy script, systemd template, deployment documentation, and smoke script.
+3. Keep Task 0.9 implementation non-activating: no runtime provisioning, restart, or deployment.
+4. Validate shell syntax and safe pre-flight/build/rollback behavior on `cbt-vps` without activating runtime.
+5. Real DB, `.env`, bare deploy repo, systemd installation, port binding, and runtime activation remain pending Task 0.10 approval.

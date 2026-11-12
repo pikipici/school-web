@@ -1,0 +1,152 @@
+openapi: 3.0.3
+info:
+  title: Informatika Monitoring API
+  version: 0.1.0
+  description: Kontrak API fondasi yang saat ini diimplementasikan oleh backend Go.
+servers:
+  - url: /
+    description: Same-origin runtime
+paths:
+  /healthz:
+    get:
+      summary: Periksa liveness proses
+      operationId: getHealth
+      responses:
+        "200":
+          description: Proses HTTP berjalan.
+          headers:
+            X-Request-ID:
+              $ref: "#/components/headers/RequestID"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"
+              example:
+                status: ok
+  /readyz:
+    get:
+      summary: Periksa kesiapan database
+      operationId: getReadiness
+      responses:
+        "200":
+          description: Database siap digunakan.
+          headers:
+            X-Request-ID:
+              $ref: "#/components/headers/RequestID"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReadinessResponse"
+              example:
+                status: ok
+                database: ok
+        "503":
+          description: Database belum dikonfigurasi atau tidak tersedia.
+          headers:
+            X-Request-ID:
+              $ref: "#/components/headers/RequestID"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReadinessResponse"
+              example:
+                status: unavailable
+                database: unavailable
+  /api/v1/public/summary:
+    get:
+      summary: Ambil ringkasan monitoring publik
+      operationId: getPublicSummary
+      responses:
+        "200":
+          description: Ringkasan publik berhasil dibaca.
+          headers:
+            X-Request-ID:
+              $ref: "#/components/headers/RequestID"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PublicSummaryEnvelope"
+              example:
+                data:
+                  totalGroups: 0
+                  manualUpdate: true
+                  updatedAt: null
+        "404":
+          $ref: "#/components/responses/NotFound"
+components:
+  headers:
+    RequestID:
+      description: ID korelasi unik untuk request.
+      schema:
+        type: string
+  responses:
+    NotFound:
+      description: Endpoint tidak ditemukan.
+      headers:
+        X-Request-ID:
+          $ref: "#/components/headers/RequestID"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorEnvelope"
+          example:
+            error:
+              code: NOT_FOUND
+              message: Endpoint tidak ditemukan.
+  schemas:
+    HealthResponse:
+      type: object
+      additionalProperties: false
+      required: [status]
+      properties:
+        status:
+          type: string
+          enum: [ok]
+    ReadinessResponse:
+      type: object
+      additionalProperties: false
+      required: [status, database]
+      properties:
+        status:
+          type: string
+          enum: [ok, unavailable]
+        database:
+          type: string
+          enum: [ok, unavailable]
+    PublicSummaryEnvelope:
+      type: object
+      additionalProperties: false
+      required: [data]
+      properties:
+        data:
+          $ref: "#/components/schemas/PublicSummary"
+    PublicSummary:
+      type: object
+      additionalProperties: false
+      required: [totalGroups, manualUpdate, updatedAt]
+      properties:
+        totalGroups:
+          type: integer
+          minimum: 0
+        manualUpdate:
+          type: boolean
+        updatedAt:
+          type: string
+          format: date-time
+          nullable: true
+    ErrorEnvelope:
+      type: object
+      additionalProperties: false
+      required: [error]
+      properties:
+        error:
+          $ref: "#/components/schemas/ErrorDetail"
+    ErrorDetail:
+      type: object
+      additionalProperties: false
+      required: [code, message]
+      properties:
+        code:
+          type: string
+        message:
+          type: string
