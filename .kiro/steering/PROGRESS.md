@@ -11,7 +11,7 @@
 - Task terakhir selesai: **0.8 — OpenAPI dan Makefile**
 - Next task: **0.9 — Hardened LMS-style deploy script**
 - Local branch: `main`
-- Local HEAD sebelum commit Task 0.8: `bed3840`
+- Task 0.8 implementation commit: `d332215`
 - Working tree: bersih saat status ini dibuat
 - Runtime aplikasi: **belum diaktifkan**
 - Real database: **belum dibuat**
@@ -36,7 +36,7 @@
 | 0.5 | Typed frontend API client | DONE | `b0c4aee` | lint, typecheck, static build, production audit, and real Go-through-Next rewrite smoke PASS; independent review PASS |
 | 0.6 | Go static export serving | DONE | `700762a` | strict RED; targeted/full tests, vet, build, real-binary static smoke PASS; independent security review blockers fixed |
 | 0.7 | Goose/sqlc/environment skeleton | DONE | `45f03b4` | sqlc v1.29 compile/generate, Go tests/vet/build PASS; environment boundary review PASS; Compose static review only (Docker unavailable) |
-| 0.8 | OpenAPI dan Makefile | DONE | pending commit | OpenAPI YAML parse; remote `make verify` PASS; independent review PASS |
+| 0.8 | OpenAPI dan Makefile | DONE | `d332215` | OpenAPI YAML parse; remote `make verify` PASS; independent review PASS |
 | 0.9 | Hardened LMS-style deploy script | PENDING | — | Belum dimulai |
 | 0.10 | Provision `cbt-vps` runtime workspace | PENDING APPROVAL | — | DB, `.env`, bare repo, systemd, dan port belum dibuat |
 | 0.11 | Remote baseline deployment dan smoke | PENDING APPROVAL | — | Belum deploy |
