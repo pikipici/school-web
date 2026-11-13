@@ -6,7 +6,7 @@
 
 ## Ringkasan
 
-- Fase aktif: **Fase 0 — Foundation (ditutup, menunggu approval Fase 1)**
+- Fase aktif: **Fase 1 — Database dan login admin (DITUTUP 13 Nov 2026, menunggu approval Fase 2)**. Fase 0 ditutup sebelumnya. Rincian Fase 1: `.kiro/steering/PHASE1_PLAN.md` dan `docs/F1_ACCEPTANCE.md`.
 - Progress task: **12/12 selesai (100%), ditutup dengan pengecualian**
 - Task terakhir selesai: **0.11 — Remote baseline deployment dan smoke**
 - Next task: **0.12 — Antislop Delivery Gate dan phase close** (sedang berjalan, menunggu cek browser manual)
@@ -427,13 +427,14 @@ The remote deploy command passed Go test/vet/build, `sqlc generate`, frontend `n
 
 ## Current Next Step
 
-Fase 0 ditutup (13 Nov 2026) dengan pengecualian: cek browser nyata belum dilakukan, 7 advisory npm dev-only diterima sementara. Redesign web pribadi ter-deploy (release `20261112T204643Z-830033683d94`).
+Fase 1 ditutup 13 Nov 2026. Produksi: `https://fikriramaaulia.online` (Caddy + Let's Encrypt, berlaku s.d. 2027-02-11), rilis `20261112T232527Z-d2e3fcac4923` (kode `d2e3fca`), migrasi versi 3, satu admin `fikri`, cookie admin Secure. Login/logout lewat browser terbukti di audit.
 
 Berikutnya, menunggu approval user:
 
-1. Aturan lampiran Materi SUDAH diputuskan di `PLAN.md` bagian 0 (PDF/PPT/PPTX, 25 MB, disk VPS di luar rilis).
-2. Fase 1 — database dan login admin.
-3. Nama di header sudah diganti jadi "Fikri Rama Aulia" (menunggu commit/deploy).
+1. Rencana Fase 2 (Pengumuman, Materi, lampiran PDF/PPT sesuai `PLAN.md` bagian 0).
+2. Naikkan HSTS bertahap setelah HTTPS stabil beberapa hari.
+3. Content-Security-Policy untuk ekspor statis Next.js.
+4. 7 advisory npm moderate (dev-only) masih terbuka.
 
 ## Update Rule
 

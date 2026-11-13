@@ -65,7 +65,8 @@
   - [x] 0.10 VPS provisioning
   - [x] 0.11 Remote deployment/smoke
   - [x] 0.12 Delivery Gate (pengecualian: cek browser nyata belum)
-- [ ] Fase 1 — Database + admin authentication
+- [x] Fase 1 — Database + admin authentication (ditutup 13 Nov 2026; `.kiro/steering/PHASE1_PLAN.md`)
+- [ ] Fase 2 — Pengumuman, Materi, lampiran (menunggu rencana dan approval)
 
 ## Commands
 
@@ -93,4 +94,4 @@ npm run build
 
 ## Current next step
 
-Fase 0 ditutup. Web pribadi (Pengumuman, Materi, Progres Tugas) ter-deploy di `cbt-vps` commit `8300336`. Menunggu approval user untuk Fase 1 (database + login admin) dan keputusan aturan lampiran Materi.
+Fase 1 ditutup. Produksi di `https://fikriramaaulia.online` (Caddy di depan port 8300, `ADMIN_COOKIE_SECURE=true`). Admin login hanya lewat HTTPS; tunnel SSH tidak lagi bisa dipakai untuk login. Tunggu approval user untuk merencanakan Fase 2. Uji integrasi butuh `/home/ubuntu/.informatika-monitoring-test.env`.

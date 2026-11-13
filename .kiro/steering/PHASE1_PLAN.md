@@ -1,6 +1,6 @@
 # Fase 1 — Database dan Login Admin (Rencana)
 
-> Status: **DRAFT — menunggu approval. Belum ada kode.**
+> Status: **DITUTUP 13 Nov 2026** (lihat `docs/F1_ACCEPTANCE.md`). Fase 2 menunggu persetujuan user.
 > Dibuat: 13 November 2026.
 
 ## Tujuan
@@ -72,7 +72,7 @@ Waktu disimpan UTC, ditampilkan WIB.
 | 1.8 **DONE** | Audit log pada login/logout | Uji: tidak ada rahasia di log |
 | 1.9 **DONE** | Frontend `/admin/login` dan `/admin` | lint, typecheck, build; keadaan loading/error/sukses |
 | 1.10 **DONE** | Deploy: cadangan `pg_dump` sebelum migrasi, migrasi pertama, smoke baru | `deploy --check`, lalu deploy |
-| 1.11 | Gerbang penutupan + `docs/F1_ACCEPTANCE.md` | Semua gate, cek browser nyata |
+| 1.11 **DONE** | Gerbang penutupan + `docs/F1_ACCEPTANCE.md` | Semua gate, cek browser nyata |
 
 Setiap task: uji gagal dulu (RED), lalu implementasi, lalu go test/vet/build di VPS, lalu commit.
 
@@ -115,15 +115,15 @@ Semua keputusan rencana sudah dijawab. Yang tersisa: persetujuan memulai Task 1.
 
 ## Gerbang selesai Fase 1
 
-- [ ] Migrasi naik dan turun bersih; `sqlc generate` hijau.
-- [ ] Semua uji Go lulus (unit + integrasi), vet dan build hijau.
-- [ ] Login, logout, me bekerja; 401 dan 403 benar; cookie flag benar.
-- [ ] Batas percobaan terbukti oleh uji.
-- [ ] Tidak ada sandi atau token di log, respons, atau repo.
-- [ ] OpenAPI diperbarui.
-- [ ] Frontend lint, typecheck, build lulus; cek browser nyata (360px, zoom 200%, keyboard).
-- [ ] Deploy ke `cbt-vps` + smoke lulus; cadangan sebelum migrasi terbukti ada.
-- [ ] Tidak ada CRUD bisnis yang bocor ke Fase 1.
+- [x] Migrasi naik dan turun bersih; `sqlc generate` hijau.
+- [x] Semua uji Go lulus (unit + integrasi), vet dan build hijau.
+- [x] Login, logout, me bekerja; 401 dan 403 benar; cookie flag benar.
+- [x] Batas percobaan terbukti oleh uji.
+- [x] Tidak ada sandi atau token di log, respons, atau repo (catatan: satu log deploy tidak sempat diperiksa).
+- [x] OpenAPI diperbarui.
+- [x] Frontend lint, typecheck, build lulus; cek browser nyata (laporan user; login/logout terbukti di audit; langkah sandi salah tanpa jejak).
+- [x] Deploy ke `cbt-vps` + smoke lulus; cadangan sebelum migrasi terbukti ada.
+- [x] Tidak ada CRUD bisnis yang bocor ke Fase 1.
 - [ ] User menyetujui pindah ke Fase 2.
 
 ## Catatan pelaksanaan
@@ -183,3 +183,4 @@ o non-test Go files. GREEN di cbt-vps: 3 uji lulus (validasi DSN, koneksi, reset
 - **HTTPS AKTIF, 13 Nov 2026 (H1–H6 selesai kecuali kenaikan HSTS).** User mengganti DNS apex ke ``43.134.111.212`` (DNS only) dan membuka TCP 80/443 di firewall Tencent Cloud. Caddy dinyalakan (``enable --now``); sertifikat Let's Encrypt terbit pada percobaan pertama (tantangan tls-alpn-01), berlaku 2026-11-13 s.d. 2027-02-11, TLS 1.3. Dari PC user: ``https://fikriramaaulia.online/`` 200 dengan judul 'Fikri Rama Aulia — Web Pribadi', ``/progres/`` ``/admin/login/`` ``/admin/`` 200, header keamanan hadir, ``http://`` dialihkan 308 ke ``https://``, ``/healthz`` dan ``/readyz`` ok, port 8300 dan 5432 tidak terjangkau dari luar.
   - ``ADMIN_COOKIE_SECURE=true`` ditambahkan ke ``.env`` produksi (hanya kunci itu; mode 600 dan pemilik tetap), layanan di-restart, ``/readyz`` ok, log mulai menampilkan ``cookie_secure=true``. Terbukti dari luar: ``/me`` anonim 401; login dari origin ``http://`` atau asing 403; JSON cacat dari origin ``https://`` 400; GET login 405. ``deploy.sh --check`` pada checkout produksi tetap lulus dengan ``.env`` baru (rehearsal cadangan 11785 byte).
   - Yang belum: login sungguhan lewat browser (butuh user), HSTS masih 1 jam, belum ada CSP, tidak ada pemantauan kedaluwarsa sertifikat selain pembaruan otomatis Caddy.
+- **Fase 1 ditutup 13 Nov 2026** atas instruksi user. Bukti browser dari tabel audit: `auth.login` sukses 07:17:17 dan `auth.logout` sukses 07:18:33 WIB dari `202.152.195.111` (alamat internet PC user). Tata letak, zoom, keyboard, dan cookie adalah laporan user. Langkah sandi salah tidak meninggalkan jejak audit dari IP user. Persetujuan Fase 2 belum diberikan.
