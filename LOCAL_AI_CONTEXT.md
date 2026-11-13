@@ -44,7 +44,7 @@
 - Fase 0 dan Fase 1 sudah ditutup pada 13 November 2026.
 - Redesign web pribadi guru, HTTPS, HSTS satu hari, dan CSP `enforce` sudah aktif di produksi.
 - Fase 2 sudah disetujui dan dibagi menjadi 2A (konten teks) lalu 2B (lampiran).
-- Task 2.1 selesai di `43c81ba`; 2.2 `fb3c9be`; 2.3 `183770d`; 2.4 `c34e3e5` + hardening `0f90555` (admin CRUD + audit). Migrasi 4–6 dan kode Fase 2A belum masuk produksi.
+- Task 2.1 selesai di `43c81ba`; 2.2 `fb3c9be`; 2.3 `183770d`; 2.4 `c34e3e5` + `0f90555`; 2.5 `6498211` (frontend publik). Migrasi 4–6 dan kode Fase 2A belum masuk produksi.
 - Backend exposes `/healthz`, safe `/readyz`, and honest zero-state `/api/v1/public/summary`; unknown API routes return JSON 404.
 - Readiness uses a fake-Pinger-tested boundary and is verified against the real PostgreSQL on `cbt-vps` (`/readyz` returns database ok).
 - GitHub `origin` configured and `main` pushed to `pikipici/school-web`.
@@ -68,7 +68,7 @@
   - [x] 0.11 Remote deployment/smoke
   - [x] 0.12 Delivery Gate (pengecualian: cek browser nyata belum)
 - [x] Fase 1 — Database + admin authentication (ditutup 13 Nov 2026; `.kiro/steering/PHASE1_PLAN.md`)
-- [~] Fase 2A — Pengumuman dan Materi teks (4/8; Task 2.1–2.4 selesai)
+- [~] Fase 2A — Pengumuman dan Materi teks (5/8; Task 2.1–2.5 selesai)
 - [ ] Fase 2B — Lampiran PDF/PPT/PPTX (belum mulai)
 
 ## Commands
@@ -97,4 +97,4 @@ npm run build
 
 ## Current next step
 
-Lanjutkan Task 2.5 sesuai `.kiro/steering/PHASE2_PLAN.md`: frontend publik untuk Beranda, daftar/detail Pengumuman dan Materi, perender teks biasa aman, dan state loading/kosong/galat/sukses. Produksi tetap di `https://fikriramaaulia.online`; perubahan Fase 2A dan migrasi 4–6 belum dideploy. Uji integrasi membutuhkan `/home/ubuntu/.informatika-monitoring-test.env`.
+Lanjutkan Task 2.6 sesuai `.kiro/steering/PHASE2_PLAN.md`: frontend admin untuk daftar/form Pengumuman dan Materi, terbitkan/tarik, hapus dengan konfirmasi, dan state lengkap. Produksi tetap di `https://fikriramaaulia.online`; perubahan Fase 2A dan migrasi 4–6 belum dideploy. Uji integrasi membutuhkan `/home/ubuntu/.informatika-monitoring-test.env`.
