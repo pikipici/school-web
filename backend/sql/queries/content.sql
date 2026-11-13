@@ -32,3 +32,31 @@ RETURNING *;
 
 -- name: TopicExists :one
 SELECT EXISTS(SELECT 1 FROM topics WHERE id=$1);
+
+-- name: ListPublicAnnouncements :many
+SELECT id, title, body, published_at FROM announcements
+WHERE status = 'published'
+ORDER BY pinned DESC, published_at DESC, id DESC LIMIT $1 OFFSET $2;
+
+-- name: CountPublicAnnouncements :one
+SELECT count(*) FROM announcements WHERE status = 'published';
+
+-- name: GetPublicAnnouncement :one
+SELECT id, title, body, published_at FROM announcements WHERE id=$1 AND status='published';
+
+-- name: ListPublicTopics :many
+SELECT id, code, title, sort_order FROM topics ORDER BY sort_order, id;
+
+-- name: ListPublicMaterials :many
+SELECT m.id, m.title, m.description, m.published_at, t.id AS topic_id, t.code AS topic_code, t.title AS topic_title
+FROM materials m LEFT JOIN topics t ON t.id=m.topic_id
+WHERE m.status='published' AND (sqlc.narg(topic_code)::text IS NULL OR t.code=sqlc.narg(topic_code))
+ORDER BY t.sort_order NULLS LAST, m.sort_order, m.id LIMIT $1 OFFSET $2;
+
+-- name: CountPublicMaterials :one
+SELECT count(*) FROM materials m LEFT JOIN topics t ON t.id=m.topic_id
+WHERE m.status='published' AND (sqlc.narg(topic_code)::text IS NULL OR t.code=sqlc.narg(topic_code));
+
+-- name: GetPublicMaterial :one
+SELECT m.id, m.title, m.description, m.published_at, t.id AS topic_id, t.code AS topic_code, t.title AS topic_title
+FROM materials m LEFT JOIN topics t ON t.id=m.topic_id WHERE m.id=$1 AND m.status='published';

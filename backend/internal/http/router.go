@@ -9,6 +9,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/pikipici/informatika-monitoring/backend/internal/content"
 	"github.com/pikipici/informatika-monitoring/backend/internal/health"
 	"github.com/pikipici/informatika-monitoring/backend/internal/web"
 )
@@ -46,6 +47,8 @@ type Deps struct {
 	Admin *AdminAuth
 	// CSPMode controls the policy header on HTML pages (zero value: enforce).
 	CSPMode web.CSPMode
+	// PublicContent enables the database-backed public content routes.
+	PublicContent content.PublicReader
 }
 
 // NewRouterWithDeps builds the router from Deps.
@@ -64,6 +67,17 @@ func newRouter(deps Deps) http.Handler {
 	readiness := health.NewService(pinger)
 	router.Get("/readyz", readyz(readiness))
 	router.Get("/api/v1/public/summary", publicSummary)
+	if deps.PublicContent != nil {
+		router.Route("/api/v1/public", func(r chi.Router) {
+			r.Get("/announcements", listAnnouncements(deps.PublicContent))
+			r.Get("/announcements/{id}", getAnnouncement(deps.PublicContent))
+			r.Get("/topics", listTopics(deps.PublicContent))
+			r.Get("/materials", listMaterials(deps.PublicContent))
+			r.Get("/materials/{id}", getMaterial(deps.PublicContent))
+			r.NotFound(notFound)
+			r.MethodNotAllowed(methodNotAllowed)
+		})
+	}
 	if deps.Admin != nil {
 		router.Route("/api/v1/admin/auth", func(r chi.Router) {
 			r.Post("/login", deps.Admin.login)

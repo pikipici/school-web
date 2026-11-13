@@ -18,6 +18,7 @@ import (
 	"github.com/pikipici/informatika-monitoring/backend/internal/auth/session"
 	"github.com/pikipici/informatika-monitoring/backend/internal/auth/users"
 	"github.com/pikipici/informatika-monitoring/backend/internal/config"
+	"github.com/pikipici/informatika-monitoring/backend/internal/content"
 	"github.com/pikipici/informatika-monitoring/backend/internal/db"
 	"github.com/pikipici/informatika-monitoring/backend/internal/health"
 	httpapi "github.com/pikipici/informatika-monitoring/backend/internal/http"
@@ -42,6 +43,7 @@ func run() error {
 
 	var pinger health.Pinger
 	var admin *httpapi.AdminAuth
+	var publicContent content.PublicReader
 	if strings.TrimSpace(cfg.DatabaseURL) != "" {
 		pool, err := db.Open(ctx, cfg.DatabaseURL)
 		if err != nil {
@@ -49,6 +51,7 @@ func run() error {
 		}
 		defer pool.Close()
 		pinger = pool
+		publicContent = content.New(pool, nil)
 
 		hasher, err := password.NewHasher(password.DefaultParams())
 		if err != nil {
@@ -69,7 +72,7 @@ func run() error {
 
 	server := &http.Server{
 		Addr:              cfg.Address,
-		Handler:           httpapi.NewRouterWithDeps(httpapi.Deps{Pinger: pinger, PublicDir: cfg.PublicDir, Admin: admin, CSPMode: cfg.CSPMode}),
+		Handler:           httpapi.NewRouterWithDeps(httpapi.Deps{Pinger: pinger, PublicDir: cfg.PublicDir, Admin: admin, CSPMode: cfg.CSPMode, PublicContent: publicContent}),
 		ReadHeaderTimeout: 5 * time.Second,
 		ReadTimeout:       15 * time.Second,
 		WriteTimeout:      15 * time.Second,
