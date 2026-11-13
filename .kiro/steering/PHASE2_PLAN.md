@@ -90,7 +90,7 @@ Lampiran membawa risiko yang berbeda (disk, unggahan besar, cadangan berkas, isi
 | 2.5 **DONE** | Frontend publik: Beranda memuat data, halaman daftar dan baca; perender teks biasa | uji klien API + uji perender (tidak ada HTML yang lolos) |
 | 2.6 **DONE** | Frontend admin: daftar, form, terbitkan/tarik, hapus dengan konfirmasi | lint/typecheck/build; keadaan loading/kosong/galat/sukses |
 | 2.7 | OpenAPI, smoke baru, deploy, cek browser | `--check`, deploy, cek nyata |
-| 2.8 | Gerbang 2A + `docs/F2A_ACCEPTANCE.md` | semua gerbang |
+| 2.8 **DONE** | Gerbang 2A + `docs/F2A_ACCEPTANCE.md` | semua gerbang |
 
 ### 2B — Lampiran
 
@@ -122,13 +122,13 @@ User mengikuti semua rekomendasi: dibagi 2A lalu 2B; isi teks biasa; Pengumuman 
 
 ## Gerbang selesai 2A
 
-- [ ] Migrasi up/down bersih; seed topik benar.
-- [ ] Uji Go (unit + integrasi) lulus, juga `-race`; vet, build, gofmt, sqlc hijau.
-- [ ] Draf tidak pernah muncul di endpoint publik (terbukti uji).
-- [ ] Semua aksi admin wajib sesi + CSRF + Origin; semua tercatat di audit.
-- [ ] Frontend lint, typecheck, test, build; tidak ada HTML dari isi yang dirender.
-- [ ] OpenAPI diperbarui.
-- [ ] Deploy + smoke lulus; cek browser nyata (buat, terbitkan, lihat publik, tarik, hapus).
+- [x] Migrasi up/down bersih; seed topik benar.
+- [x] Uji Go (unit + integrasi) lulus, juga `-race`; vet, build, gofmt, sqlc hijau.
+- [x] Draf tidak pernah muncul di endpoint publik (terbukti uji).
+- [x] Semua aksi admin wajib sesi + CSRF + Origin; semua tercatat di audit.
+- [x] Frontend lint, typecheck, test, build; tidak ada HTML dari isi yang dirender.
+- [x] OpenAPI diperbarui.
+- [x] Deploy + smoke lulus; cek browser nyata (buat, terbitkan, lihat publik, tarik, hapus). Pengecualian: admin di 360px tidak diverifikasi.
 - [ ] User menyetujui lanjut ke 2B.
 
 ## Gerbang selesai 2B

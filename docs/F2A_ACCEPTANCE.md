@@ -3,7 +3,7 @@
 > Tanggal: 14 November 2026. Kode di produksi: `12bcf48` (rilis `20261113T220824Z-12bcf48de85e`, migrasi versi 6).
 > Perbaikan gaya tautan `e86f851` dideploy 14 Nov 2026 05:42 WIB (rilis `20261113T224209Z-27fe481c50fa`, kode `27fe481`), smoke PASS. Perbaikan lanjutan untuk tautan di isi teks (`f4cb002`) dideploy 05:45 WIB (rilis `20261113T224525Z-f4cb002e17e7`), smoke PASS, aturan garis bawah terverifikasi di CSS produksi.
 >
-> **Verdict: BELUM DITUTUP — 1 hal terbuka:** tampilan `/admin/` dan formulir pada 360px saat masuk (alat ukur agen tidak punya sesi). Halaman publik dan login sudah terukur di 360px dan 200%; semua perbaikan sudah di produksi.
+> **Verdict: DITUTUP 14 Nov 2026 atas instruksi user, dengan pengecualian tercatat.** Semua gerbang otomatis, alur fungsi di browser nyata, dan ukuran 360px/200% halaman publik lulus di produksi. Tampilan `/admin/` dan formulir pada 360px **tidak diverifikasi**; user menunda revisi desain ke tahap berikutnya.
 
 ## Gerbang (dari `.kiro/steering/PHASE2_PLAN.md`)
 
@@ -18,7 +18,7 @@
 | Deploy + smoke lulus | PASS | Rilis `20261113T220824Z-12bcf48de85e`; cadangan `pre-20261113T220824Z-12bcf48de85e.dump`; smoke baru (topik, daftar publik, halaman admin, API admin anonim 401) terbukti gagal pada rilis lama dan lulus pada rilis baru |
 | Cek browser nyata: buat, terbitkan, lihat publik, tarik, hapus | PASS (alur) | Edge di produksi dengan CSP `enforce`, 14 Nov 05:16–05:22 WIB: judul kosong ditolak; draf; terbit; publik; tarik; materi tanpa topik tampil "Umum"; hapus dengan konfirmasi; keluar. Data uji dihapus; tabel kosong lagi |
 | **Cek 360px, zoom 200%, keyboard** | **PASS kecuali halaman admin yang butuh sesi** | Emulasi perangkat lewat DevTools protocol (Edge headless, produksi): 360px `/`, `/pengumuman/`, `/progres/`, `/admin/login/` tanpa gulir samping; `/materi/` sempat melebar ke 469px karena `select` filter topik; diperbaiki di `a4dfc8a`, dideploy (rilis `20261113T233022Z-e4f640237316`), diukur ulang: 360px pada ketujuh rute; 200% (640 CSS px pada 2x) semua halaman tanpa gulir samping. Keyboard: Tab pertama memunculkan "Lewati ke konten utama" dengan cincin fokus oranye. `/admin/` dan formulir tidak terukur karena butuh sesi |
-| User menyetujui lanjut ke 2B | BELUM | Menunggu |
+| User menyetujui lanjut ke 2B | BELUM | 2A ditutup; persetujuan memulai 2B belum diberikan |
 
 ## Temuan saat gerbang
 
@@ -47,5 +47,9 @@ Buka [halaman login](https://fikriramaaulia.online/admin/login/) di Edge atau Ch
 4. Hapus data uji yang dibuat untuk cek ini.
 
 ## Keputusan penutupan
+
+**Ditutup 14 Nov 2026** atas instruksi user ("design nanti bisa kita revisi lagi"). Pengecualian: tampilan admin di 360px tidak diverifikasi; catatan paginasi di 360px dibiarkan. Keduanya masuk daftar revisi desain.
+
+Syarat semula:
 
 Fase 2A ditutup setelah (a) daftar periksa di atas lulus, (b) perbaikan tautan isi teks dideploy dan smoke lulus (selesai), dan (c) user menyetujui lanjut ke 2B.

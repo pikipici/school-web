@@ -6,10 +6,10 @@
 
 ## Ringkasan
 
-- Fase aktif: **Fase 2A — Pengumuman dan Materi teks**. Fase 0 dan Fase 1 sudah ditutup.
-- Progress Fase 2A: **7/8 task selesai** (2.1–2.7). Fase 2B (lampiran): 0/7, belum mulai.
-- Task terakhir selesai: **2.7 — deploy produksi + cek browser nyata** (14 Nov 2026)
-- Next task: **2.8 — gerbang 2A** (sisa satu: user cek `/admin/` dan formulir di 360px saat masuk)
+- Fase aktif: **tidak ada — Fase 2A DITUTUP 14 Nov 2026**, menunggu persetujuan memulai Fase 2B (lampiran). Fase 0 dan Fase 1 sudah ditutup.
+- Progress Fase 2A: **8/8 selesai** (ditutup dengan pengecualian). Fase 2B (lampiran): 0/7, belum mulai.
+- Task terakhir selesai: **2.8 — gerbang 2A** (`docs/F2A_ACCEPTANCE.md`)
+- Next task: **2.9 — migrasi `material_attachments`** (setelah user setuju mulai 2B). Daftar revisi desain: tampilan admin di 360px belum diverifikasi; paginasi 360px turun baris.
 - Semua perbaikan gaya tautan sudah di produksi.
 - Local branch: `main`, working tree bersih
 - Semua commit sampai `12bcf48` sudah di `server/main`.
@@ -26,7 +26,7 @@
 | Redesign | Web pribadi guru (Pengumuman, Materi, Progres Tugas) | DONE, ter-deploy | `.kiro/steering/REDESIGN_BACKLOG.md` |
 | 1 | Database + login admin + HTTPS | DITUTUP 13 Nov 2026 | `.kiro/steering/PHASE1_PLAN.md`, `docs/F1_ACCEPTANCE.md` |
 | Hardening | HSTS 1 hari + CSP `enforce` | DONE, aktif di produksi | bagian Current Next Step |
-| 2A | Pengumuman + Materi teks | 7/8 — berjalan | `.kiro/steering/PHASE2_PLAN.md` |
+| 2A | Pengumuman + Materi teks | DITUTUP 14 Nov 2026 (dengan pengecualian) | `.kiro/steering/PHASE2_PLAN.md` |
 | 2B | Lampiran PDF/PPT/PPTX | belum mulai | `.kiro/steering/PHASE2_PLAN.md` |
 
 ## Fase 2A Tracker
@@ -40,7 +40,7 @@
 | 2.5 | Frontend publik | DONE | `6498211` | 43 Node tests; lint/typecheck; static build 2x; lima output route; production audit 0; query-ID dan plain-text/link safety teruji di `cbt-vps` |
 | 2.6 | Frontend admin | DONE | lihat commit Task 2.6 | 34 uji klien admin baru (RED dulu: modul belum ada); total 77 uji frontend; lint, typecheck, build (rute `/admin/pengumuman/ubah/`, `/admin/materi/ubah/`), audit produksi 0 di `cbt-vps`; E2E klien asli melawan API Go asli + database uji: buat, terbit, publik melihat, konflik 409, ubah, tarik, CSRF salah 403, hapus, 401 setelah logout; audit tercatat. Cek browser nyata belum (ikut Task 2.7) |
 | 2.7 | OpenAPI, smoke, deploy, cek browser | DONE (kecuali 360px/zoom/keyboard) | `12bcf48` | OpenAPI 0.3.0 lolos `openapi-spec-validator` 0.7.1 (15 jalur, 21 operasi); smoke baru terbukti gagal (404) pada rilis lama dan lulus pada kode baru; deploy produksi rilis `20261113T220824Z-12bcf48de85e`: semua gerbang, cadangan `pre-20261113T220824Z-12bcf48de85e.dump`, migrasi 4–6 (versi 6), smoke PASS, tanpa DSN di log; `cookie_secure=true`, `csp_mode=enforce`. **Browser nyata (Edge, produksi, CSP enforce), 14 Nov 05:16–05:22 WIB:** login (sandi diketik user); judul kosong ditolak dengan pesan; draf tersimpan dan tidak muncul di API publik; Terbitkan → tampil di publik, tautan `https://` jadi link dan `<b>` tampil sebagai teks; Tarik ke draf → API publik kosong, detail 404; materi tanpa topik tampil "Umum"; Hapus meminta konfirmasi lalu menghapus; tabel kosong lagi; audit mencatat 7 aksi dari IP user; keluar kembali ke login. **Belum:** 360px, zoom 200%, keyboard (alat browser agen tidak bisa mengubah ukuran layar) |
-| 2.8 | Gerbang 2A + `docs/F2A_ACCEPTANCE.md` | IN PROGRESS | `e86f851` | Gerbang otomatis PASS pada `e86f851` (`deploy.sh --check`: 12 paket Go, 77 uji frontend, build, latihan cadangan; `-race`; 59 uji fungsi deploy; audit produksi 0). Terbuka: cek 360px/zoom/keyboard oleh user; deploy perbaikan gaya tautan `e86f851` |
+| 2.8 | Gerbang 2A + `docs/F2A_ACCEPTANCE.md` | DONE (pengecualian: admin 360px) | `e86f851` | Gerbang otomatis PASS pada `e86f851` (`deploy.sh --check`: 12 paket Go, 77 uji frontend, build, latihan cadangan; `-race`; 59 uji fungsi deploy; audit produksi 0). Terbuka: cek 360px/zoom/keyboard oleh user; deploy perbaikan gaya tautan `e86f851` |
 
 Keputusan Fase 2 (disetujui user 13 Nov 2026): dibagi 2A lalu 2B; isi teks biasa (tanpa Markdown/HTML); Pengumuman punya draf/terbit dan sematkan; hapus permanen dengan jejak audit; topik Materi opsional (tanpa topik = Umum); ID tetap `bigint`.
 
