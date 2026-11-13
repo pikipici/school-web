@@ -2,26 +2,52 @@
 
 > Dokumen status aktual implementasi. Update setelah setiap task, verifikasi, commit, provisioning, dan deployment.
 >
-> Last updated: 12 November 2026
+> Last updated: 13 November 2026, 10:05 WIB
 
 ## Ringkasan
 
-- Fase aktif: **Fase 1 — Database dan login admin (DITUTUP 13 Nov 2026, menunggu approval Fase 2)**. Fase 0 ditutup sebelumnya. Rincian Fase 1: `.kiro/steering/PHASE1_PLAN.md` dan `docs/F1_ACCEPTANCE.md`.
-- Progress task: **12/12 selesai (100%), ditutup dengan pengecualian**
-- Task terakhir selesai: **0.11 — Remote baseline deployment dan smoke**
-- Next task: **0.12 — Antislop Delivery Gate dan phase close** (sedang berjalan, menunggu cek browser manual)
-- Local branch: `main`
-- Deployment evidence commit: `594ea74`
-- Working tree: bersih saat status ini dibuat
-- Runtime internal aplikasi: **aktif dan terverifikasi di `cbt-vps:8300`**
-- PostgreSQL aplikasi: **aktif dan readiness PASS**
-- Public hostname/HTTPS: **belum dilakukan dan tetap di luar scope Fase 0**
+- Fase aktif: **Fase 2A — Pengumuman dan Materi teks (sedang dikerjakan, dijeda atas permintaan user)**. Fase 0 dan Fase 1 sudah ditutup.
+- Progress Fase 2A: **1/8 task selesai** (2.1). Fase 2B (lampiran): 0/7, belum mulai.
+- Task terakhir selesai: **2.1 — migrasi `announcements`, `topics`, `materials`** (commit `43c81ba`)
+- Next task: **2.2 — paket `content` (validasi, aturan terbit, konflik `updatedAt`)**
+- Local branch: `main`, working tree bersih
+- Belum masuk `server/main`: `485ef23` (rencana Fase 2) dan `43c81ba` (Task 2.1). Push dilakukan user.
+- Produksi: **`https://fikriramaaulia.online`** aktif (Caddy + Let's Encrypt, berlaku s.d. 2027-02-11)
+- Rilis produksi: `20261113T023752Z-56c1e059e84d` (kode `56c1e05`), migrasi versi **3**. Migrasi 4–6 dari Task 2.1 **belum** di produksi.
+- PostgreSQL aplikasi: aktif, readiness PASS
+- Admin: satu akun `fikri`; login dan logout lewat browser terbukti di audit
+
+## Phase Tracker
+
+| Fase | Isi | Status | Rincian |
+|---|---|---|---|
+| 0 | Fondasi Go + Next.js + deploy | DITUTUP 13 Nov 2026 (dengan pengecualian) | `.kiro/steering/IMPLEMENTATION_PLAN.md`, `docs/F0_ACCEPTANCE.md` |
+| Redesign | Web pribadi guru (Pengumuman, Materi, Progres Tugas) | DONE, ter-deploy | `.kiro/steering/REDESIGN_BACKLOG.md` |
+| 1 | Database + login admin + HTTPS | DITUTUP 13 Nov 2026 | `.kiro/steering/PHASE1_PLAN.md`, `docs/F1_ACCEPTANCE.md` |
+| Hardening | HSTS 1 hari + CSP `enforce` | DONE, aktif di produksi | bagian Current Next Step |
+| 2A | Pengumuman + Materi teks | 1/8 — dijeda | `.kiro/steering/PHASE2_PLAN.md` |
+| 2B | Lampiran PDF/PPT/PPTX | belum mulai | `.kiro/steering/PHASE2_PLAN.md` |
+
+## Fase 2A Tracker
+
+| Task | Scope | Status | Commit | Verification |
+|---|---|---|---|---|
+| 2.1 | Migrasi `announcements`, `topics` + seed K1–K7, `materials` | DONE | `43c81ba` | RED 5 uji skema; GREEN di `cbt-vps`; `goose validate`, sqlc, seluruh suite, vet, build hijau; gladi migrasi 3→6 pada salinan data produksi di database uji (admin dan audit utuh) |
+| 2.2 | Paket `content`: validasi, terbit, konflik | PENDING | — | — |
+| 2.3 | API publik baca-saja | PENDING | — | — |
+| 2.4 | API admin CRUD + audit | PENDING | — | — |
+| 2.5 | Frontend publik | PENDING | — | — |
+| 2.6 | Frontend admin | PENDING | — | — |
+| 2.7 | OpenAPI, smoke, deploy, cek browser | PENDING | — | — |
+| 2.8 | Gerbang 2A + `docs/F2A_ACCEPTANCE.md` | PENDING | — | — |
+
+Keputusan Fase 2 (disetujui user 13 Nov 2026): dibagi 2A lalu 2B; isi teks biasa (tanpa Markdown/HTML); Pengumuman punya draf/terbit dan sematkan; hapus permanen dengan jejak audit; topik Materi opsional (tanpa topik = Umum); ID tetap `bigint`.
 
 ## Sources of Truth
 
 1. `PLAN.md` — spesifikasi produk, arsitektur, security, API, dan AC01–AC25.
 2. `DESIGN.md` — design tokens, UX, responsive, accessibility, dan antislop rules.
-3. `.kiro/steering/IMPLEMENTATION_PLAN.md` — task-by-task Fase 0.
+3. `.kiro/steering/IMPLEMENTATION_PLAN.md` (Fase 0), `.kiro/steering/PHASE1_PLAN.md` (Fase 1), `.kiro/steering/PHASE2_PLAN.md` (Fase 2) — rencana task-by-task.
 4. `LOCAL_AI_CONTEXT.md` — environment, working agreements, dan pointer sesi.
 5. `.kiro/steering/PROGRESS.md` — status aktual dan evidence pelaksanaan.
 
@@ -327,12 +353,12 @@ Notes:
 Target:
 
 - SSH alias: `cbt-vps`
-- Host: `43.134.111.212`
+- Host: `43.134.111.212` (Tencent Cloud)
 - User: `ubuntu`
 - Git checkout/runtime workspace: `/home/ubuntu/informatika-monitoring`
-- Bare deploy repository: `/home/ubuntu/git-repos/informatika-monitoring.git`
-- Service: `informatika-monitoring-api.service`
-- Internal port: `8300`
+- Bare deploy repository: `/home/ubuntu/git-repos/informatika-monitoring.git` (remote `server` di lokal; di checkout VPS bernama `origin`)
+- Service: `informatika-monitoring-api.service`, port internal `8300` (tertutup dari internet)
+- Reverse proxy: Caddy v2.11.9 (`caddy.service`, aktif dan enabled), konfigurasi `/etc/caddy/Caddyfile` = `deploy/Caddyfile`
 
 Verified toolchain:
 
@@ -340,65 +366,55 @@ Verified toolchain:
 Go:      1.27.4
 Node.js: 26.13.1 LTS
 npm:     11.20.0
+Caddy:   2.11.9
 ```
 
 Current provisioning state:
 
-- Clean Git checkout: PRESENT
-- Application database `informatika_monitoring`: PRESENT
-- Least-privilege application role: PRESENT and verified non-superuser
-- Application `.env`: PRESENT, owner `ubuntu:ubuntu`, mode `0600`
-- Bare Git deploy repository: PRESENT
-- `informatika-monitoring-api.service`: ACTIVE and ENABLED
-- Runtime port 8300: ACTIVE and owned by the systemd MainPID
-- Immutable release deployment: PRESENT
-- Public hostname/HTTPS: NOT CONFIGURED — intentionally outside Fase 0 scope
+- Database `informatika_monitoring` (versi migrasi 3) dan role aplikasi non-superuser: PRESENT
+- Database uji `informatika_monitoring_test` + role sendiri (tanpa akses produksi): PRESENT; kredensial `/home/ubuntu/.informatika-monitoring-test.env` (0600)
+- `.env` produksi (0600, `ubuntu`): `APP_ADDR`, `PUBLIC_DIR`, `DATABASE_URL`, `ADMIN_COOKIE_SECURE=true`, `CSP_MODE=enforce`
+- Cadangan otomatis sebelum migrasi: `/home/ubuntu/informatika-monitoring/backups/` (10 terakhir)
+- DNS `fikriramaaulia.online`: A ke `43.134.111.212`, Cloudflare **DNS only** (wajib tetap abu-abu agar sertifikat bisa diperpanjang)
+- Firewall Tencent: TCP 80 dan 443 terbuka; 8300 dan 5432 tidak terjangkau dari luar (terverifikasi)
+- HSTS `max-age=86400`; cadangan Caddyfile lama `/etc/caddy/Caddyfile.bak-hsts3600`
 
 ## Current Backend Contract
 
-Available in source:
+Di produksi (`docs/openapi.yaml` 0.2.0):
 
-- `GET /healthz`
-  - Process liveness only.
-  - Does not depend on PostgreSQL.
-- `GET /readyz`
-  - `200` when configured DB pinger succeeds.
-  - Safe `503` when DB is missing/unavailable.
-- `GET /api/v1/public/summary`
-  - Honest zero state.
-  - `totalGroups: 0`
-  - `manualUpdate: true`
-  - `updatedAt: null`
-- Unknown API routes return safe JSON `404`.
-- Go serves the exported Next.js frontend with extensionless routing, frontend 404, safe cache policy, and traversal protection.
+- `GET /healthz`, `GET /readyz`, `GET /api/v1/public/summary` (zero state).
+- `POST /api/v1/admin/auth/login`, `POST /api/v1/admin/auth/logout`, `GET /api/v1/admin/auth/me` — sesi server-side, cookie `__Host-admin_session`, CSRF + Origin, pembatas percobaan, audit.
+- Go menyajikan ekspor statis Next.js dengan Content-Security-Policy berbasis hash per halaman.
+- CLI server `bin/current/adminctl` (`create-admin`, `reset-password`).
 
-Not available yet:
+Di kode, belum di produksi:
 
-- Authentication.
-- Business database schema.
-- Classes/groups CRUD.
-- Real monitoring data.
-- Group portal.
+- Tabel `announcements`, `topics` (K1–K7), `materials` (Task 2.1).
+
+Belum ada:
+
+- API dan UI Pengumuman/Materi (Task 2.2–2.6).
+- Lampiran (Fase 2B).
+- Kelas, kelompok, pengumpulan, evaluasi, portal kelompok.
 
 ## Safety and Scope Status
 
-Still enforced:
+Tetap berlaku:
 
-- No Gmail API, IMAP, or automatic inbox sync.
-- No PPT/PDF upload.
-- No AI grading.
-- No real student data.
-- No direct frontend database access.
-- No Next.js business Route Handlers or Server Actions.
-- No runtime restart/deployment without approval.
+- Tanpa Gmail API/IMAP/sinkronisasi inbox, tanpa AI grading, tanpa data siswa asli.
+- Tanpa upload dari siswa. Upload hanya untuk lampiran Materi dari guru (Fase 2B, belum dibangun).
+- Frontend tidak mengakses database; tanpa Route Handlers/Server Actions Next.js.
+- Tidak ada deploy/restart produksi tanpa persetujuan user.
+- Agen tidak bisa memperbarui `main` di remote; itu dilakukan user.
 
 ## Blockers / Pending External Decisions
 
-1. Task 0.10–0.11 tidak memiliki blocker acceptance; provisioning dan baseline deployment sudah VERIFIED.
-2. Docker tidak tersedia di `cbt-vps`; optional Compose hanya mendapat static review dan bukan dependency runtime.
-3. npm masih melaporkan tujuh moderate dependency advisories; harus dicatat pada Task 0.12, bukan disamarkan sebagai audit bersih.
-4. Public hostname/HTTPS cutover belum diputuskan dan tetap di luar scope Fase 0.
-5. Perpindahan ke Fase 1 menunggu Task 0.12 PASS dan approval user.
+1. Tidak ada blocker untuk Task 2.2.
+2. Docker tidak tersedia di `cbt-vps`; uji integrasi memakai database uji PostgreSQL lokal.
+3. 7 advisory npm moderate (alat dev saja) masih terbuka sejak Fase 0.
+4. HSTS 1 tahun menunggu kira-kira dua minggu HTTPS stabil (sekitar 27 Nov 2026).
+5. Komponen UI belum punya uji otomatis; hanya logika klien API.
 
 ## Task 0.10–0.11 Deployment Evidence
 
@@ -427,14 +443,21 @@ The remote deploy command passed Go test/vet/build, `sqlc generate`, frontend `n
 
 ## Current Next Step
 
-Fase 1 ditutup 13 Nov 2026. Produksi: `https://fikriramaaulia.online` (Caddy + Let's Encrypt, berlaku s.d. 2027-02-11), rilis `20261112T232527Z-d2e3fcac4923` (kode `d2e3fca`), migrasi versi 3, satu admin `fikri`, cookie admin Secure. Login/logout lewat browser terbukti di audit.
+Kerja **dijeda atas permintaan user** setelah Task 2.1 (13 Nov 2026).
 
-Berikutnya, menunggu approval user:
+Saat dilanjutkan:
 
-1. Rencana Fase 2 (Pengumuman, Materi, lampiran PDF/PPT sesuai `PLAN.md` bagian 0).
-2. HSTS: SUDAH dinaikkan ke 1 hari (`max-age=86400`) di `/etc/caddy/Caddyfile` pada 13 Nov 2026; cadangan konfigurasi lama `/etc/caddy/Caddyfile.bak-hsts3600`. Naikkan ke 1 tahun setelah kira-kira dua minggu stabil.
-3. CSP: AKTIF mode `enforce` sejak 13 Nov 2026 (rilis `20261113T023752Z-56c1e059e84d`, kode `3f0361f`; `.env` `CSP_MODE=enforce`). Jalur: deploy dengan `report-only` (smoke lulus, konsol browser kosong di `/`, `/progres/`, `/admin/`), lalu `enforce` + restart. Bukti fungsi di browser nyata (Edge) dengan `enforce`: `/progres/` berganti dari teks statis 'Memuat ringkasan proyek' ke 'Belum ada kelompok yang disiapkan' (butuh JavaScript + fetch API), dan `/admin/` dialihkan ke `/admin/login/` (butuh JavaScript). Login penuh di bawah `enforce` terbukti: audit `auth.login` sukses 09:47:10 WIB dari `202.152.195.111`. Batas: tidak terbukti bahwa alat konsol menangkap laporan CSP. Undo: `CSP_MODE=off` lalu restart.
-4. 7 advisory npm moderate (dev-only) masih terbuka.
+1. User mengirim `485ef23` dan `43c81ba` ke `origin` dan `server` (perintah sama seperti sebelumnya, dengan `GIT_SSH_COMMAND="ssh -o ClearAllForwardings=yes"`).
+2. Task 2.2 — paket `content`: validasi judul/isi/status/topik, aturan `published_at` pada terbit pertama, penolakan `updatedAt` lama (409). TDD unit.
+3. Lanjut 2.3–2.8 sesuai `.kiro/steering/PHASE2_PLAN.md`. Migrasi 4–6 baru masuk produksi saat deploy Task 2.7 (cadangan otomatis berjalan sebelumnya).
+
+Selesai sebelum jeda (13 Nov 2026):
+
+- Fase 1 ditutup; HTTPS aktif; login/logout lewat browser terbukti di audit.
+- HSTS dinaikkan ke 1 hari (`max-age=86400`); naikkan ke 1 tahun sekitar 27 Nov 2026.
+- CSP `enforce` aktif (rilis `20261113T023752Z-56c1e059e84d`, kode `3f0361f`): terbukti tidak memutus `/progres/`, pengalihan `/admin/` ke login, dan login penuh (audit `auth.login` sukses 09:47:10 WIB dari `202.152.195.111`). Batas: tidak terbukti bahwa alat konsol menangkap laporan CSP. Undo: `CSP_MODE=off` lalu restart.
+- Rencana Fase 2 disetujui.
+- Task 2.1 selesai; `deploy.sh` kini menolak berkas Go yang belum di-`gofmt` (temuan: `cmd/api/main.go` dari commit CSP; sudah diperbaiki).
 
 ## Update Rule
 
