@@ -1,6 +1,6 @@
 # Fase 2 — Pengumuman, Materi, dan Lampiran (Rencana)
 
-> Status: **DISETUJUI 13 Nov 2026 — 2A sedang dikerjakan.**
+> Status: **DISETUJUI 13 Nov 2026 — 2A sedang dikerjakan (2/8 task selesai).**
 > Dibuat: 13 November 2026. Sumber: `PLAN.md` bagian 0 (keputusan lampiran), `DESIGN.md` (Beranda dan navigasi), Fase 1 (login admin, CSRF, audit).
 
 ## Tujuan
@@ -84,7 +84,7 @@ Lampiran membawa risiko yang berbeda (disk, unggahan besar, cadangan berkas, isi
 | Task | Isi | Uji |
 |---|---|---|
 | 2.1 **DONE** | Migrasi `announcements`, `topics` + seed K1–K7, `materials`; query sqlc | uji skema: constraint, seed, up/down |
-| 2.2 | Paket `content`: validasi (panjang, status, topik), aturan terbit (`published_at`), konflik `updatedAt` | TDD unit |
+| 2.2 **DONE** | Paket `content`: validasi (panjang, status, topik), aturan terbit (`published_at`), konflik `updatedAt` | TDD unit + PostgreSQL nyata |
 | 2.3 | API publik baca-saja | TDD HTTP: draf tidak pernah bocor, 404 untuk draf/terhapus, paginasi |
 | 2.4 | API admin CRUD + audit | TDD HTTP: 401 tanpa sesi, 403 tanpa CSRF, 409 konflik, audit tercatat |
 | 2.5 | Frontend publik: Beranda memuat data, halaman daftar dan baca; perender teks biasa | uji klien API + uji perender (tidak ada HTML yang lolos) |
@@ -146,3 +146,4 @@ User mengikuti semua rekomendasi: dibagi 2A lalu 2B; isi teks biasa; Pengumuman 
   - **Gladi migrasi pada data produksi:** cadangan produksi terbaru (``pre-20261113T023752Z-56c1e059e84d.dump``) dipulihkan ke database **uji**, lalu ``goose up``: versi 3 ke 6, admin 1 dan audit 6 tetap, topik 7. Database uji dikosongkan lagi sesudahnya. Catatan: selama gladi, database uji sempat berisi salinan data produksi (hash sandi admin dan audit).
   - **Temuan:** ``backend/cmd/api/main.go`` (dari commit CSP ``3f0361f``, sudah dideploy) tidak lolos ``gofmt`` (kurang baris baru di akhir). Diperbaiki, dan ``deploy.sh`` kini menolak deploy bila ada berkas Go yang belum di-``gofmt``.
   - Query sqlc untuk konten ditulis bersama task yang memakainya (2.2–2.4).
+- **Task 2.2 selesai (13 Nov 2026, commit `fb3c9be`).** Strict RED di `cbt-vps`: paket uji gagal dibangun karena API yang diinginkan (`Input`, `Kind`, `Draft`, `Announcement`) belum ada. GREEN: paket `internal/content` dan query sqlc memvalidasi judul Unicode 1–160 setelah trim, isi Pengumuman 10.000, deskripsi Materi 20.000, status draf/terbit, topik opsional yang harus ada, dan urutan nonnegatif. Terbit pertama mengisi `published_at`; tarik lalu terbitkan ulang mempertahankan waktu pertama. Update dengan `updatedAt` lama menghasilkan `ErrConflict`, sedangkan ID tidak ada menghasilkan `ErrNotFound`. `sqlc generate`, targeted/full suite dua kali, race package, vet, build, dan gofmt hijau dengan PostgreSQL uji nyata. Belum di produksi.
