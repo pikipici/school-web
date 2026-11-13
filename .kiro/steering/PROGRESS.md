@@ -432,8 +432,8 @@ Fase 1 ditutup 13 Nov 2026. Produksi: `https://fikriramaaulia.online` (Caddy + L
 Berikutnya, menunggu approval user:
 
 1. Rencana Fase 2 (Pengumuman, Materi, lampiran PDF/PPT sesuai `PLAN.md` bagian 0).
-2. Naikkan HSTS bertahap setelah HTTPS stabil beberapa hari.
-3. Content-Security-Policy untuk ekspor statis Next.js.
+2. HSTS: SUDAH dinaikkan ke 1 hari (`max-age=86400`) di `/etc/caddy/Caddyfile` pada 13 Nov 2026; cadangan konfigurasi lama `/etc/caddy/Caddyfile.bak-hsts3600`. Naikkan ke 1 tahun setelah kira-kira dua minggu stabil.
+3. CSP: kode SELESAI di commit `3f0361f` (hash SHA-256 per halaman, tanpa `'unsafe-inline'` untuk skrip; `CSP_MODE` enforce/report-only/off). Uji web 7 baru + config + 8 uji parser deploy; hash Go cocok dengan pengurai HTML Python pada kelima halaman produksi. BELUM dideploy: urutan rencana `CSP_MODE=report-only` -> deploy -> cek konsol browser -> `enforce` -> restart -> cek ulang.
 4. 7 advisory npm moderate (dev-only) masih terbuka.
 
 ## Update Rule
