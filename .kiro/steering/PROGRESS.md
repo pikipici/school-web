@@ -6,10 +6,10 @@
 
 ## Ringkasan
 
-- Fase aktif: **tidak ada — Fase 2A DITUTUP 14 Nov 2026**, menunggu persetujuan memulai Fase 2B (lampiran). Fase 0 dan Fase 1 sudah ditutup.
-- Progress Fase 2A: **8/8 selesai** (ditutup dengan pengecualian). Fase 2B (lampiran): 0/7, belum mulai.
-- Task terakhir selesai: **2.8 — gerbang 2A** (`docs/F2A_ACCEPTANCE.md`)
-- Next task: **2.9 — migrasi `material_attachments`** (setelah user setuju mulai 2B). Daftar revisi desain: tampilan admin di 360px belum diverifikasi; paginasi 360px turun baris.
+- Fase aktif: **Fase 2B — Lampiran PDF/PPT/PPTX** (disetujui 14 Nov 2026). Fase 0, 1, dan 2A sudah ditutup.
+- Progress Fase 2A: **8/8 selesai** (ditutup dengan pengecualian). Fase 2B (lampiran): **1/7** (2.9).
+- Task terakhir selesai: **2.9 — migrasi `material_attachments` + direktori data** (14 Nov 2026)
+- Next task: **2.10 — paket `attachments`** (validasi isi, nama UUID, tulis atomik, kuota). Daftar revisi desain: tampilan admin di 360px belum diverifikasi; paginasi 360px turun baris.
 - Semua perbaikan gaya tautan sudah di produksi.
 - Local branch: `main`, working tree bersih
 - Semua commit sampai `12bcf48` sudah di `server/main`.
@@ -27,7 +27,7 @@
 | 1 | Database + login admin + HTTPS | DITUTUP 13 Nov 2026 | `.kiro/steering/PHASE1_PLAN.md`, `docs/F1_ACCEPTANCE.md` |
 | Hardening | HSTS 1 hari + CSP `enforce` | DONE, aktif di produksi | bagian Current Next Step |
 | 2A | Pengumuman + Materi teks | DITUTUP 14 Nov 2026 (dengan pengecualian) | `.kiro/steering/PHASE2_PLAN.md` |
-| 2B | Lampiran PDF/PPT/PPTX | belum mulai | `.kiro/steering/PHASE2_PLAN.md` |
+| 2B | Lampiran PDF/PPT/PPTX | 1/7 — berjalan | `.kiro/steering/PHASE2_PLAN.md` |
 
 ## Fase 2A Tracker
 
