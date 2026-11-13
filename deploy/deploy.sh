@@ -188,7 +188,7 @@ preflight() {
   log "=== PRE-FLIGHT ==="
   [[ "$mode" == check || "$ROOT_DIR" == "$REMOTE_DIR" ]] || fail "remote checkout mismatch: expected $REMOTE_DIR"
   local cmd dirty available_mb root_dev releases_parent_dev
-  for cmd in git go node npm sqlc goose psql pg_dump pg_restore curl python3 sudo systemctl ss stat df mktemp tar sed sort grep readlink ln mv install timeout id cut cp chmod date; do require_command "$cmd"; done
+  for cmd in git go gofmt node npm sqlc goose psql pg_dump pg_restore curl python3 sudo systemctl ss stat df mktemp tar sed sort grep readlink ln mv install timeout id cut cp chmod date; do require_command "$cmd"; done
   parse_environment
   load_test_database
   dirty="$(git -C "$ROOT_DIR" status --porcelain)"; [[ -z "$dirty" ]] || fail "working tree is dirty; preserve or commit changes before deployment"
@@ -219,6 +219,9 @@ build_and_verify() {
   local src="$BUILD_ROOT/source"
   mkdir -p "$src" "$BUILD_ROOT/npm-cache" "$BUILD_ROOT/go-cache" "$BUILD_ROOT/go-mod-cache"
   git -C "$ROOT_DIR" archive --format=tar "$SOURCE_HEAD" | tar -xf - -C "$src"
+  local unformatted
+  unformatted="$(cd "$src/backend" && gofmt -l cmd internal)"
+  [[ -z "$unformatted" ]] || fail "Go files are not gofmt-formatted: $(printf '%s' "$unformatted" | tr '\n' ' ')"
   (cd "$src/backend" && GOCACHE="$BUILD_ROOT/go-cache" GOMODCACHE="$BUILD_ROOT/go-mod-cache" sqlc generate && TEST_DATABASE_URL="$TEST_DB_DSN" REQUIRE_TEST_DB=1 go test ./... -count=1 && go vet ./... && go build -o "$BUILD_ROOT/api" ./cmd/api && go build -o "$BUILD_ROOT/adminctl" ./cmd/adminctl)
   [[ -x "$BUILD_ROOT/api" && -x "$BUILD_ROOT/adminctl" ]] || fail "backend binaries were not created"
   (cd "$src/frontend" && npm_config_cache="$BUILD_ROOT/npm-cache" npm ci && npm run lint && npm run typecheck && npm test && npm run build)

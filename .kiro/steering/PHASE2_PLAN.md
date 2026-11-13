@@ -1,6 +1,6 @@
 # Fase 2 — Pengumuman, Materi, dan Lampiran (Rencana)
 
-> Status: **DRAFT — menunggu approval. Belum ada kode.**
+> Status: **DISETUJUI 13 Nov 2026 — 2A sedang dikerjakan.**
 > Dibuat: 13 November 2026. Sumber: `PLAN.md` bagian 0 (keputusan lampiran), `DESIGN.md` (Beranda dan navigasi), Fase 1 (login admin, CSRF, audit).
 
 ## Tujuan
@@ -40,7 +40,7 @@ Lampiran membawa risiko yang berbeda (disk, unggahan besar, cadangan berkas, isi
 | K2 | Format isi | **Teks biasa**: baris kosong jadi paragraf, URL `https://` jadi tautan. Tanpa HTML/Markdown | Tidak ada jalur XSS; CSP tetap ketat |
 | K3 | Pengumuman disematkan | Ya, satu bendera `pinned`; yang disematkan tampil paling atas | Pengumuman penting tidak tenggelam |
 | K4 | Pengumuman kedaluwarsa | Tidak di 2A | Bisa ditambah nanti; menjaga sederhana |
-| K5 | Materi per topik | Materi wajib punya satu topik K1–K7, plus urutan | Sesuai tujuh materi di `PLAN.md` |
+| K5 | Materi per topik | Topik K1–K7 **opsional**; materi tanpa topik tampil di kelompok **Umum**; plus urutan | Web pribadi punya materi di luar tujuh topik (mis. panduan pengumpulan) |
 | K6 | Hapus | Hapus permanen dengan konfirmasi; jejak tetap ada di `audit_log` (judul + id) | Konten publik, bukan data siswa; tidak perlu arsip |
 | K7 | Alamat halaman | Halaman baca memakai `?id=` (mis. `/pengumuman/baca/?id=12`) | Ekspor statis Next.js tidak bisa membuat halaman per id saat runtime |
 | K8 | Tipe ID | Tetap `bigint` seperti Fase 1, bukan UUID seperti tertulis di `PLAN.md` 9 | Konsisten dengan tabel yang sudah ada; `PLAN.md` diperbarui |
@@ -83,7 +83,7 @@ Lampiran membawa risiko yang berbeda (disk, unggahan besar, cadangan berkas, isi
 
 | Task | Isi | Uji |
 |---|---|---|
-| 2.1 | Migrasi `announcements`, `topics` + seed K1–K7, `materials`; query sqlc | uji skema: constraint, seed, up/down |
+| 2.1 **DONE** | Migrasi `announcements`, `topics` + seed K1–K7, `materials`; query sqlc | uji skema: constraint, seed, up/down |
 | 2.2 | Paket `content`: validasi (panjang, status, topik), aturan terbit (`published_at`), konflik `updatedAt` | TDD unit |
 | 2.3 | API publik baca-saja | TDD HTTP: draf tidak pernah bocor, 404 untuk draf/terhapus, paginasi |
 | 2.4 | API admin CRUD + audit | TDD HTTP: 401 tanpa sesi, 403 tanpa CSRF, 409 konflik, audit tercatat |
@@ -116,13 +116,9 @@ Setiap task: uji gagal dulu, implementasi, uji/vet/build di VPS, commit.
 6. **Cadangan tidak lengkap.** 2B wajib menambah cadangan direktori lampiran sebelum dianggap selesai.
 7. **Migrasi maju-saja.** Cadangan `pg_dump` otomatis dari Fase 1 tetap berjalan sebelum migrasi.
 
-## Keputusan yang saya butuhkan dari user
+## Keputusan user (13 Nov 2026)
 
-1. Setuju dibagi **2A lalu 2B**?
-2. Setuju **teks biasa** (tanpa Markdown/HTML) untuk isi?
-3. Setuju **draf/terbit** dan **sematkan** untuk Pengumuman?
-4. Setuju **hapus permanen** (jejak di audit)?
-5. Setuju **setiap Materi wajib punya topik K1–K7**? Atau perlu materi umum tanpa topik?
+User mengikuti semua rekomendasi: dibagi 2A lalu 2B; isi teks biasa; Pengumuman punya draf/terbit dan sematkan; hapus permanen dengan jejak audit; topik Materi opsional (tanpa topik = Umum). ID tetap `bigint` (K8).
 
 ## Gerbang selesai 2A
 
@@ -143,3 +139,10 @@ Setiap task: uji gagal dulu, implementasi, uji/vet/build di VPS, commit.
 - [ ] Cadangan mencakup direktori lampiran dan terbukti bisa dipulihkan.
 - [ ] Deploy + smoke lulus; cek browser nyata dengan PDF dan PPTX asli.
 - [ ] User menyetujui fase berikutnya.
+
+## Catatan pelaksanaan
+
+- **Task 2.1 selesai (13 Nov 2026).** RED: 5 uji skema baru gagal tanpa migrasi. GREEN di ``cbt-vps`` dengan database uji: migrasi ``00004_create_announcements``, ``00005_create_topics`` (seed K1–K7, judul persis dari ``PLAN.md`` 2.1), ``00006_create_materials`` (topik opsional, ``ON DELETE RESTRICT``). Uji membuktikan: default draf/tidak disematkan, batas judul 160 dan isi 10.000/20.000 karakter (dihitung per karakter, termasuk huruf beraksen), status hanya draft/published, terbit wajib punya ``published_at``, topik tak dikenal ditolak, topik yang dipakai tidak bisa dihapus, ``down-to 3`` menghapus tabel konten tanpa menyentuh data Fase 1, ``up`` ulang tidak menggandakan seed. ``goose validate``, ``sqlc generate``, seluruh suite, vet, build hijau.
+  - **Gladi migrasi pada data produksi:** cadangan produksi terbaru (``pre-20261113T023752Z-56c1e059e84d.dump``) dipulihkan ke database **uji**, lalu ``goose up``: versi 3 ke 6, admin 1 dan audit 6 tetap, topik 7. Database uji dikosongkan lagi sesudahnya. Catatan: selama gladi, database uji sempat berisi salinan data produksi (hash sandi admin dan audit).
+  - **Temuan:** ``backend/cmd/api/main.go`` (dari commit CSP ``3f0361f``, sudah dideploy) tidak lolos ``gofmt`` (kurang baris baru di akhir). Diperbaiki, dan ``deploy.sh`` kini menolak deploy bila ada berkas Go yang belum di-``gofmt``.
+  - Query sqlc untuk konten ditulis bersama task yang memakainya (2.2–2.4).
