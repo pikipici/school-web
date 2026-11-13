@@ -1,0 +1,32 @@
+"use client";
+import Link from "next/link";
+import { useCallback, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { Announcement, Material, PageMeta, getAnnouncement, getAnnouncements, getMaterial, getMaterials, getTopics } from "@/lib/api-client/content";
+import { formatWIB, validContentID } from "@/lib/format";
+import { PlainText } from "./PlainText";
+
+function State({ kind, retry }: { kind: "loading"|"error"; retry?:()=>void }) { return <div className={`public-state ${kind}`} role={kind === "loading" ? "status" : "alert"} aria-live="polite"><p>{kind === "loading" ? "Memuat konten…" : "Konten tidak dapat dimuat. Silakan coba lagi."}</p>{retry && <button className="retry-button" type="button" onClick={retry}>Coba lagi</button>}</div>; }
+function Empty({ children }: {children: React.ReactNode}) { return <div className="empty-block" role="status"><p>{children}</p></div>; }
+function AnnouncementRows({ items }: {items: Announcement[]}) { return <ol className="content-list">{items.map(x=><li key={x.id}><time dateTime={x.publishedAt}>{formatWIB(x.publishedAt)}</time><h3><Link href={`/pengumuman/baca/?id=${x.id}`}>{x.title}</Link></h3><p>{x.body.split(/\r?\n/)[0]}</p></li>)}</ol>; }
+function MaterialRows({ items }: {items: Material[]}) { return <ol className="content-list">{items.map(x=><li key={x.id}><p className="topic-label">{x.topic?.title ?? "Tanpa topik"}</p><h3><Link href={`/materi/baca/?id=${x.id}`}>{x.title}</Link></h3><time dateTime={x.publishedAt}>{formatWIB(x.publishedAt)}</time><p>{x.description.split(/\r?\n/)[0]}</p></li>)}</ol>; }
+function useLoad<T>(loader:(signal:AbortSignal)=>Promise<T>, key: string) { const [state,setState]=useState<{key:string;value?:T;error:boolean}>({key:"",error:false}); const [tick,setTick]=useState(0); useEffect(()=>{const c=new AbortController();loader(c.signal).then(value=>setState({key,value,error:false})).catch(e=>{if(e?.name!=="AbortError")setState({key,error:true})});return()=>c.abort();},[key,tick]); // eslint-disable-line react-hooks/exhaustive-deps
+ const current=state.key===key?state:{key,error:false}; return {value:current.value,error:current.error,retry:()=>setTick(x=>x+1)}; }
+export function HomeContent() { const announcements=useLoad(s=>getAnnouncements({page:1,limit:3},s),"home-a"); const materials=useLoad(s=>getMaterials({page:1,limit:5},s),"home-m"); return <><section className="content-section" aria-labelledby="home-a"><div className="section-heading"><h2 id="home-a">Pengumuman terbaru</h2><Link href="/pengumuman/">Lihat semua pengumuman</Link></div>{announcements.error?<State kind="error" retry={announcements.retry}/>:!announcements.value?<State kind="loading"/>:announcements.value.items.length?<AnnouncementRows items={announcements.value.items}/>:<Empty>Belum ada pengumuman yang dipublikasikan.</Empty>}</section><section className="content-section" aria-labelledby="home-m"><div className="section-heading"><h2 id="home-m">Materi terbaru</h2><Link href="/materi/">Lihat semua materi</Link></div>{materials.error?<State kind="error" retry={materials.retry}/>:!materials.value?<State kind="loading"/>:materials.value.items.length?<MaterialRows items={materials.value.items}/>:<Empty>Belum ada materi yang dipublikasikan.</Empty>}</section></>; }
+function Pager({meta,page,setPage}:{meta:PageMeta;page:number;setPage:(n:number)=>void}) { return <nav className="pagination" aria-label="Halaman daftar"><button type="button" disabled={page<=1} onClick={()=>setPage(page-1)}>Sebelumnya</button><span>Halaman {meta.page} dari {Math.max(meta.totalPages,1)}</span><button type="button" disabled={page>=meta.totalPages} onClick={()=>setPage(page+1)}>Berikutnya</button></nav>; }
+export function AnnouncementList() { const [page,setPage]=useState(1); const load=useLoad(s=>getAnnouncements({page,limit:10},s),`a-${page}`); return load.error?<State kind="error" retry={load.retry}/>:!load.value?<State kind="loading"/>:<>{load.value.items.length?<AnnouncementRows items={load.value.items}/>:<Empty>Belum ada pengumuman yang dipublikasikan.</Empty>}<Pager meta={load.value.meta} page={page} setPage={setPage}/></>; }
+export function MaterialList() { const [page,setPage]=useState(1),[topic,setTopic]=useState(""); const load=useLoad(s=>getMaterials({page,limit:10,topic:topic||undefined},s),`m-${page}-${topic}`); const topics=useLoad(s=>getTopics(s),"topics"); return <>{topics.error?<State kind="error" retry={topics.retry}/>:!topics.value?<State kind="loading"/>:<div className="filter"><label htmlFor="topic">Filter topik</label><select id="topic" value={topic} onChange={e=>{setTopic(e.target.value);setPage(1)}}><option value="">Semua topik</option>{topics.value.map(t=><option key={t.id} value={t.code}>{t.title}</option>)}</select></div>}{load.error?<State kind="error" retry={load.retry}/>:!load.value?<State kind="loading"/>:<>{load.value.items.length?<MaterialRows items={load.value.items}/>:<Empty>Tidak ada materi untuk pilihan ini.</Empty>}<Pager meta={load.value.meta} page={page} setPage={setPage}/></>}</>; }
+function LoadedDetail({ type, id, back }: { type: "announcement" | "material"; id: number; back: string }) {
+  const loader = useCallback((signal: AbortSignal) => type === "announcement" ? getAnnouncement(id, signal) : getMaterial(id, signal), [id, type]);
+  const load = useLoad<Announcement | Material>(loader, `${type}-${id}`);
+  if (load.error) return <><State kind="error" retry={load.retry}/><Link href={back}>Kembali ke daftar</Link></>;
+  if (!load.value) return <State kind="loading"/>;
+  const body = "body" in load.value ? load.value.body : load.value.description;
+  return <article className="detail"><p><Link href={back}>Kembali ke daftar</Link></p>{"topic" in load.value && <p className="topic-label">{load.value.topic?.title ?? "Tanpa topik"}</p>}<h1 className="page-title">{load.value.title}</h1><time dateTime={load.value.publishedAt}>{formatWIB(load.value.publishedAt)}</time><PlainText value={body}/></article>;
+}
+export function Detail({ type }: { type: "announcement" | "material" }) {
+  const id = validContentID(useSearchParams().get("id"));
+  const back = type === "announcement" ? "/pengumuman/" : "/materi/";
+  if (!id) return <><p className="public-state error" role="alert">ID konten tidak ada atau tidak valid.</p><Link href={back}>Kembali ke daftar</Link></>;
+  return <LoadedDetail type={type} id={id} back={back}/>;
+}

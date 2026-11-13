@@ -5,7 +5,7 @@ export const SITE_DESCRIPTION =
   "Web pribadi guru Informatika: pengumuman, materi, dan progres tugas kelompok kelas IX.";
 
 export const NAV_ITEMS = [
-  { href: "/#pengumuman", label: "Pengumuman" },
-  { href: "/#materi", label: "Materi" },
-  { href: "/progres", label: "Progres Tugas" }
+  { href: "/pengumuman/", label: "Pengumuman" },
+  { href: "/materi/", label: "Materi" },
+  { href: "/progres/", label: "Progres Tugas" }
 ] as const;
