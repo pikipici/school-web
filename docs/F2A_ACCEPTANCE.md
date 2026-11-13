@@ -1,9 +1,9 @@
 # Fase 2A — Acceptance Evidence (Pengumuman dan Materi teks)
 
 > Tanggal: 14 November 2026. Kode di produksi: `12bcf48` (rilis `20261113T220824Z-12bcf48de85e`, migrasi versi 6).
-> Perbaikan gaya tautan `e86f851` dideploy 14 Nov 2026 05:42 WIB (rilis `20261113T224209Z-27fe481c50fa`, kode `27fe481`), smoke PASS. Perbaikan lanjutan untuk tautan di isi teks ada di commit sesudahnya, belum dideploy.
+> Perbaikan gaya tautan `e86f851` dideploy 14 Nov 2026 05:42 WIB (rilis `20261113T224209Z-27fe481c50fa`, kode `27fe481`), smoke PASS. Perbaikan lanjutan untuk tautan di isi teks (`f4cb002`) dideploy 05:45 WIB (rilis `20261113T224525Z-f4cb002e17e7`), smoke PASS, aturan garis bawah terverifikasi di CSS produksi.
 >
-> **Verdict: BELUM DITUTUP — 2 hal terbuka:** (1) cek tata letak 360px, zoom 200%, dan keyboard oleh user; (2) deploy perbaikan garis bawah tautan di isi teks. Semua gerbang otomatis dan alur fungsi di browser nyata lulus.
+> **Verdict: BELUM DITUTUP — 1 hal terbuka:** cek tata letak 360px, zoom 200%, dan keyboard oleh user. Semua gerbang otomatis, alur fungsi di browser nyata, dan semua perbaikan sudah di produksi.
 
 ## Gerbang (dari `.kiro/steering/PHASE2_PLAN.md`)
 
@@ -22,7 +22,7 @@
 
 ## Temuan saat gerbang
 
-1. **Judul di daftar publik tidak tampak seperti tautan** (warna teks biasa, garis bawah tipis/tak terlihat). Penyebab: reset CSS Tailwind (`a { text-decoration: inherit }`) menghapus garis bawah semua tautan. Diperbaiki di `e86f851` (dideploy): judul daftar, "Kembali ke daftar", dan "Lihat semua …" berwarna utama dengan garis bawah (kontras 6,9:1). Tautan `https://` di dalam isi teks punya masalah yang sama; diperbaiki di commit sesudahnya, **belum dideploy**.
+1. **Judul di daftar publik tidak tampak seperti tautan** (warna teks biasa, garis bawah tipis/tak terlihat). Penyebab: reset CSS Tailwind (`a { text-decoration: inherit }`) menghapus garis bawah semua tautan. Diperbaiki di `e86f851` (dideploy): judul daftar, "Kembali ke daftar", dan "Lihat semua …" berwarna utama dengan garis bawah (kontras 6,9:1). Tautan `https://` di dalam isi teks punya masalah yang sama; diperbaiki di `f4cb002` (dideploy).
 2. `publishedAt` dari API berzona `+07:00` (zona server), bukan `Z`. Tetap ISO 8601 yang sah; klien memformat ke WIB dengan benar. Tidak ada tindakan.
 3. `adminItem` di Go menghilangkan nilai nol (`omitempty`): isi kosong, `pinned` false, `sortOrder` 0, topik kosong. Klien mengisi nilai bawaan dan terbukti di E2E serta produksi. Dicatat di OpenAPI.
 
@@ -44,4 +44,4 @@ Buka [halaman login](https://fikriramaaulia.online/admin/login/) di Edge atau Ch
 
 ## Keputusan penutupan
 
-Fase 2A ditutup setelah (a) daftar periksa di atas lulus, (b) perbaikan tautan isi teks dideploy dan smoke lulus, dan (c) user menyetujui lanjut ke 2B.
+Fase 2A ditutup setelah (a) daftar periksa di atas lulus, (b) perbaikan tautan isi teks dideploy dan smoke lulus (selesai), dan (c) user menyetujui lanjut ke 2B.
