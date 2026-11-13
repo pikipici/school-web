@@ -7,13 +7,13 @@
 ## Ringkasan
 
 - Fase aktif: **Fase 2A — Pengumuman dan Materi teks**. Fase 0 dan Fase 1 sudah ditutup.
-- Progress Fase 2A: **6/8 task selesai** (2.1–2.6). Fase 2B (lampiran): 0/7, belum mulai.
-- Task terakhir selesai: **2.6 — Frontend admin**
-- Next task: **2.7 — OpenAPI, smoke, deploy, cek browser** (butuh izin deploy; migrasi 4–6 masuk produksi)
+- Progress Fase 2A: **6/8 task selesai, 2.7 hampir selesai** (deploy lulus; tinggal cek browser nyata). Fase 2B (lampiran): 0/7, belum mulai.
+- Task terakhir selesai: **2.6 — Frontend admin**; 2.7 deploy produksi lulus 14 Nov 2026 05:08 WIB
+- Next task: **2.7 cek browser nyata (user)**, lalu **2.8 — gerbang 2A**
 - Local branch: `main`, working tree bersih
-- Semua commit sampai `21532e1` sudah di `server/main`; commit Task 2.6 belum di-push.
+- Semua commit sampai `12bcf48` sudah di `server/main`.
 - Produksi: **`https://fikriramaaulia.online`** aktif (Caddy + Let's Encrypt, berlaku s.d. 2027-02-11)
-- Rilis produksi: `20261113T023752Z-56c1e059e84d` (kode `56c1e05`), migrasi versi **3**. Migrasi 4–6 dari Task 2.1 **belum** di produksi.
+- Rilis produksi: `20261113T220824Z-12bcf48de85e` (kode `12bcf48`), migrasi versi **6**. Pengumuman dan Materi aktif di produksi.
 - PostgreSQL aplikasi: aktif, readiness PASS
 - Admin: satu akun `fikri`; login dan logout lewat browser terbukti di audit
 
@@ -38,7 +38,7 @@
 | 2.4 | API admin CRUD + audit | DONE | `c34e3e5`, `0f90555` | CRUD real-router + PostgreSQL; 401/403/409/422; CSRF/Origin; audit aman; full suite 2x, race paket terkait, vet, dua binary, gofmt hijau di `cbt-vps` |
 | 2.5 | Frontend publik | DONE | `6498211` | 43 Node tests; lint/typecheck; static build 2x; lima output route; production audit 0; query-ID dan plain-text/link safety teruji di `cbt-vps` |
 | 2.6 | Frontend admin | DONE | lihat commit Task 2.6 | 34 uji klien admin baru (RED dulu: modul belum ada); total 77 uji frontend; lint, typecheck, build (rute `/admin/pengumuman/ubah/`, `/admin/materi/ubah/`), audit produksi 0 di `cbt-vps`; E2E klien asli melawan API Go asli + database uji: buat, terbit, publik melihat, konflik 409, ubah, tarik, CSRF salah 403, hapus, 401 setelah logout; audit tercatat. Cek browser nyata belum (ikut Task 2.7) |
-| 2.7 | OpenAPI, smoke, deploy, cek browser | PENDING | — | — |
+| 2.7 | OpenAPI, smoke, deploy, cek browser | DEPLOYED, cek browser PENDING | `12bcf48` | OpenAPI 0.3.0 lolos `openapi-spec-validator` 0.7.1 (15 jalur, 21 operasi); smoke baru terbukti gagal (404) pada rilis lama dan lulus pada kode baru; deploy produksi rilis `20261113T220824Z-12bcf48de85e`: semua gerbang, cadangan `pre-20261113T220824Z-12bcf48de85e.dump`, migrasi 4–6 (versi 6), smoke PASS, tanpa DSN di log; dari luar 7 rute 200; `cookie_secure=true`, `csp_mode=enforce`. Browser agen tidak tersedia (Edge menolak debug) |
 | 2.8 | Gerbang 2A + `docs/F2A_ACCEPTANCE.md` | PENDING | — | — |
 
 Keputusan Fase 2 (disetujui user 13 Nov 2026): dibagi 2A lalu 2B; isi teks biasa (tanpa Markdown/HTML); Pengumuman punya draf/terbit dan sematkan; hapus permanen dengan jejak audit; topik Materi opsional (tanpa topik = Umum); ID tetap `bigint`.
