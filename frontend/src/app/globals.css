@@ -111,7 +111,7 @@ footer p { margin: 0; }
 .pagination button { cursor:pointer; }.pagination button:disabled { cursor:not-allowed; opacity:.55; }
 .filter { display:grid; gap:6px; max-width:380px; margin-bottom:24px; }.filter label { font-weight:600; }
 .detail { max-width:760px; }.detail .page-title { margin:24px 0 8px; }.detail time { color:var(--ink-muted); }
-.plain-text { margin-top:32px; overflow-wrap:anywhere; }.plain-text p { margin:0 0 1.25em; white-space:pre-wrap; }.plain-text a { color:var(--primary); }
+.plain-text { margin-top:32px; overflow-wrap:anywhere; }.plain-text p { margin:0 0 1.25em; white-space:pre-wrap; }.plain-text a { color:var(--primary); text-decoration:underline; text-decoration-thickness:1px; text-underline-offset:3px; }
 @media (max-width: 720px) {
   .header-inner, main, footer { width: min(100% - 24px, 1120px); }
   .manual-notice { padding: 16px; }

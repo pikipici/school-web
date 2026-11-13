@@ -10,11 +10,11 @@
 - Progress Fase 2A: **7/8 task selesai** (2.1–2.7). Fase 2B (lampiran): 0/7, belum mulai.
 - Task terakhir selesai: **2.7 — deploy produksi + cek browser nyata** (14 Nov 2026)
 - Next task: **2.8 — gerbang 2A** (dokumen dibuat; sisa: cek 360px/zoom/keyboard oleh user dan deploy `e86f851`)
-- Perbaikan gaya tautan publik ada di `e86f851` (belum dideploy).
+- Produksi kini rilis `20261113T224209Z-27fe481c50fa` (kode `27fe481`, migrasi 6) dengan perbaikan gaya tautan. Perbaikan garis bawah tautan di isi teks ada di commit sesudahnya, belum dideploy.
 - Local branch: `main`, working tree bersih
 - Semua commit sampai `12bcf48` sudah di `server/main`.
 - Produksi: **`https://fikriramaaulia.online`** aktif (Caddy + Let's Encrypt, berlaku s.d. 2027-02-11)
-- Rilis produksi: `20261113T220824Z-12bcf48de85e` (kode `12bcf48`), migrasi versi **6**. Pengumuman dan Materi aktif di produksi.
+- Rilis produksi: `20261113T224209Z-27fe481c50fa` (kode `27fe481`), migrasi versi **6**. Pengumuman dan Materi aktif di produksi.
 - PostgreSQL aplikasi: aktif, readiness PASS
 - Admin: satu akun `fikri`; login dan logout lewat browser terbukti di audit
 
