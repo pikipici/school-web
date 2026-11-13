@@ -5,6 +5,8 @@ import { useCallback, useEffect, useState } from "react";
 
 import { AdminApiError, getSession, logout, messageFor, type AdminSession } from "@/lib/api-client/admin";
 
+import { ContentManager } from "./ContentManager";
+
 const LOGIN_PATH = "/admin/login/";
 
 type ShellState =
@@ -55,6 +57,11 @@ export function AdminShell() {
     setState({ status: "loading" });
     setAttempt((current) => current + 1);
   }, []);
+
+  const expired = useCallback(() => {
+    setState({ status: "redirecting" });
+    router.replace(LOGIN_PATH);
+  }, [router]);
 
   async function onLogout(session: AdminSession) {
     setLeaving(true);
@@ -112,19 +119,11 @@ export function AdminShell() {
         </div>
       ) : null}
 
-      <section className="content-section" aria-labelledby="judul-pengelolaan">
-        <h2 id="judul-pengelolaan">Pengelolaan konten</h2>
-        <div className="empty-block" role="status">
-          <h3>Belum ada fitur pengelolaan</h3>
-          <p>
-            Pengumuman, Materi, dan Progres Tugas akan dikelola dari sini setelah fitur tersebut ditambahkan pada
-            tahap berikutnya.
-          </p>
-        </div>
-        <p className="section-note">
-          Sesi berakhir otomatis setelah 30 menit tanpa aktivitas, dan paling lambat pada {formatWIB(session.expiresAt)}.
-        </p>
-      </section>
+      <ContentManager csrf={session.csrfToken} onExpired={expired} />
+
+      <p className="section-note">
+        Sesi berakhir otomatis setelah 30 menit tanpa aktivitas, dan paling lambat pada {formatWIB(session.expiresAt)}.
+      </p>
     </>
   );
 }

@@ -2,16 +2,16 @@
 
 > Dokumen status aktual implementasi. Update setelah setiap task, verifikasi, commit, provisioning, dan deployment.
 >
-> Last updated: 13 November 2026, setelah Task 2.5
+> Last updated: 14 November 2026, setelah Task 2.6
 
 ## Ringkasan
 
 - Fase aktif: **Fase 2A — Pengumuman dan Materi teks**. Fase 0 dan Fase 1 sudah ditutup.
-- Progress Fase 2A: **5/8 task selesai** (2.1–2.5). Fase 2B (lampiran): 0/7, belum mulai.
-- Task terakhir selesai: **2.5 — Frontend publik** (commit `6498211`)
-- Next task: **2.6 — Frontend admin**
+- Progress Fase 2A: **6/8 task selesai** (2.1–2.6). Fase 2B (lampiran): 0/7, belum mulai.
+- Task terakhir selesai: **2.6 — Frontend admin**
+- Next task: **2.7 — OpenAPI, smoke, deploy, cek browser** (butuh izin deploy; migrasi 4–6 masuk produksi)
 - Local branch: `main`, working tree bersih
-- Belum masuk `server/main`: `485ef23` (rencana Fase 2) dan `43c81ba` (Task 2.1). Push dilakukan user.
+- Semua commit sampai `21532e1` sudah di `server/main`; commit Task 2.6 belum di-push.
 - Produksi: **`https://fikriramaaulia.online`** aktif (Caddy + Let's Encrypt, berlaku s.d. 2027-02-11)
 - Rilis produksi: `20261113T023752Z-56c1e059e84d` (kode `56c1e05`), migrasi versi **3**. Migrasi 4–6 dari Task 2.1 **belum** di produksi.
 - PostgreSQL aplikasi: aktif, readiness PASS
@@ -25,7 +25,7 @@
 | Redesign | Web pribadi guru (Pengumuman, Materi, Progres Tugas) | DONE, ter-deploy | `.kiro/steering/REDESIGN_BACKLOG.md` |
 | 1 | Database + login admin + HTTPS | DITUTUP 13 Nov 2026 | `.kiro/steering/PHASE1_PLAN.md`, `docs/F1_ACCEPTANCE.md` |
 | Hardening | HSTS 1 hari + CSP `enforce` | DONE, aktif di produksi | bagian Current Next Step |
-| 2A | Pengumuman + Materi teks | 5/8 — berjalan | `.kiro/steering/PHASE2_PLAN.md` |
+| 2A | Pengumuman + Materi teks | 6/8 — berjalan | `.kiro/steering/PHASE2_PLAN.md` |
 | 2B | Lampiran PDF/PPT/PPTX | belum mulai | `.kiro/steering/PHASE2_PLAN.md` |
 
 ## Fase 2A Tracker
@@ -37,7 +37,7 @@
 | 2.3 | API publik baca-saja | DONE | `183770d` | Tes ditulis lebih dulu; remote RED awal tertahan bootstrap karena output sqlc sengaja tidak dilacak, lalu sqlc generate; targeted PostgreSQL, full suite 2x, race, vet, dua binary, gofmt hijau |
 | 2.4 | API admin CRUD + audit | DONE | `c34e3e5`, `0f90555` | CRUD real-router + PostgreSQL; 401/403/409/422; CSRF/Origin; audit aman; full suite 2x, race paket terkait, vet, dua binary, gofmt hijau di `cbt-vps` |
 | 2.5 | Frontend publik | DONE | `6498211` | 43 Node tests; lint/typecheck; static build 2x; lima output route; production audit 0; query-ID dan plain-text/link safety teruji di `cbt-vps` |
-| 2.6 | Frontend admin | PENDING | — | — |
+| 2.6 | Frontend admin | DONE | lihat commit Task 2.6 | 34 uji klien admin baru (RED dulu: modul belum ada); total 77 uji frontend; lint, typecheck, build (rute `/admin/pengumuman/ubah/`, `/admin/materi/ubah/`), audit produksi 0 di `cbt-vps`; E2E klien asli melawan API Go asli + database uji: buat, terbit, publik melihat, konflik 409, ubah, tarik, CSRF salah 403, hapus, 401 setelah logout; audit tercatat. Cek browser nyata belum (ikut Task 2.7) |
 | 2.7 | OpenAPI, smoke, deploy, cek browser | PENDING | — | — |
 | 2.8 | Gerbang 2A + `docs/F2A_ACCEPTANCE.md` | PENDING | — | — |
 
