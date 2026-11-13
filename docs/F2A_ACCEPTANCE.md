@@ -17,7 +17,7 @@
 | OpenAPI diperbarui | PASS | `docs/openapi.yaml` 0.3.0 lolos `openapi-spec-validator` 0.7.1 (15 jalur, 21 operasi) |
 | Deploy + smoke lulus | PASS | Rilis `20261113T220824Z-12bcf48de85e`; cadangan `pre-20261113T220824Z-12bcf48de85e.dump`; smoke baru (topik, daftar publik, halaman admin, API admin anonim 401) terbukti gagal pada rilis lama dan lulus pada rilis baru |
 | Cek browser nyata: buat, terbitkan, lihat publik, tarik, hapus | PASS (alur) | Edge di produksi dengan CSP `enforce`, 14 Nov 05:16–05:22 WIB: judul kosong ditolak; draf; terbit; publik; tarik; materi tanpa topik tampil "Umum"; hapus dengan konfirmasi; keluar. Data uji dihapus; tabel kosong lagi |
-| **Cek 360px, zoom 200%, keyboard** | **BELUM** | Alat browser agen tidak bisa mengubah ukuran layar. Lihat daftar periksa |
+| **Cek 360px, zoom 200%, keyboard** | **SEBAGIAN** | Emulasi perangkat lewat DevTools protocol (Edge headless, produksi): 360px `/`, `/pengumuman/`, `/progres/`, `/admin/login/` tanpa gulir samping; **`/materi/` melebar ke 469px** karena `select` filter topik (diperbaiki di commit sesudahnya, belum dideploy); 200% (640 CSS px pada 2x) semua halaman tanpa gulir samping. Keyboard: Tab pertama memunculkan "Lewati ke konten utama" dengan cincin fokus oranye. `/admin/` dan formulir tidak terukur karena butuh sesi |
 | User menyetujui lanjut ke 2B | BELUM | Menunggu |
 
 ## Temuan saat gerbang
