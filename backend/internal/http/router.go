@@ -93,6 +93,8 @@ func newRouter(deps Deps) http.Handler {
 			h := adminContent{store: deps.AdminContent, audit: deps.ContentAudit}
 			router.Route("/api/v1/admin", func(r chi.Router) {
 				r.Use(deps.Admin.Require)
+				r.Get("/announcements", h.list(content.Announcement))
+				r.Post("/announcements", h.create(content.Announcement))
 				r.Route("/announcements", func(r chi.Router) {
 					r.Get("/", h.list(content.Announcement))
 					r.Post("/", h.create(content.Announcement))
@@ -102,6 +104,8 @@ func newRouter(deps Deps) http.Handler {
 					r.NotFound(notFound)
 					r.MethodNotAllowed(methodNotAllowed)
 				})
+				r.Get("/materials", h.list(content.Material))
+				r.Post("/materials", h.create(content.Material))
 				r.Route("/materials", func(r chi.Router) {
 					r.Get("/", h.list(content.Material))
 					r.Post("/", h.create(content.Material))

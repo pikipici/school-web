@@ -18,6 +18,7 @@ import (
 	"github.com/pikipici/informatika-monitoring/backend/internal/auth/ratelimit"
 	"github.com/pikipici/informatika-monitoring/backend/internal/auth/session"
 	"github.com/pikipici/informatika-monitoring/backend/internal/auth/users"
+	"github.com/pikipici/informatika-monitoring/backend/internal/content"
 	httpapi "github.com/pikipici/informatika-monitoring/backend/internal/http"
 	"github.com/pikipici/informatika-monitoring/backend/internal/testdb"
 )
@@ -139,7 +140,7 @@ func newFixture(t *testing.T, o fixtureOpts) *fixture {
 	return &fixture{
 		origin: o2,
 		t:      t, pool: pool, clk: clk, hasher: o.loginHasher, auth: auth, audit: rec, userID: uid,
-		handler: httpapi.NewRouterWithDeps(httpapi.Deps{Admin: auth}),
+		handler: httpapi.NewRouterWithDeps(httpapi.Deps{Admin: auth, AdminContent: content.New(pool, clk.Now), ContentAudit: sink}),
 	}
 }
 
