@@ -49,6 +49,9 @@ type Deps struct {
 	CSPMode web.CSPMode
 	// PublicContent enables the database-backed public content routes.
 	PublicContent content.PublicReader
+	// AdminContent enables authenticated editable content routes.
+	AdminContent content.AdminStore
+	ContentAudit AuditRecorder
 }
 
 // NewRouterWithDeps builds the router from Deps.
@@ -86,6 +89,30 @@ func newRouter(deps Deps) http.Handler {
 			r.NotFound(notFound)
 			r.MethodNotAllowed(methodNotAllowed)
 		})
+		if deps.AdminContent != nil {
+			h := adminContent{store: deps.AdminContent, audit: deps.ContentAudit}
+			router.Route("/api/v1/admin", func(r chi.Router) {
+				r.Use(deps.Admin.Require)
+				r.Route("/announcements", func(r chi.Router) {
+					r.Get("/", h.list(content.Announcement))
+					r.Post("/", h.create(content.Announcement))
+					r.Get("/{id}", h.get(content.Announcement))
+					r.Patch("/{id}", h.update(content.Announcement))
+					r.Delete("/{id}", h.delete(content.Announcement))
+					r.NotFound(notFound)
+					r.MethodNotAllowed(methodNotAllowed)
+				})
+				r.Route("/materials", func(r chi.Router) {
+					r.Get("/", h.list(content.Material))
+					r.Post("/", h.create(content.Material))
+					r.Get("/{id}", h.get(content.Material))
+					r.Patch("/{id}", h.update(content.Material))
+					r.Delete("/{id}", h.delete(content.Material))
+					r.NotFound(notFound)
+					r.MethodNotAllowed(methodNotAllowed)
+				})
+			})
+		}
 	}
 	router.HandleFunc("/api/v1", notFound)
 	router.HandleFunc("/api/v1/", notFound)

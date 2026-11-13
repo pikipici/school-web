@@ -30,6 +30,24 @@ SET topic_id=$3, title=$4, description=$5, status=$6, sort_order=$7,
 WHERE id=$1 AND updated_at=$2
 RETURNING *;
 
+-- name: DeleteAnnouncement :one
+DELETE FROM announcements WHERE id=$1 RETURNING title;
+
+-- name: DeleteMaterial :one
+DELETE FROM materials WHERE id=$1 RETURNING title;
+
+-- name: ListAdminAnnouncements :many
+SELECT * FROM announcements ORDER BY updated_at DESC, id DESC LIMIT $1 OFFSET $2;
+
+-- name: CountAdminAnnouncements :one
+SELECT count(*) FROM announcements;
+
+-- name: ListAdminMaterials :many
+SELECT * FROM materials ORDER BY updated_at DESC, id DESC LIMIT $1 OFFSET $2;
+
+-- name: CountAdminMaterials :one
+SELECT count(*) FROM materials;
+
 -- name: TopicExists :one
 SELECT EXISTS(SELECT 1 FROM topics WHERE id=$1);
 

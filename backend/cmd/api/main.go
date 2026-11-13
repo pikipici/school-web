@@ -44,6 +44,8 @@ func run() error {
 	var pinger health.Pinger
 	var admin *httpapi.AdminAuth
 	var publicContent content.PublicReader
+	var adminContent content.AdminStore
+	var auditStore *audit.Store
 	if strings.TrimSpace(cfg.DatabaseURL) != "" {
 		pool, err := db.Open(ctx, cfg.DatabaseURL)
 		if err != nil {
@@ -51,7 +53,9 @@ func run() error {
 		}
 		defer pool.Close()
 		pinger = pool
-		publicContent = content.New(pool, nil)
+		contentStore := content.New(pool, nil)
+		publicContent, adminContent = contentStore, contentStore
+		auditStore = audit.New(pool, nil)
 
 		hasher, err := password.NewHasher(password.DefaultParams())
 		if err != nil {
@@ -65,14 +69,14 @@ func run() error {
 			Hasher:       hasher,
 			Gate:         ratelimit.NewGate(2),
 			SecureCookie: cfg.AdminCookieSecure,
-			Audit:        audit.New(pool, nil),
+			Audit:        auditStore,
 		})
 		go purgeSessions(ctx, sessions)
 	}
 
 	server := &http.Server{
 		Addr:              cfg.Address,
-		Handler:           httpapi.NewRouterWithDeps(httpapi.Deps{Pinger: pinger, PublicDir: cfg.PublicDir, Admin: admin, CSPMode: cfg.CSPMode, PublicContent: publicContent}),
+		Handler:           httpapi.NewRouterWithDeps(httpapi.Deps{Pinger: pinger, PublicDir: cfg.PublicDir, Admin: admin, CSPMode: cfg.CSPMode, PublicContent: publicContent, AdminContent: adminContent, ContentAudit: auditStore}),
 		ReadHeaderTimeout: 5 * time.Second,
 		ReadTimeout:       15 * time.Second,
 		WriteTimeout:      15 * time.Second,

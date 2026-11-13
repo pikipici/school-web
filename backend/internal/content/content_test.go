@@ -119,3 +119,37 @@ func TestMaterialTopicAndLifecycle(t *testing.T) {
 		t.Fatalf("missing error = %v", err)
 	}
 }
+
+func TestAdminListsDetailsAndPermanentDeletes(t *testing.T) {
+	pool := testdb.OpenMigrated(t)
+	ctx := context.Background()
+	s := New(pool, func() time.Time { return time.Date(2026, 11, 13, 6, 0, 0, 0, time.UTC) })
+	a, err := s.CreateAnnouncement(ctx, Input{Title: "Draft internal", Body: "editable", Status: Draft, Pinned: true})
+	if err != nil {
+		t.Fatal(err)
+	}
+	m, err := s.CreateMaterial(ctx, Input{Title: "Material draft", Body: "description", Status: Draft, SortOrder: 4})
+	if err != nil {
+		t.Fatal(err)
+	}
+	items, total, err := s.AdminAnnouncements(ctx, Page{Limit: 10})
+	if err != nil || total != 1 || len(items) != 1 || items[0].Body != "editable" || items[0].Status != Draft {
+		t.Fatalf("admin announcements: %#v %d %v", items, total, err)
+	}
+	got, err := s.AdminMaterial(ctx, m.ID)
+	if err != nil || got.Body != "description" || got.SortOrder != 4 {
+		t.Fatalf("admin material: %#v %v", got, err)
+	}
+	if title, err := s.DeleteAnnouncement(ctx, a.ID); err != nil || title != "Draft internal" {
+		t.Fatalf("delete announcement: %q %v", title, err)
+	}
+	if title, err := s.DeleteMaterial(ctx, m.ID); err != nil || title != "Material draft" {
+		t.Fatalf("delete material: %q %v", title, err)
+	}
+	if _, err := s.AdminAnnouncement(ctx, a.ID); !errors.Is(err, ErrNotFound) {
+		t.Fatalf("deleted announcement: %v", err)
+	}
+	if _, err := s.DeleteMaterial(ctx, m.ID); !errors.Is(err, ErrNotFound) {
+		t.Fatalf("second delete: %v", err)
+	}
+}
