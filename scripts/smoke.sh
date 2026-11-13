@@ -9,7 +9,7 @@ fetch() { curl --fail --silent --show-error --max-time 5 "$@"; }
 
 fetch "$BASE_URL/healthz" >"$TMP_DIR/health.json"
 fetch "$BASE_URL/readyz" >"$TMP_DIR/ready.json"
-fetch "$BASE_URL/" >"$TMP_DIR/index.html"
+fetch --dump-header "$TMP_DIR/index.headers" "$BASE_URL/" >"$TMP_DIR/index.html"
 fetch "$BASE_URL/progres/" >"$TMP_DIR/progres.html"
 fetch "$BASE_URL/admin/login/" >"$TMP_DIR/login.html"
 
@@ -37,6 +37,16 @@ login = read("login.html")
 assert health == {"status": "ok"}, health
 assert ready == {"status": "ok", "database": "ok"}, ready
 assert 'aria-label="Menu utama"' in index, "frontend marker not found"
+
+# If a page policy is sent (CSP_MODE enforce or report-only), it must allow
+# only same-origin and hashed inline scripts.
+headers = read("index.headers").lower().splitlines()
+policies = [h.split(":", 1)[1].strip() for h in headers if h.startswith(("content-security-policy:", "content-security-policy-report-only:"))]
+for policy in policies:
+    script_src = next((p.strip() for p in policy.split(";") if p.strip().startswith("script-src")), "")
+    assert script_src.startswith("script-src 'self'"), policy
+    assert "'unsafe-inline'" not in script_src and "'unsafe-eval'" not in script_src, script_src
+    assert "frame-ancestors 'none'" in policy and "object-src 'none'" in policy, policy
 assert "Progres Tugas Kelompok" in progres, "progress page marker not found"
 assert 'name="username"' in login and 'name="password"' in login, "admin login form not found"
 

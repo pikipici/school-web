@@ -21,6 +21,7 @@ import (
 	"github.com/pikipici/informatika-monitoring/backend/internal/db"
 	"github.com/pikipici/informatika-monitoring/backend/internal/health"
 	httpapi "github.com/pikipici/informatika-monitoring/backend/internal/http"
+	"github.com/pikipici/informatika-monitoring/backend/internal/web"
 )
 
 func main() {
@@ -68,7 +69,7 @@ func run() error {
 
 	server := &http.Server{
 		Addr:              cfg.Address,
-		Handler:           httpapi.NewRouterWithDeps(httpapi.Deps{Pinger: pinger, PublicDir: cfg.PublicDir, Admin: admin}),
+		Handler:           httpapi.NewRouterWithDeps(httpapi.Deps{Pinger: pinger, PublicDir: cfg.PublicDir, Admin: admin, CSPMode: cfg.CSPMode}),
 		ReadHeaderTimeout: 5 * time.Second,
 		ReadTimeout:       15 * time.Second,
 		WriteTimeout:      15 * time.Second,
@@ -78,7 +79,7 @@ func run() error {
 
 	serverErrors := make(chan error, 1)
 	go func() {
-		slog.Info("API mulai", "address", cfg.Address, "environment", cfg.Environment, "database_configured", pinger != nil, "admin_auth_enabled", admin != nil, "cookie_secure", cfg.AdminCookieSecure)
+		slog.Info("API mulai", "address", cfg.Address, "environment", cfg.Environment, "database_configured", pinger != nil, "admin_auth_enabled", admin != nil, "cookie_secure", cfg.AdminCookieSecure, "csp_mode", cspModeName(cfg.CSPMode))
 		serverErrors <- server.ListenAndServe()
 	}()
 
@@ -121,5 +122,16 @@ func purgeSessions(ctx context.Context, sessions *session.Service) {
 			}
 			cancel()
 		}
+	}
+}
+
+func cspModeName(m web.CSPMode) string {
+	switch m {
+	case web.CSPReportOnly:
+		return "report-only"
+	case web.CSPOff:
+		return "off"
+	default:
+		return "enforce"
 	}
 }

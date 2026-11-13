@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"os"
 	"strings"
+
+	"github.com/pikipici/informatika-monitoring/backend/internal/web"
 )
 
 type Config struct {
@@ -13,6 +15,8 @@ type Config struct {
 	Environment string
 	// AdminCookieSecure must be true when the site is served over HTTPS.
 	AdminCookieSecure bool
+	// CSPMode controls the Content-Security-Policy header on HTML pages.
+	CSPMode web.CSPMode
 }
 
 func Load(getenv func(string) string) (Config, error) {
@@ -27,6 +31,11 @@ func Load(getenv func(string) string) (Config, error) {
 		return Config{}, fmt.Errorf("ADMIN_COOKIE_SECURE tidak valid")
 	}
 	cfg.AdminCookieSecure = secure
+	mode, err := web.ParseCSPMode(getenv("CSP_MODE"))
+	if err != nil {
+		return Config{}, fmt.Errorf("CSP_MODE tidak valid")
+	}
+	cfg.CSPMode = mode
 	if !strings.HasPrefix(cfg.Address, ":") {
 		return Config{}, fmt.Errorf("APP_ADDR tidak valid")
 	}

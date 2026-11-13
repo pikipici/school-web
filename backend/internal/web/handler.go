@@ -1,6 +1,8 @@
 package web
 
 import (
+	"bytes"
+	"io"
 	"mime"
 	"net/http"
 	"net/url"
@@ -27,25 +29,39 @@ var portableMIMETypes = map[string]string{
 	".xml":         "application/xml",
 }
 
+// maxHTMLBytes bounds how much of an HTML page is read into memory to compute
+// its policy. Exported pages are a few tens of KiB.
+const maxHTMLBytes = 8 << 20
+
 type handler struct {
 	publicDir string
 	enabled   bool
+	csp       CSPMode
+	policies  *policyCache
 }
 
-// New returns a handler for a Next.js static export rooted at publicDir.
+// New returns a handler for a Next.js static export rooted at publicDir that
+// enforces a hash-based Content-Security-Policy on HTML pages.
 func New(publicDir string) http.Handler {
+	return NewWithCSP(publicDir, CSPEnforce)
+}
+
+// NewWithCSP is New with an explicit policy mode.
+func NewWithCSP(publicDir string, mode CSPMode) http.Handler {
+	h := &handler{csp: mode, policies: &policyCache{}}
 	if strings.TrimSpace(publicDir) == "" {
-		return &handler{}
+		return h
 	}
 	root, err := filepath.Abs(filepath.Clean(publicDir))
 	if err != nil {
-		return &handler{}
+		return h
 	}
 	root, err = filepath.EvalSymlinks(root)
 	if err != nil {
-		return &handler{}
+		return h
 	}
-	return &handler{publicDir: root, enabled: true}
+	h.publicDir, h.enabled = root, true
+	return h
 }
 
 func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -74,14 +90,31 @@ func (h *handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	defer file.Close()
 	setHeaders(w, requestPath, name)
+
+	var content io.ReadSeeker = file
+	if strings.EqualFold(filepath.Ext(name), ".html") && h.csp != CSPOff {
+		body, err := io.ReadAll(io.LimitReader(file, maxHTMLBytes+1))
+		if err != nil || len(body) > maxHTMLBytes {
+			http.Error(w, "internal error", http.StatusInternalServerError)
+			return
+		}
+		policy := h.policies.get(cacheKey{name: name, size: info.Size(), modTime: info.ModTime()}, body)
+		if h.csp == CSPReportOnly {
+			w.Header().Set("Content-Security-Policy-Report-Only", policy)
+		} else {
+			w.Header().Set("Content-Security-Policy", policy)
+		}
+		content = bytes.NewReader(body)
+	}
+
 	if status == http.StatusNotFound {
 		w.WriteHeader(status)
 		if r.Method == http.MethodGet {
-			_, _ = file.WriteTo(w)
+			_, _ = io.Copy(w, content)
 		}
 		return
 	}
-	http.ServeContent(w, r, info.Name(), info.ModTime(), file)
+	http.ServeContent(w, r, info.Name(), info.ModTime(), content)
 }
 
 func safePath(r *http.Request) (string, bool) {

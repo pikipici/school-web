@@ -44,6 +44,8 @@ type Deps struct {
 	PublicDir string
 	// Admin enables /api/v1/admin/auth/*.
 	Admin *AdminAuth
+	// CSPMode controls the policy header on HTML pages (zero value: enforce).
+	CSPMode web.CSPMode
 }
 
 // NewRouterWithDeps builds the router from Deps.
@@ -77,7 +79,7 @@ func newRouter(deps Deps) http.Handler {
 	if strings.TrimSpace(publicDir) == "" {
 		router.NotFound(notFound)
 	} else {
-		static := web.New(publicDir)
+		static := web.NewWithCSP(publicDir, deps.CSPMode)
 		router.NotFound(static.ServeHTTP)
 	}
 

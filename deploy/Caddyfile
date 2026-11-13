@@ -9,9 +9,10 @@ fikriramaaulia.online {
 	encode zstd gzip
 
 	header {
-		# Start with one hour. Once HTTPS is proven stable, raise it
-		# (86400, then 31536000) so browsers stop trying plain HTTP.
-		Strict-Transport-Security "max-age=3600"
+		# Raised from 1 hour to 1 day on 2026-11-13 after HTTPS went live.
+		# Next step after about two stable weeks: 31536000 (one year).
+		# Do not add includeSubDomains or preload without checking every subdomain.
+		Strict-Transport-Security "max-age=86400"
 		X-Content-Type-Options "nosniff"
 		X-Frame-Options "DENY"
 		Referrer-Policy "strict-origin-when-cross-origin"

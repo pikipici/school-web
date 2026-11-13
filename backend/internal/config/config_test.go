@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/pikipici/informatika-monitoring/backend/internal/config"
+	"github.com/pikipici/informatika-monitoring/backend/internal/web"
 )
 
 func TestPublicDirDefaultsToPublicWhenAbsentOrBlank(t *testing.T) {
@@ -68,5 +69,29 @@ func TestAdminCookieSecureParsing(t *testing.T) {
 
 	if _, err := load("maybe"); err == nil {
 		t.Fatal("ADMIN_COOKIE_SECURE=maybe must be rejected, not silently treated as false")
+	}
+}
+
+func TestCSPModeParsing(t *testing.T) {
+	load := func(v string) (config.Config, error) {
+		return config.Load(func(key string) string {
+			if key == "CSP_MODE" {
+				return v
+			}
+			return ""
+		})
+	}
+
+	for in, want := range map[string]web.CSPMode{"": web.CSPEnforce, "enforce": web.CSPEnforce, "report-only": web.CSPReportOnly, "off": web.CSPOff} {
+		cfg, err := load(in)
+		if err != nil {
+			t.Fatalf("CSP_MODE=%q: %v", in, err)
+		}
+		if cfg.CSPMode != want {
+			t.Fatalf("CSP_MODE=%q => %v; want %v", in, cfg.CSPMode, want)
+		}
+	}
+	if _, err := load("disabled"); err == nil {
+		t.Fatal("CSP_MODE=disabled must be rejected, not silently treated as enforce or off")
 	}
 }

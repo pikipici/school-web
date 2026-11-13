@@ -19,6 +19,8 @@ ADMIN_COOKIE_SECURE=false
 
 `ADMIN_COOKIE_SECURE` is optional and must be `true`, `false`, `1`, or `0` (anything else aborts the deploy). Keep it `false` while the site is served over plain HTTP. Set it to `true` only once HTTPS is in front of the app: the admin session cookie then becomes `__Host-admin_session` with the `Secure` flag, and over plain HTTP it would not be sent at all.
 
+`CSP_MODE` is optional and must be `enforce` (the default when absent), `report-only`, or `off`. The Go server sends a Content-Security-Policy on every HTML page that allows scripts only from the same origin plus the exact inline scripts of that page, identified by SHA-256 hash (no `'unsafe-inline'`, no `'unsafe-eval'`). `report-only` sends the same policy as `Content-Security-Policy-Report-Only`, so browsers log violations in the developer console without blocking anything; use it to try a new frontend build. `off` is for emergencies only. Changing it needs a service restart, not a deploy.
+
 `GOOSE_DBSTRING` may replace `DATABASE_URL`, but do not define both. DSNs are passed through environment/config files, never command arguments, and are not logged. The service reads the same EnvironmentFile. `PUBLIC_DIR` is the stable `public` symlink.
 
 Install `deploy/informatika-monitoring-api.service`; its ExecStart follows the stable `bin/current` symlink. Before first activation, a deployment must create a release and these links.
@@ -92,11 +94,11 @@ Turn-on order. Do not reorder: starting Caddy before DNS and the firewall are ri
 3. Check from outside the server: `dig +short fikriramaaulia.online` returns the server IP, and TCP 80 and 443 connect.
 4. `sudo systemctl enable --now caddy`, then `sudo journalctl -u caddy -n 50 --no-pager` and look for a successful certificate. `curl -I https://fikriramaaulia.online/` must return 200 with a valid certificate, and `curl -I http://fikriramaaulia.online/` must redirect to HTTPS.
 5. Only after step 4 works, set `ADMIN_COOKIE_SECURE=true` in `.env` and restart the service. From then on the admin cookie is `__Host-admin_session` with `Secure`, and the app accepts admin requests only from an `https://` origin, so the old SSH-tunnel login over plain `http://localhost` stops working. Use the HTTPS address.
-6. After a few stable days raise HSTS in the Caddyfile (`max-age=86400`, later `31536000`). Test with `caddy validate`, install, `sudo systemctl reload caddy`.
+6. HSTS was raised to `max-age=86400` on 13 Nov 2026. After about two stable weeks raise it to `31536000`. Test with `caddy validate`, install, `sudo systemctl reload caddy`.
 
 Rollback: `sudo systemctl disable --now caddy`, set `ADMIN_COOKIE_SECURE=false`, restart the app, and use the SSH tunnel again. Browsers that already saw the HSTS header will refuse plain HTTP for its `max-age`, which is why it starts at one hour.
 
-A Content-Security-Policy header is not set yet: the static Next.js export uses inline scripts, so a policy needs per-build hashes or a nonce setup. Track it as follow-up work.
+The Content-Security-Policy is set by the Go app, not Caddy, because each page needs its own script hashes (see `CSP_MODE` above).
 
 ## Failure and rollback
 

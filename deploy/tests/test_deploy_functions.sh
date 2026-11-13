@@ -128,10 +128,12 @@ run_parse() { # content mode
   chmod "$2" "$ENV_FILE"
   APP_PORT=8300
   PUBLIC_LINK="/srv/app/public"
-  APP_ADDR="" PUBLIC_DIR="" DB_DSN="" ADMIN_COOKIE_SECURE=""
+  APP_ADDR="" PUBLIC_DIR="" DB_DSN="" ADMIN_COOKIE_SECURE="" CSP_MODE=""
   parse_environment
   printf '%s' "$ADMIN_COOKIE_SECURE"
 }
+run_parse_csp() { run_parse "$1" 600 >/dev/null; printf '%s' "$CSP_MODE"; }
+t_csp_expect() { [[ "$(run_parse_csp "$1")" == "$2" ]] || fail "unexpected CSP_MODE"; }
 BASE_ENV="APP_ADDR=:8300\nPUBLIC_DIR=/srv/app/public\nDATABASE_URL=$PROD_DSN\n"
 t_parse_expect() { [[ "$(run_parse "$1" 600)" == "$2" ]] || fail "unexpected ADMIN_COOKIE_SECURE"; }
 check "env: without ADMIN_COOKIE_SECURE" ok t_parse_expect "$BASE_ENV" ""
@@ -150,6 +152,14 @@ check "env: shell expansion rejected" fail run_parse "${BASE_ENV}ADMIN_COOKIE_SE
 check "env: group-readable rejected" fail run_parse "$BASE_ENV" 640
 check "env: missing DATABASE_URL rejected" fail run_parse "APP_ADDR=:8300\nPUBLIC_DIR=/srv/app/public\n" 600
 check "env: both DB variables rejected" fail run_parse "${BASE_ENV}GOOSE_DBSTRING=$PROD_DSN\n" 600
+check "env: CSP_MODE absent" ok t_csp_expect "$BASE_ENV" ""
+check "env: CSP_MODE=enforce" ok t_csp_expect "${BASE_ENV}CSP_MODE=enforce\n" enforce
+check "env: CSP_MODE=report-only" ok t_csp_expect "${BASE_ENV}CSP_MODE=report-only\n" report-only
+check "env: CSP_MODE=off" ok t_csp_expect "${BASE_ENV}CSP_MODE=off\n" off
+check "env: CSP_MODE=Report-Only normalised" ok t_csp_expect "${BASE_ENV}CSP_MODE=Report-Only\n" report-only
+check "env: CSP_MODE=disabled rejected" fail run_parse "${BASE_ENV}CSP_MODE=disabled\n" 600
+check "env: CSP_MODE empty rejected" fail run_parse "${BASE_ENV}CSP_MODE=\n" 600
+check "env: duplicate CSP_MODE rejected" fail run_parse "${BASE_ENV}CSP_MODE=off\nCSP_MODE=enforce\n" 600
 check "env: wrong port rejected" fail run_parse "APP_ADDR=:9000\nPUBLIC_DIR=/srv/app/public\nDATABASE_URL=$PROD_DSN\n" 600
 
 # ---- with_pg_env -------------------------------------------------------------

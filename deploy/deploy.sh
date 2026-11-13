@@ -43,6 +43,7 @@ TEST_DB_DSN=""
 BACKUP_FILE=""
 BACKUP_DIR="$ROOT_DIR/backups"
 ADMIN_COOKIE_SECURE=""
+CSP_MODE=""
 APP_ADDR=""
 PUBLIC_DIR=""
 OLD_BIN_TARGET=""
@@ -72,7 +73,7 @@ parse_environment() {
   while IFS= read -r line || [[ -n "$line" ]]; do
     line="${line%$'\r'}"
     [[ -z "$line" || "$line" =~ ^[[:space:]]*# ]] && continue
-    [[ "$line" =~ ^(APP_ADDR|PUBLIC_DIR|DATABASE_URL|GOOSE_DBSTRING|ADMIN_COOKIE_SECURE)=(.*)$ ]] || fail ".env contains unsupported or malformed assignment"
+    [[ "$line" =~ ^(APP_ADDR|PUBLIC_DIR|DATABASE_URL|GOOSE_DBSTRING|ADMIN_COOKIE_SECURE|CSP_MODE)=(.*)$ ]] || fail ".env contains unsupported or malformed assignment"
     key="${BASH_REMATCH[1]}"; raw="${BASH_REMATCH[2]}"
     if [[ "$raw" =~ ^\'([^\']*)\'$ ]]; then value="${BASH_REMATCH[1]}"
     elif [[ "$raw" =~ ^\"([^\"\\]*)\"$ ]]; then value="${BASH_REMATCH[1]}"
@@ -86,6 +87,10 @@ parse_environment() {
         [[ -z "$ADMIN_COOKIE_SECURE" ]] || fail "duplicate ADMIN_COOKIE_SECURE"
         [[ "${value,,}" =~ ^(true|false|1|0)$ ]] || fail "ADMIN_COOKIE_SECURE must be true, false, 1, or 0"
         ADMIN_COOKIE_SECURE="${value,,}" ;;
+      CSP_MODE)
+        [[ -z "$CSP_MODE" ]] || fail "duplicate CSP_MODE"
+        [[ "${value,,}" =~ ^(enforce|report-only|off)$ ]] || fail "CSP_MODE must be enforce, report-only, or off"
+        CSP_MODE="${value,,}" ;;
       DATABASE_URL|GOOSE_DBSTRING)
         [[ -z "$DB_DSN" ]] || fail "define only one of DATABASE_URL or GOOSE_DBSTRING"
         DB_DSN="$value" ;;
