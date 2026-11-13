@@ -2,7 +2,7 @@
 
 > Tanggal: 13 November 2026. Kode yang dideploy: `d2e3fca` (rilis `20261112T232527Z-d2e3fcac4923`). Commit sesudahnya hanya dokumen.
 >
-> **Verdict: BELUM DITUTUP — 1 gerbang wajib terbuka (cek browser nyata) dan 1 keputusan keamanan tertunda (HTTPS).** Semua gerbang otomatis dan kontrak lulus.
+> **Verdict: BELUM DITUTUP — 1 gerbang wajib terbuka (cek browser nyata).** Semua gerbang otomatis dan kontrak lulus. HTTPS sudah aktif sejak 13 Nov 2026 (lihat bagian HTTPS).
 
 ## Gerbang penutupan (dari `.kiro/steering/PHASE1_PLAN.md`)
 
@@ -30,16 +30,16 @@
 
 ## Risiko terbuka
 
-1. **HTTPS belum dipasang.** Login lewat HTTP polos bisa disadap. Selama itu, akses admin hanya lewat tunnel SSH. DNS `fikriramaaulia.online` masih di Cloudflare dan belum menunjuk ke VPS (lihat rencana H1–H6 di `PHASE1_PLAN.md`).
+1. **HTTPS aktif (13 Nov 2026), dengan tiga hal yang perlu dijaga:** sertifikat Let's Encrypt (berlaku sampai 2027-02-11, TLS 1.3) diperpanjang otomatis oleh Caddy, yang mensyaratkan DNS tetap **DNS only (awan abu-abu)** dan port 80/443 tetap terbuka; HSTS baru 1 jam dan perlu dinaikkan bertahap; belum ada Content-Security-Policy (ekspor statis Next.js memakai skrip inline).
 2. **Cek browser nyata belum dilakukan** (komponen UI tidak punya uji otomatis; hanya logika klien).
-3. **Penyebab 429 lewat tunnel:** koneksi tunnel tiba dari 127.0.0.1, sehingga semua pengguna tunnel berbagi satu keranjang batas; untuk satu admin ini tidak masalah.
+3. Batas login kini memakai alamat klien asli (Caddy menimpa `X-Forwarded-For`), jadi tiga percobaan gagal lama dari 127.0.0.1 tidak lagi memengaruhi login lewat HTTPS.
 4. Batas yang diketahui: hitungan batas login hilang saat layanan restart; dua `create-admin` yang benar-benar serentak dengan username berbeda bisa lolos keduanya; akun bisa terkunci hingga 15 menit saat serangan terdistribusi.
 5. Tabel `goose_db_version` sudah terbuat lebih awal oleh `--check` versi lama (diperbaiki; tidak berbahaya).
 6. 7 advisory npm moderate (alat dev) masih terbuka sejak Fase 0.
 
 ## Daftar periksa browser (dikerjakan user)
 
-Buka tunnel di PC: `ssh -L 8300:127.0.0.1:8300 cbt-vps`, lalu `http://localhost:8300/admin/login/`.
+Buka `https://fikriramaaulia.online/admin/login/` di browser (tunnel SSH tidak lagi dipakai dan tidak akan bekerja untuk login, karena aplikasi kini hanya menerima permintaan admin dari origin `https://`).
 
 1. Lebar 360px (DevTools, mode ponsel): tidak ada gulir horizontal; kolom isian dan tombol terbaca; tombol minimal 44px.
 2. Zoom 200%: semua teks terbaca, tidak ada yang terpotong.
@@ -47,7 +47,7 @@ Buka tunnel di PC: `ssh -L 8300:127.0.0.1:8300 cbt-vps`, lalu `http://localhost:
 4. Sandi salah: pesan galat muncul, kolom sandi kosong, fokus kembali ke sandi.
 5. Sandi benar: pindah ke `/admin/`, terlihat "Masuk sebagai fikri" dan batas sesi dalam WIB.
 6. Muat ulang `/admin/`: tetap masuk. Klik "Keluar": kembali ke login; tombol Back tidak menampilkan dasbor.
-7. DevTools, Application, Cookies: `admin_session` bertanda HttpOnly dan SameSite=Strict, tanpa Secure (selama HTTP).
+7. DevTools, Application, Cookies: `__Host-admin_session` bertanda HttpOnly, Secure, SameSite=Strict, Path=/.
 8. Pembaca layar singkat (opsional): galat diumumkan.
 
 ## Keputusan penutupan
