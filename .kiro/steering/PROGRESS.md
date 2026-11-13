@@ -2,14 +2,14 @@
 
 > Dokumen status aktual implementasi. Update setelah setiap task, verifikasi, commit, provisioning, dan deployment.
 >
-> Last updated: 13 November 2026, setelah Task 2.3
+> Last updated: 13 November 2026, setelah Task 2.4
 
 ## Ringkasan
 
 - Fase aktif: **Fase 2A — Pengumuman dan Materi teks**. Fase 0 dan Fase 1 sudah ditutup.
-- Progress Fase 2A: **3/8 task selesai** (2.1–2.3). Fase 2B (lampiran): 0/7, belum mulai.
-- Task terakhir selesai: **2.3 — API publik baca-saja** (commit `183770d`)
-- Next task: **2.4 — API admin CRUD + audit**
+- Progress Fase 2A: **4/8 task selesai** (2.1–2.4). Fase 2B (lampiran): 0/7, belum mulai.
+- Task terakhir selesai: **2.4 — API admin CRUD + audit** (commit `c34e3e5`, hardening `0f90555`)
+- Next task: **2.5 — Frontend publik**
 - Local branch: `main`, working tree bersih
 - Belum masuk `server/main`: `485ef23` (rencana Fase 2) dan `43c81ba` (Task 2.1). Push dilakukan user.
 - Produksi: **`https://fikriramaaulia.online`** aktif (Caddy + Let's Encrypt, berlaku s.d. 2027-02-11)
@@ -25,7 +25,7 @@
 | Redesign | Web pribadi guru (Pengumuman, Materi, Progres Tugas) | DONE, ter-deploy | `.kiro/steering/REDESIGN_BACKLOG.md` |
 | 1 | Database + login admin + HTTPS | DITUTUP 13 Nov 2026 | `.kiro/steering/PHASE1_PLAN.md`, `docs/F1_ACCEPTANCE.md` |
 | Hardening | HSTS 1 hari + CSP `enforce` | DONE, aktif di produksi | bagian Current Next Step |
-| 2A | Pengumuman + Materi teks | 3/8 — berjalan | `.kiro/steering/PHASE2_PLAN.md` |
+| 2A | Pengumuman + Materi teks | 4/8 — berjalan | `.kiro/steering/PHASE2_PLAN.md` |
 | 2B | Lampiran PDF/PPT/PPTX | belum mulai | `.kiro/steering/PHASE2_PLAN.md` |
 
 ## Fase 2A Tracker
@@ -35,7 +35,7 @@
 | 2.1 | Migrasi `announcements`, `topics` + seed K1–K7, `materials` | DONE | `43c81ba` | RED 5 uji skema; GREEN di `cbt-vps`; `goose validate`, sqlc, seluruh suite, vet, build hijau; gladi migrasi 3→6 pada salinan data produksi di database uji (admin dan audit utuh) |
 | 2.2 | Paket `content`: validasi, terbit, konflik | DONE | `fb3c9be` | Strict RED (`Input`, `Kind`, `Draft`, `Announcement` belum ada); sqlc; targeted + full suite 2x; race; vet; build; gofmt hijau di `cbt-vps` dengan PostgreSQL uji nyata |
 | 2.3 | API publik baca-saja | DONE | `183770d` | Tes ditulis lebih dulu; remote RED awal tertahan bootstrap karena output sqlc sengaja tidak dilacak, lalu sqlc generate; targeted PostgreSQL, full suite 2x, race, vet, dua binary, gofmt hijau |
-| 2.4 | API admin CRUD + audit | PENDING | — | — |
+| 2.4 | API admin CRUD + audit | DONE | `c34e3e5`, `0f90555` | CRUD real-router + PostgreSQL; 401/403/409/422; CSRF/Origin; audit aman; full suite 2x, race paket terkait, vet, dua binary, gofmt hijau di `cbt-vps` |
 | 2.5 | Frontend publik | PENDING | — | — |
 | 2.6 | Frontend admin | PENDING | — | — |
 | 2.7 | OpenAPI, smoke, deploy, cek browser | PENDING | — | — |
@@ -393,10 +393,11 @@ Di kode, belum di produksi:
 - Tabel `announcements`, `topics` (K1–K7), `materials` (Task 2.1).
 - Paket Go `content` + query sqlc untuk validasi, create/update, aturan terbit pertama, topik opsional, dan optimistic concurrency (Task 2.2).
 - API publik Pengumuman/Topik/Materi: published-only, detail aman, filter topik, dan paginasi berbatas (Task 2.3).
+- API admin CRUD Pengumuman/Materi dengan sesi, CSRF, Origin, optimistic concurrency, hapus permanen, dan audit aman (Task 2.4).
 
 Belum ada:
 
-- API admin dan UI Pengumuman/Materi (Task 2.4–2.6).
+- UI publik dan admin Pengumuman/Materi (Task 2.5–2.6).
 - Lampiran (Fase 2B).
 - Kelas, kelompok, pengumpulan, evaluasi, portal kelompok.
 
@@ -412,7 +413,7 @@ Tetap berlaku:
 
 ## Blockers / Pending External Decisions
 
-1. Tidak ada blocker untuk Task 2.4.
+1. Tidak ada blocker untuk Task 2.5.
 2. Docker tidak tersedia di `cbt-vps`; uji integrasi memakai database uji PostgreSQL lokal.
 3. 7 advisory npm moderate (alat dev saja) masih terbuka sejak Fase 0.
 4. HSTS 1 tahun menunggu kira-kira dua minggu HTTPS stabil (sekitar 27 Nov 2026).
@@ -445,11 +446,11 @@ The remote deploy command passed Go test/vet/build, `sqlc generate`, frontend `n
 
 ## Current Next Step
 
-Task 2.3 selesai. Saat dilanjutkan:
+Task 2.4 selesai. Saat dilanjutkan:
 
 1. Sinkronkan commit lokal yang belum ada di `origin`/`server` sesuai workflow project.
-2. Task 2.4 — API admin CRUD + audit: semua mutasi wajib sesi, CSRF, dan Origin; konflik `updatedAt` menjadi 409; perubahan tercatat di audit. Strict TDD HTTP/PostgreSQL.
-3. Lanjut 2.5–2.8 sesuai `.kiro/steering/PHASE2_PLAN.md`. Migrasi 4–6 baru masuk produksi saat deploy Task 2.7 (cadangan otomatis berjalan sebelumnya).
+2. Task 2.5 — frontend publik: Beranda memuat Pengumuman dan Materi, halaman daftar/detail, perender teks biasa aman, serta loading/kosong/galat/sukses. TDD klien/perender.
+3. Lanjut 2.6–2.8 sesuai `.kiro/steering/PHASE2_PLAN.md`. Migrasi 4–6 baru masuk produksi saat deploy Task 2.7 (cadangan otomatis berjalan sebelumnya).
 
 Selesai sebelum jeda (13 Nov 2026):
 
@@ -460,6 +461,7 @@ Selesai sebelum jeda (13 Nov 2026):
 - Task 2.1 selesai; `deploy.sh` kini menolak berkas Go yang belum di-`gofmt` (temuan: `cmd/api/main.go` dari commit CSP; sudah diperbaiki).
 - Task 2.2 selesai (`fb3c9be`): paket `content` memvalidasi Unicode/panjang/status/topik/urutan, menjaga waktu terbit pertama, dan membedakan konflik `updatedAt` dari data tidak ditemukan. Verifikasi PostgreSQL nyata, race, vet, dan build hijau; belum di produksi.
 - Task 2.3 selesai (`183770d`): lima endpoint publik read-only hanya mengekspos konten terbit, menyamakan 404 draf/tidak ada, menyediakan filter topik dan paginasi berbatas, serta terpasang hanya ketika database tersedia. Belum di produksi.
+- Task 2.4 selesai (`c34e3e5`, hardening `0f90555`): CRUD admin real-router dilindungi sesi/CSRF/Origin, konflik edit 409, validasi topik 422, dan enam aksi audit teruji. Catatan: audit memakai recorder fail-open setelah mutasi sehingga mutation+audit belum atomik; kegagalan audit dapat meninggalkan mutasi tanpa jejak. Belum di produksi.
 
 ## Update Rule
 

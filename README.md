@@ -11,7 +11,7 @@ Website untuk memantau pengumpulan dan evaluasi tugas kelompok Informatika kelas
 
 ## Status
 
-Fase 0 dan Fase 1 sudah ditutup. Redesign web pribadi guru, HTTPS, HSTS, dan CSP sudah aktif di produksi. Fase aktif adalah **Fase 2A — Pengumuman dan Materi teks**: Task 2.1–2.3 sudah selesai (migrasi konten, paket Go `content`, dan API publik published-only). Berikutnya Task 2.4, API admin CRUD + audit. Perubahan Fase 2A belum dideploy ke produksi. Dokumen sumber:
+Fase 0 dan Fase 1 sudah ditutup. Redesign web pribadi guru, HTTPS, HSTS, dan CSP sudah aktif di produksi. Fase aktif adalah **Fase 2A — Pengumuman dan Materi teks**: Task 2.1–2.4 sudah selesai (migrasi, service, API publik, dan CRUD admin + audit). Berikutnya Task 2.5, frontend publik. Perubahan Fase 2A belum dideploy ke produksi. Dokumen sumber:
 
 - `PLAN.md` — spesifikasi produk dan arsitektur.
 - `DESIGN.md` — arah visual dan accessibility.
