@@ -2,7 +2,7 @@
 
 > Tanggal: 13 November 2026. Kode yang dideploy: `d2e3fca` (rilis `20261112T232527Z-d2e3fcac4923`). Commit sesudahnya hanya dokumen.
 >
-> **Verdict: DITUTUP 13 Nov 2026 atas laporan user, dengan satu catatan.** Semua gerbang otomatis dan kontrak lulus; HTTPS aktif; login dan logout lewat browser terbukti dari tabel audit. Hasil tata letak, zoom, keyboard, dan cookie adalah laporan user, tidak diamati langsung. Langkah "sandi salah" tidak meninggalkan jejak audit dari IP user (lihat bagian Cek browser). Fase 2 menunggu persetujuan user.
+> **Verdict: DITUTUP 13 Nov 2026 atas laporan user, dengan satu catatan.** Semua gerbang otomatis dan kontrak lulus; HTTPS aktif; login dan logout lewat browser terbukti dari tabel audit. Hasil tata letak, zoom, keyboard, dan cookie adalah laporan user, tidak diamati langsung. Langkah "sandi salah" tidak meninggalkan jejak audit dari IP user (lihat bagian Cek browser). Fase 2 kemudian disetujui; Task 2.1 sudah selesai.
 
 ## Gerbang penutupan (dari `.kiro/steering/PHASE1_PLAN.md`)
 
@@ -18,7 +18,7 @@
 | Cek browser nyata (360px, zoom 200%, keyboard) | PASS (laporan user) | Lihat bagian Cek browser: login dan logout terbukti di audit; sisanya laporan user |
 | Deploy ke `cbt-vps` + smoke lulus; cadangan sebelum migrasi terbukti ada | PASS | Smoke PASS; `backups/pre-20261112T232527Z-d2e3fcac4923.dump` (2664 byte, 0600); migrasi versi 3 |
 | Tidak ada CRUD bisnis yang bocor ke Fase 1 | PASS | Produksi: `/api/v1/admin/{announcements,materials,groups}` dan `/api/v1/{announcements,materials}` semuanya 404; rute admin hanya `auth/login`, `auth/logout`, `auth/me` |
-| User menyetujui pindah ke Fase 2 | BELUM | Menunggu |
+| User menyetujui pindah ke Fase 2 | PASS (sesudah penutupan Fase 1) | Fase 2 disetujui 13 Nov 2026; lihat `.kiro/steering/PHASE2_PLAN.md` |
 
 ## Keadaan produksi (hanya baca, 13 Nov 2026)
 
@@ -65,4 +65,4 @@ Buka `https://fikriramaaulia.online/admin/login/` di browser (tunnel SSH tidak l
 
 ## Keputusan penutupan
 
-Fase 1 **ditutup 13 Nov 2026** atas instruksi user setelah (a) cek browser dilaporkan lulus dan login/logout terbukti di audit, dan (b) HTTPS dipasang. (c) Persetujuan masuk Fase 2 **belum diberikan**.
+Fase 1 **ditutup 13 Nov 2026** atas instruksi user setelah (a) cek browser dilaporkan lulus dan login/logout terbukti di audit, dan (b) HTTPS dipasang. Sesudah checkpoint penutupan ini, user menyetujui Fase 2; Task 2.1 kemudian selesai.

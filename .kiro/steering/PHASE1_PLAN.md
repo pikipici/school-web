@@ -1,6 +1,6 @@
 # Fase 1 — Database dan Login Admin (Rencana)
 
-> Status: **DITUTUP 13 Nov 2026** (lihat `docs/F1_ACCEPTANCE.md`). Fase 2 menunggu persetujuan user.
+> Status: **DITUTUP 13 Nov 2026** (lihat `docs/F1_ACCEPTANCE.md`). Setelah penutupan ini, Fase 2 disetujui dan Task 2.1 selesai; status aktif ada di `.kiro/steering/PROGRESS.md`.
 > Dibuat: 13 November 2026.
 
 ## Tujuan
@@ -124,7 +124,7 @@ Semua keputusan rencana sudah dijawab. Yang tersisa: persetujuan memulai Task 1.
 - [x] Frontend lint, typecheck, build lulus; cek browser nyata (laporan user; login/logout terbukti di audit; langkah sandi salah tanpa jejak).
 - [x] Deploy ke `cbt-vps` + smoke lulus; cadangan sebelum migrasi terbukti ada.
 - [x] Tidak ada CRUD bisnis yang bocor ke Fase 1.
-- [ ] User menyetujui pindah ke Fase 2.
+- [x] User menyetujui pindah ke Fase 2 (setelah penutupan Fase 1; lihat `.kiro/steering/PHASE2_PLAN.md`).
 
 ## Catatan pelaksanaan
 

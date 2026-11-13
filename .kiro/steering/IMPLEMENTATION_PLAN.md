@@ -2,7 +2,7 @@
 
 > **Untuk Hermes:** gunakan TDD dan checkpoint task-by-task. Jangan lanjut ke Fase 1 sebelum seluruh completion gate Fase 0 hijau dan user menyetujui checkpoint.
 
-**Status:** PROPOSED — menunggu approval implementasi
+**Status:** DONE — Fase 0 ditutup 13 Nov 2026 dengan pengecualian yang tercatat di `docs/F0_ACCEPTANCE.md`. Dokumen ini dipertahankan sebagai riwayat pelaksanaan.
 **Goal:** Membuat fondasi monorepo Go + Next.js yang bisa dibangun, diuji, dan dideploy secara aman ke `cbt-vps`, tanpa mengimplementasikan autentikasi atau CRUD bisnis lebih awal.
 **Architecture:** Next.js App Router menjadi UI-only dan menghasilkan static export. Go `chi` menjadi satu-satunya backend bisnis serta production runtime: melayani `/api/v1/*`, health endpoints, dan static export frontend. PostgreSQL tersedia sebagai dependency workspace, tetapi Fase 0 belum membuat schema bisnis.
 **Tech stack:** Go, `net/http`, `go-chi/chi/v5`, Next.js App Router, TypeScript, Tailwind CSS, PostgreSQL, `pgx/v5`, sqlc, Goose, systemd, Playwright smoke.
@@ -459,7 +459,7 @@ BRANCH=main
 - [x] `cbt-vps` deployed HEAD, systemd, migration, health, readiness, and frontend marker verified.
 - [x] Antislop Delivery Gate: otomatis PASS; cek browser nyata TIDAK diverifikasi (ditutup dengan pengecualian, lihat `docs/F0_ACCEPTANCE.md`).
 - [x] No Fase 1 business/auth work leaked into foundation.
-- [ ] User approves moving to Fase 1.
+- [x] User approved moving to Fase 1; Fase 1 kemudian selesai dan ditutup.
 
 ## 6. Risks and Mitigations
 

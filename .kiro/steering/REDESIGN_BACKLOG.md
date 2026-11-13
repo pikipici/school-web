@@ -1,6 +1,6 @@
 # Redesign Backlog — Web Pribadi Guru
 
-> Status: **DRAFT — menunggu approval. Belum ada kode diubah.**
+> Status: **DONE — disetujui, diimplementasikan, dan ter-deploy 13 Nov 2026.** Dokumen ini dipertahankan sebagai riwayat keputusan redesign; status aktual ada di `.kiro/steering/PROGRESS.md`.
 > Dibuat: 13 November 2026.
 
 ## Konteks
@@ -64,6 +64,6 @@ Fase 0 membangun "Papan Progres Informatika" sebagai alat tunggal untuk monitori
 | Jawab 3 pertanyaan terbuka baru | DONE (nama sementara, lampiran PDF+PPT, redesign tahap satu hanya tampilan) |
 | Revisi `DESIGN.md` | DONE (13 Nov 2026) |
 | Revisi `PLAN.md` | DONE (v2.1, bagian 0; aturan lampiran diputuskan 13 Nov 2026: PDF/PPT/PPTX, 25 MB, disk VPS di luar rilis) |
-| Implementasi tampilan tahap satu | DONE di working tree, belum commit/deploy. Lint, typecheck, build PASS di `cbt-vps` (salinan sementara, runtime tidak disentuh). Rute `/` dan `/progres` terlayani Go. |
-| Cek browser manual (360px, zoom 200%, keyboard) | PENDING |
-| Nama asli menggantikan "Guru Informatika" di `frontend/src/lib/site.ts` | PENDING |
+| Implementasi tampilan tahap satu | DONE, commit dan deploy selesai; rute `/` dan `/progres/` terlayani Go. |
+| Cek browser manual (360px, zoom 200%, keyboard) | Ditutup dengan pengecualian pada Fase 0; kemudian dilaporkan PASS oleh user saat acceptance Fase 1. |
+| Nama asli menggantikan "Guru Informatika" di `frontend/src/lib/site.ts` | DONE — `Fikri Rama Aulia` |
