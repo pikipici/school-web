@@ -186,7 +186,9 @@ export function ProgressTable() {
                 </th>
                 <td data-label="Kelas">{g.classCode}</td>
                 <td data-label="Topik">
-                  <span className="topic-code">{g.topic.code}</span> {g.topic.title}
+                  <span>
+                    <span className="topic-code">{g.topic.code}</span> {g.topic.title}
+                  </span>
                 </td>
                 <td data-label="Pengumpulan">
                   <SubmissionCell g={g} />

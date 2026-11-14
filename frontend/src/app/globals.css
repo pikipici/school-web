@@ -187,12 +187,13 @@ fieldset.form-field legend { margin-bottom: 6px; font-weight: 600; }
 .progress-filters .filter { flex: 1 1 200px; margin-bottom: 16px; }
 .progress-filters input[type="search"] { width: 100%; min-height: 44px; padding: 8px 12px; border: 1px solid var(--ink-muted); border-radius: 3px; background: var(--surface); color: var(--ink); font: inherit; }
 .progress-table { width: 100%; border-collapse: collapse; border-top: 1px solid var(--line); font-size: .9375rem; }
-.progress-table th, .progress-table td { padding: 12px 10px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; overflow-wrap: anywhere; }
+.progress-table th, .progress-table td { padding: 12px 10px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; overflow-wrap: break-word; }
 .progress-table thead th { font-size: .875rem; color: var(--ink-muted); font-weight: 600; }
 .progress-table tbody th { font-weight: 600; }
-.progress-table time { white-space: nowrap; color: var(--ink-muted); }
+.progress-table td[data-label="Kelas"] { white-space: nowrap; }
+.progress-table time { color: var(--ink-muted); }
 .topic-code { font-family: "IBM Plex Mono", monospace; font-size: .8125rem; font-weight: 600; }
-.lane-chip { display: inline-flex; align-items: baseline; gap: 6px; padding: 2px 8px; border-radius: 3px; font-weight: 600; font-size: .875rem; line-height: 1.5; }
+.lane-chip { display: inline-block; padding: 2px 8px; border-radius: 3px; font-weight: 600; font-size: .875rem; line-height: 1.5; }
 .lane-none { background: var(--surface-muted); color: var(--ink); }
 .lane-partial { background: var(--warning-soft); color: var(--warning); }
 .lane-done { background: var(--success-soft); color: var(--success); }
@@ -210,9 +211,13 @@ fieldset.form-field legend { margin-bottom: 6px; font-weight: 600; }
 }
 
 /* Admin kelas dan kelompok (Task 3.4) */
-.admin-nav { display: flex; flex-wrap: wrap; gap: 8px 16px; margin: 0 0 24px; padding: 0; list-style: none; }
+.admin-nav { display: flex; flex-wrap: wrap; gap: 8px 24px; margin: 0 0 24px; padding: 0; list-style: none; }
+.admin-nav a { display: inline-flex; align-items: center; min-height: 44px; color: var(--primary); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; }
+.admin-nav a[aria-current="page"] { color: var(--ink); font-weight: 700; text-decoration-thickness: 2px; }
 .inline-form { display: grid; gap: 0 16px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); align-items: start; }
 .inline-form .form-actions { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 8px; }
+.inline-form > h3 { margin: 0 0 12px; font-size: 1.125rem; font-weight: 700; }
+.field-hint { overflow-wrap: anywhere; }
 .form-field input[type="text"], .form-field input[type="email"], .form-field input[type="number"] { width: 100%; min-width: 0; }
 .admin-row .inline-form { grid-column: 1 / -1; }
 .status-inactive { background: var(--surface-muted); color: var(--ink); }
