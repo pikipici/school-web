@@ -1,6 +1,6 @@
 # Fase 2 — Pengumuman, Materi, dan Lampiran (Rencana)
 
-> Status: **DISETUJUI 13 Nov 2026 — 2A ditutup 14 Nov 2026; 2B berjalan (4/7: 2.9–2.12).**
+> Status: **DISETUJUI 13 Nov 2026 — 2A ditutup 14 Nov 2026; 2B berjalan (5/7: 2.9–2.13).**
 > Dibuat: 13 November 2026. Sumber: `PLAN.md` bagian 0 (keputusan lampiran), `DESIGN.md` (Beranda dan navigasi), Fase 1 (login admin, CSRF, audit).
 
 ## Tujuan
@@ -100,7 +100,7 @@ Lampiran membawa risiko yang berbeda (disk, unggahan besar, cadangan berkas, isi
 | 2.10 **DONE** | Paket `attachments`: validasi isi (magic bytes, cek ZIP berisi `ppt/` untuk PPTX, OLE untuk PPT, tolak makro), nama UUID, tulis atomik (sementara lalu `rename`), kuota dan sisa disk | TDD dengan berkas contoh asli dan berkas palsu |
 | 2.11 **DONE** | Unggah dan hapus admin (dialirkan, tenggat per-rute, 1 unggahan serentak) | TDD HTTP: >25 MB 413, tipe palsu 415, kuota penuh 507, CSRF |
 | 2.12 **DONE** | Unduh publik lewat Go | TDD: header benar, hanya untuk materi terbit, Range jalan |
-| 2.13 **SIAP (belum aktif di produksi)** | Caddy: batas badan khusus jalur unggah; deploy: cadangan direktori lampiran | `caddy validate`, uji fungsi deploy |
+| 2.13 **DONE, aktif di produksi 14 Nov 2026** | Caddy: batas badan khusus jalur unggah; deploy: cadangan direktori lampiran | `caddy validate`, uji fungsi deploy |
 | 2.14 | UI unggah (progres, galat jelas), daftar lampiran di halaman publik | lint/typecheck/build |
 | 2.15 | Deploy, cek browser (unggah PDF dan PPTX asli, unduh), gerbang 2B + `docs/F2B_ACCEPTANCE.md` | semua gerbang |
 
@@ -182,3 +182,7 @@ User mengikuti semua rekomendasi: dibagi 2A lalu 2B; isi teks biasa; Pengumuman 
   - Uji fungsi deploy: **89 lulus** (sebelumnya 59): parsing `ATTACHMENTS_DIR`, `unit_allows_write`, `check_attachments_dir`, snapshot + **pemulihan** (berkas dihapus lalu dipulihkan sesuai runbook, isi dan mode 0640 sama), snapshot tidak menimpa yang ada, pemangkasan. Tiga uji mutan (cek unit dibuang, filter UUID dibuang, cek izin user lain dibuang) masing-masing menggagalkan satu uji yang tepat. `bash -n` bersih.
   - **Belum:** pemasangan unit/Caddyfile dan baris `.env` di produksi; uji unggah 25 MB lewat Caddy produksi ke app sungguhan; snapshot di produksi (masih 0 berkas).
   - **Temuan:** proses uji lama `/tmp/informatika-monitoring-task06` (dari Task 0.6, user `ubuntu`) masih mendengarkan di `*:18300` sejak sekitar 12 Nov. Bukan produksi; belum dimatikan, menunggu persetujuan user.
+- **Task 2.13 diaktifkan di produksi (14 Nov 2026, atas izin user).** Urutan: `git pull` ke `57438e0`; unit lama dicadangkan ke `/etc/systemd/system/informatika-monitoring-api.service.bak-20261114`, unit baru dipasang, `daemon-reload`, `ReadWritePaths` terbaca benar; Caddyfile lama dicadangkan ke `/etc/caddy/Caddyfile.bak-20261114`, yang baru lolos `caddy validate`, `reload` (situs tetap 200); satu baris `ATTACHMENTS_DIR` ditambahkan ke `.env` (tetap 0600); `deploy.sh --remote` exit 0.
+  - Rilis `20261114T030336Z-57438e043577`, **migrasi versi 7**. Cadangan `backups/pre-20261114T030336Z-57438e043577.dump` (20651 byte) dan snapshot lampiran `...attachments` (0 berkas, 0700) ditulis sebelum mutasi. Pre-flight mengonfirmasi direktori lampiran dapat ditulis layanan. Log deploy tidak memuat pola DSN/sandi lalu dihapus.
+  - Dari luar lewat Caddy: unduh ID tak dikenal → `Lampiran tidak ditemukan.` (rute aktif); 2 MB anonim ke jalur unggah diteruskan ke app → 401; 2 MB ke login → 413; Beranda, `/materi/`, `/admin/login/` 200.
+  - **Belum:** unggah sungguhan dengan sesi admin (berkas tertulis di disk produksi) dan unduh; itu bagian Task 2.15 bersama UI Task 2.14.
