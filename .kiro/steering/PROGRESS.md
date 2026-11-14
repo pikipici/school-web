@@ -8,8 +8,8 @@
 
 - Fase aktif: **Fase 3A — Kelas, kelompok, tabel publik** (rencana Fase 3 disetujui 14 Nov 2026). Fase 0, 1, 2A, dan 2B sudah ditutup.
 - Progress Fase 2A: **8/8 selesai** (ditutup dengan pengecualian). Fase 2B (lampiran): **7/7** (2.9–2.15), **ditutup 14 Nov 2026 dengan pengecualian**.
-- Task terakhir selesai: **3.3 — API admin kelas/kelompok + API publik progres** (belum di produksi)
-- Next task: **3.4 — UI admin kelas/kelompok dan tabel `/progres/`**. Daftar revisi desain: tampilan admin di 360px sudah diukur untuk editor materi; paginasi 360px turun baris; judul "Lampiran" publik.
+- Task terakhir selesai: **3.4 — UI admin kelas/kelompok dan tabel `/progres/`** (belum di produksi)
+- Next task: **3.5 — deploy 3A (migrasi 8), cek browser, `docs/F3A_ACCEPTANCE.md`** (butuh izin deploy). Daftar revisi desain: tampilan admin di 360px sudah diukur untuk editor materi; paginasi 360px turun baris; judul "Lampiran" publik.
 - Semua perbaikan gaya tautan sudah di produksi.
 - Local branch: `main`; semua commit sampai `d3918f3` sudah di `origin`/`server` (yang dideploy). Commit dokumen `490c6b3`, `3e46e2e`, `2f9ba59`, dan pembaruan ini belum di-push (user yang push).
 - Produksi: **`https://fikriramaaulia.online`** aktif (Caddy + Let's Encrypt, berlaku s.d. 2027-02-11)
@@ -27,7 +27,7 @@
 | Hardening | HSTS 1 hari + CSP `enforce` | DONE, aktif di produksi | bagian Current Next Step |
 | 2A | Pengumuman + Materi teks | DITUTUP 14 Nov 2026 (dengan pengecualian) | `.kiro/steering/PHASE2_PLAN.md` |
 | 2B | Lampiran PDF/PPT/PPTX | DITUTUP 14 Nov 2026 (dengan pengecualian) | `.kiro/steering/PHASE2_PLAN.md` |
-| 3 | Progres Tugas Kelompok (3A kelas/kelompok, 3B pengumpulan, 3C pemeriksaan, 3D portal) | DISETUJUI 14 Nov 2026; 3A berjalan (3/17) | `.kiro/steering/PHASE3_PLAN.md` |
+| 3 | Progres Tugas Kelompok (3A kelas/kelompok, 3B pengumpulan, 3C pemeriksaan, 3D portal) | DISETUJUI 14 Nov 2026; 3A berjalan (4/17) | `.kiro/steering/PHASE3_PLAN.md` |
 
 ## Fase 2A Tracker
 

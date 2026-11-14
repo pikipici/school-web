@@ -180,3 +180,39 @@ fieldset.form-field legend { margin-bottom: 6px; font-weight: 600; }
 .upload-progress { display: grid; gap: 8px; }
 .upload-progress progress { width: 100%; height: 12px; accent-color: var(--primary); }
 .upload-progress button { justify-self: start; }
+
+/* Progres Tugas Kelompok (Task 3.4) */
+.progress-counts { margin: 0 0 20px; }
+.progress-filters { display: flex; flex-wrap: wrap; gap: 0 20px; margin-bottom: 8px; }
+.progress-filters .filter { flex: 1 1 200px; margin-bottom: 16px; }
+.progress-filters input[type="search"] { width: 100%; min-height: 44px; padding: 8px 12px; border: 1px solid var(--ink-muted); border-radius: 3px; background: var(--surface); color: var(--ink); font: inherit; }
+.progress-table { width: 100%; border-collapse: collapse; border-top: 1px solid var(--line); font-size: .9375rem; }
+.progress-table th, .progress-table td { padding: 12px 10px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; overflow-wrap: anywhere; }
+.progress-table thead th { font-size: .875rem; color: var(--ink-muted); font-weight: 600; }
+.progress-table tbody th { font-weight: 600; }
+.progress-table time { white-space: nowrap; color: var(--ink-muted); }
+.topic-code { font-family: "IBM Plex Mono", monospace; font-size: .8125rem; font-weight: 600; }
+.lane-chip { display: inline-flex; align-items: baseline; gap: 6px; padding: 2px 8px; border-radius: 3px; font-weight: 600; font-size: .875rem; line-height: 1.5; }
+.lane-none { background: var(--surface-muted); color: var(--ink); }
+.lane-partial { background: var(--warning-soft); color: var(--warning); }
+.lane-done { background: var(--success-soft); color: var(--success); }
+.lane-attention { background: var(--danger-soft); color: var(--danger); }
+.lane-chip.tuntas { margin-left: 8px; }
+@media (max-width: 900px) {
+  .progress-table, .progress-table thead, .progress-table tbody, .progress-table tr, .progress-table th, .progress-table td { display: block; }
+  .progress-table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  .progress-table tr { padding: 14px 0; border-bottom: 1px solid var(--line); }
+  .progress-table th, .progress-table td { padding: 4px 0; border: 0; }
+  .progress-table tbody th { font-size: 1.0625rem; }
+  .progress-table td { display: grid; grid-template-columns: minmax(96px, 40%) minmax(0, 1fr); gap: 8px; }
+  .progress-table td::before { content: attr(data-label); color: var(--ink-muted); font-size: .875rem; }
+  .progress-table td > * { min-width: 0; }
+}
+
+/* Admin kelas dan kelompok (Task 3.4) */
+.admin-nav { display: flex; flex-wrap: wrap; gap: 8px 16px; margin: 0 0 24px; padding: 0; list-style: none; }
+.inline-form { display: grid; gap: 0 16px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); align-items: start; }
+.inline-form .form-actions { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 8px; }
+.form-field input[type="text"], .form-field input[type="email"], .form-field input[type="number"] { width: 100%; min-width: 0; }
+.admin-row .inline-form { grid-column: 1 / -1; }
+.status-inactive { background: var(--surface-muted); color: var(--ink); }
