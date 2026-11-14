@@ -12,6 +12,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/pikipici/informatika-monitoring/backend/internal/attachments"
 	"github.com/pikipici/informatika-monitoring/backend/internal/audit"
 	"github.com/pikipici/informatika-monitoring/backend/internal/auth/password"
 	"github.com/pikipici/informatika-monitoring/backend/internal/auth/ratelimit"
@@ -46,6 +47,7 @@ func run() error {
 	var publicContent content.PublicReader
 	var adminContent content.AdminStore
 	var auditStore *audit.Store
+	var attachmentService *attachments.Service
 	if strings.TrimSpace(cfg.DatabaseURL) != "" {
 		pool, err := db.Open(ctx, cfg.DatabaseURL)
 		if err != nil {
@@ -56,6 +58,13 @@ func run() error {
 		contentStore := content.New(pool, nil)
 		publicContent, adminContent = contentStore, contentStore
 		auditStore = audit.New(pool, nil)
+		if cfg.AttachmentsDir != "" {
+			files, err := attachments.NewStore(attachments.Options{Dir: cfg.AttachmentsDir})
+			if err != nil {
+				return fmt.Errorf("direktori lampiran tidak valid: %w", err)
+			}
+			attachmentService = attachments.NewService(pool, files, nil)
+		}
 
 		hasher, err := password.NewHasher(password.DefaultParams())
 		if err != nil {
@@ -76,7 +85,7 @@ func run() error {
 
 	server := &http.Server{
 		Addr:              cfg.Address,
-		Handler:           httpapi.NewRouterWithDeps(httpapi.Deps{Pinger: pinger, PublicDir: cfg.PublicDir, Admin: admin, CSPMode: cfg.CSPMode, PublicContent: publicContent, AdminContent: adminContent, ContentAudit: auditStore}),
+		Handler:           httpapi.NewRouterWithDeps(httpapi.Deps{Pinger: pinger, PublicDir: cfg.PublicDir, Admin: admin, CSPMode: cfg.CSPMode, PublicContent: publicContent, AdminContent: adminContent, ContentAudit: auditStore, Attachments: attachmentService}),
 		ReadHeaderTimeout: 5 * time.Second,
 		ReadTimeout:       15 * time.Second,
 		WriteTimeout:      15 * time.Second,
@@ -86,7 +95,7 @@ func run() error {
 
 	serverErrors := make(chan error, 1)
 	go func() {
-		slog.Info("API mulai", "address", cfg.Address, "environment", cfg.Environment, "database_configured", pinger != nil, "admin_auth_enabled", admin != nil, "cookie_secure", cfg.AdminCookieSecure, "csp_mode", cspModeName(cfg.CSPMode))
+		slog.Info("API mulai", "address", cfg.Address, "environment", cfg.Environment, "database_configured", pinger != nil, "admin_auth_enabled", admin != nil, "attachments_enabled", attachmentService != nil, "cookie_secure", cfg.AdminCookieSecure, "csp_mode", cspModeName(cfg.CSPMode))
 		serverErrors <- server.ListenAndServe()
 	}()
 

@@ -17,14 +17,17 @@ type Config struct {
 	AdminCookieSecure bool
 	// CSPMode controls the Content-Security-Policy header on HTML pages.
 	CSPMode web.CSPMode
+	// AttachmentsDir holds uploaded material files. Empty disables attachments.
+	AttachmentsDir string
 }
 
 func Load(getenv func(string) string) (Config, error) {
 	cfg := Config{
-		Address:     valueOrDefault(getenv("APP_ADDR"), ":8300"),
-		DatabaseURL: strings.TrimSpace(getenv("DATABASE_URL")),
-		PublicDir:   valueOrDefault(getenv("PUBLIC_DIR"), "public"),
-		Environment: valueOrDefault(getenv("APP_ENV"), "development"),
+		Address:        valueOrDefault(getenv("APP_ADDR"), ":8300"),
+		DatabaseURL:    strings.TrimSpace(getenv("DATABASE_URL")),
+		PublicDir:      valueOrDefault(getenv("PUBLIC_DIR"), "public"),
+		Environment:    valueOrDefault(getenv("APP_ENV"), "development"),
+		AttachmentsDir: strings.TrimSpace(getenv("ATTACHMENTS_DIR")),
 	}
 	secure, err := parseBool(getenv("ADMIN_COOKIE_SECURE"))
 	if err != nil {

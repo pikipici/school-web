@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: Informatika Monitoring API
-  version: 0.3.0
+  version: 0.4.0
   description: Kontrak API yang saat ini diimplementasikan oleh backend Go, termasuk autentikasi admin. Endpoint admin hanya aktif bila database dikonfigurasi.
 servers:
   - url: /
@@ -481,7 +481,123 @@ paths:
         - $ref: "#/components/parameters/CSRF"
       responses:
         "204":
-          description: Dihapus; judul dan id tercatat di audit_log.
+          description: Dihapus; judul dan id tercatat di audit_log. Bila lampiran aktif, berkas lampirannya ikut dihapus dari disk.
+        "401":
+          $ref: "#/components/responses/Unauthenticated"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/v1/admin/materials/{id}/attachments:
+    description: Hanya aktif bila ATTACHMENTS_DIR dikonfigurasi.
+    parameters:
+      - $ref: "#/components/parameters/ID"
+    get:
+      summary: Daftar lampiran satu materi (lama ke baru)
+      operationId: listAdminAttachments
+      responses:
+        "200":
+          description: Lampiran materi.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Attachment"
+        "401":
+          $ref: "#/components/responses/Unauthenticated"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    post:
+      summary: Unggah satu lampiran PDF/PPT/PPTX
+      description: >
+        Jenis ditentukan dari isi berkas dan ekstensi harus cocok; presentasi bermakro ditolak.
+        Maks 25 MiB per berkas, 5 per materi, kuota total 2 GiB, dan sisa disk minimal 1 GiB.
+        Hanya satu unggahan berjalan pada satu waktu. Tenggat baca/tulis untuk rute ini 10 menit.
+      operationId: uploadAdminAttachment
+      parameters:
+        - $ref: "#/components/parameters/CSRF"
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        "201":
+          description: Lampiran disimpan; tercatat di audit_log sebagai content.attachment_uploaded.
+          headers:
+            Location:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AttachmentEnvelope"
+        "400":
+          description: Bagian "file" tidak ada, nama berkas tidak dapat dipakai, atau unggahan terputus (INVALID_REQUEST, INVALID_FILE_NAME).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "401":
+          $ref: "#/components/responses/Unauthenticated"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          description: Materi sudah punya 5 lampiran (ATTACHMENT_LIMIT).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "413":
+          description: Berkas lebih dari 25 MiB (PAYLOAD_TOO_LARGE).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "415":
+          description: Bukan multipart (UNSUPPORTED_MEDIA_TYPE), bukan PDF/PPT/PPTX atau ekstensi tidak cocok (UNSUPPORTED_FILE_TYPE), atau bermakro (MACRO_NOT_ALLOWED).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "503":
+          description: Unggahan lain sedang berjalan (SERVICE_BUSY); lihat Retry-After.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "507":
+          description: Kuota 2 GiB penuh (STORAGE_QUOTA_EXCEEDED) atau sisa disk kurang (INSUFFICIENT_STORAGE).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+  /api/v1/admin/attachments/{id}:
+    description: Hanya aktif bila ATTACHMENTS_DIR dikonfigurasi.
+    parameters:
+      - $ref: "#/components/parameters/ID"
+    delete:
+      summary: Hapus lampiran (baris lalu berkas)
+      operationId: deleteAdminAttachment
+      parameters:
+        - $ref: "#/components/parameters/CSRF"
+      responses:
+        "204":
+          description: Dihapus; tercatat di audit_log sebagai content.attachment_deleted.
         "401":
           $ref: "#/components/responses/Unauthenticated"
         "403":
@@ -786,6 +902,46 @@ components:
       properties:
         data:
           $ref: "#/components/schemas/AdminItem"
+    Attachment:
+      type: object
+      additionalProperties: false
+      description: Kunci penyimpanan di disk tidak pernah dikirim ke klien.
+      required: [id, materialId, name, kind, contentType, size, createdAt]
+      properties:
+        id:
+          type: integer
+          format: int64
+        materialId:
+          type: integer
+          format: int64
+        name:
+          type: string
+          maxLength: 200
+          description: Nama asli yang sudah dibersihkan (tanpa jalur dan karakter kontrol); hanya teks tampilan.
+        kind:
+          type: string
+          enum: [pdf, ppt, pptx]
+        contentType:
+          type: string
+          enum:
+            - application/pdf
+            - application/vnd.ms-powerpoint
+            - application/vnd.openxmlformats-officedocument.presentationml.presentation
+        size:
+          type: integer
+          format: int64
+          minimum: 1
+          maximum: 26214400
+        createdAt:
+          type: string
+          format: date-time
+    AttachmentEnvelope:
+      type: object
+      additionalProperties: false
+      required: [data]
+      properties:
+        data:
+          $ref: "#/components/schemas/Attachment"
     LoginRequest:
       type: object
       additionalProperties: false

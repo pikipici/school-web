@@ -95,3 +95,24 @@ func TestCSPModeParsing(t *testing.T) {
 		t.Fatal("CSP_MODE=disabled must be rejected, not silently treated as enforce or off")
 	}
 }
+
+func TestAttachmentsDirIsOptionalAndTrimmed(t *testing.T) {
+	load := func(v string) config.Config {
+		cfg, err := config.Load(func(key string) string {
+			if key == "ATTACHMENTS_DIR" {
+				return v
+			}
+			return ""
+		})
+		if err != nil {
+			t.Fatal(err)
+		}
+		return cfg
+	}
+	if got := load("").AttachmentsDir; got != "" {
+		t.Errorf("unset ATTACHMENTS_DIR = %q, want empty (attachments disabled)", got)
+	}
+	if got := load("  /srv/data/attachments \t").AttachmentsDir; got != "/srv/data/attachments" {
+		t.Errorf("ATTACHMENTS_DIR = %q", got)
+	}
+}

@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"os"
+	"path/filepath"
 	"strings"
 	"sync"
 	"testing"
@@ -13,6 +15,7 @@ import (
 
 	"github.com/jackc/pgx/v5/pgxpool"
 
+	"github.com/pikipici/informatika-monitoring/backend/internal/attachments"
 	"github.com/pikipici/informatika-monitoring/backend/internal/audit"
 	"github.com/pikipici/informatika-monitoring/backend/internal/auth/password"
 	"github.com/pikipici/informatika-monitoring/backend/internal/auth/ratelimit"
@@ -64,6 +67,8 @@ type fixture struct {
 	audit   *recorder
 	userID  int64
 	origin  string
+	// attachDir is the attachment directory when fixtureOpts.attachments is set.
+	attachDir string
 }
 
 type fixtureOpts struct {
@@ -73,6 +78,8 @@ type fixtureOpts struct {
 	storedHasher *password.Hasher // hasher used to create the stored hash
 	loginHasher  *password.Hasher // hasher configured on the handler
 	persistAudit bool             // write audit events to the audit_log table instead of the in-memory recorder
+	attachments  bool             // enable attachment routes backed by a temporary directory
+	attachTotal  int64            // attachment quota; zero means the default
 }
 
 func cheapParams() password.Params {
@@ -137,10 +144,28 @@ func newFixture(t *testing.T, o fixtureOpts) *fixture {
 	if o.secure {
 		o2 = "https://example.test"
 	}
+	deps := httpapi.Deps{Admin: auth, AdminContent: content.New(pool, clk.Now), ContentAudit: sink}
+	var attachDir string
+	if o.attachments {
+		attachDir = filepath.Join(t.TempDir(), "attachments")
+		if err := os.Mkdir(attachDir, 0o750); err != nil {
+			t.Fatal(err)
+		}
+		store, err := attachments.NewStore(attachments.Options{
+			Dir:       attachDir,
+			MaxTotal:  o.attachTotal,
+			FreeBytes: func(string) (uint64, error) { return 100 << 30, nil },
+		})
+		if err != nil {
+			t.Fatal(err)
+		}
+		deps.Attachments = attachments.NewService(pool, store, clk.Now)
+	}
 	return &fixture{
 		origin: o2,
 		t:      t, pool: pool, clk: clk, hasher: o.loginHasher, auth: auth, audit: rec, userID: uid,
-		handler: httpapi.NewRouterWithDeps(httpapi.Deps{Admin: auth, AdminContent: content.New(pool, clk.Now), ContentAudit: sink}),
+		attachDir: attachDir,
+		handler:   httpapi.NewRouterWithDeps(deps),
 	}
 }
 

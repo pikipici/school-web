@@ -1,6 +1,6 @@
 # Fase 2 — Pengumuman, Materi, dan Lampiran (Rencana)
 
-> Status: **DISETUJUI 13 Nov 2026 — 2A sedang dikerjakan (5/8 task selesai).**
+> Status: **DISETUJUI 13 Nov 2026 — 2A ditutup 14 Nov 2026; 2B berjalan (3/7: 2.9–2.11).**
 > Dibuat: 13 November 2026. Sumber: `PLAN.md` bagian 0 (keputusan lampiran), `DESIGN.md` (Beranda dan navigasi), Fase 1 (login admin, CSRF, audit).
 
 ## Tujuan
@@ -98,7 +98,7 @@ Lampiran membawa risiko yang berbeda (disk, unggahan besar, cadangan berkas, isi
 |---|---|---|
 | 2.9 **DONE** | Migrasi `material_attachments`; direktori data (`0750`, milik `ubuntu`, di luar rilis) | uji skema |
 | 2.10 **DONE** | Paket `attachments`: validasi isi (magic bytes, cek ZIP berisi `ppt/` untuk PPTX, OLE untuk PPT, tolak makro), nama UUID, tulis atomik (sementara lalu `rename`), kuota dan sisa disk | TDD dengan berkas contoh asli dan berkas palsu |
-| 2.11 | Unggah dan hapus admin (dialirkan, tenggat per-rute, 1 unggahan serentak) | TDD HTTP: >25 MB 413, tipe palsu 415, kuota penuh 507, CSRF |
+| 2.11 **DONE** | Unggah dan hapus admin (dialirkan, tenggat per-rute, 1 unggahan serentak) | TDD HTTP: >25 MB 413, tipe palsu 415, kuota penuh 507, CSRF |
 | 2.12 | Unduh publik lewat Go | TDD: header benar, hanya untuk materi terbit, Range jalan |
 | 2.13 | Caddy: batas badan khusus jalur unggah; deploy: cadangan direktori lampiran | `caddy validate`, uji fungsi deploy |
 | 2.14 | UI unggah (progres, galat jelas), daftar lampiran di halaman publik | lint/typecheck/build |
@@ -160,3 +160,12 @@ User mengikuti semua rekomendasi: dibagi 2A lalu 2B; isi teks biasa; Pengumuman 
   - Uji mutan: cek makro PPTX dibuang, dua uji gagal.
   - `golang.org/x/sys` kini dependensi langsung (versi sama, v0.50.0) untuk `statfs`.
   - Batas: tidak ada pemindai virus; PDF tidak diperiksa isinya (JavaScript di PDF tidak ditolak), aman karena diunduh sebagai lampiran dengan `nosniff` (Task 2.12).
+- **Task 2.11 selesai (14 Nov 2026).** RED: `attachments.Service`, `NewService`, `ErrMaterialNotFound`/`ErrLimit`/`ErrBusy`, dan `Deps.Attachments` belum ada (build gagal). GREEN di `cbt-vps` dengan database uji nyata: 8 uji layanan + 5 uji HTTP + 1 uji config; seluruh suite lulus 2 kali, `-race` paket `attachments` dan `http`, vet, build `api`/`adminctl` hijau.
+  - Endpoint: `GET`/`POST /api/v1/admin/materials/{id}/attachments` (multipart, satu bagian `file`) dan `DELETE /api/v1/admin/attachments/{id}`. Semua di belakang `Require` (sesi; POST/DELETE wajib CSRF + Origin). Respons tidak pernah memuat kunci penyimpanan.
+  - Terbukti: anonim 401, tanpa CSRF atau Origin asing 403; 201 + `Location`; 25 MiB + 1 byte 413 (dialirkan dari pembangkit, tidak pernah utuh di memori); isi palsu dan `.pdf.exe` 415 `UNSUPPORTED_FILE_TYPE`; JSON 415 `UNSUPPORTED_MEDIA_TYPE`; isian salah 400; materi tak ada 404; lampiran ke-6 409 `ATTACHMENT_LIMIT`; kuota penuh 507 `STORAGE_QUOTA_EXCEEDED`; unggahan kedua saat satu berjalan `ErrBusy` (uji layanan; pemetaan ke HTTP 503 + `Retry-After` belum diuji di HTTP). Penolakan tidak meninggalkan berkas maupun baris audit.
+  - Urutan tulis: berkas dulu lalu baris; bila sisip gagal berkas dihapus. Hapus lampiran: baris dulu lalu berkas. Hapus materi (bila lampiran aktif) mengunci baris materi, membaca kunci berkas, menghapus materi, commit, lalu menghapus berkasnya. Audit `content.attachment_uploaded`/`content.attachment_deleted` dengan detail `entityId`, `materialId`, `title` (nama berkas).
+  - **Uji mutan:** pembersihan setelah sisip gagal dibuang → 1 uji gagal; penghapusan berkas saat hapus materi dibuang → 2 uji gagal (layanan dan HTTP).
+  - Tenggat baca/tulis 10 menit dipasang per rute lewat `http.ResponseController`; **belum teruji di server nyata** (perekam uji tidak mendukungnya). Diuji saat deploy (Task 2.15) bersama batas Caddy (Task 2.13).
+  - Konfigurasi baru `ATTACHMENTS_DIR` (kosong = rute lampiran nonaktif; direktori harus ada dan tertutup untuk pengguna lain, kalau tidak API berhenti saat mulai). `deploy.sh` belum menerima kunci ini di `.env` — ditambahkan di Task 2.13 bersama `ReadWritePaths` systemd. Jadi deploy sebelum 2.13 aman: lampiran tetap mati.
+  - OpenAPI 0.4.0 memuat dua path baru dan skema `Attachment` (YAML valid, semua `$ref` terselesaikan).
+  - Batas diketahui: crash di antara tulis berkas dan sisip baris bisa meninggalkan berkas yatim (tidak pernah baris tanpa berkas); pembersih berkala belum ada. Audit tetap fail-open seperti 2A.

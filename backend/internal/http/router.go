@@ -9,6 +9,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/pikipici/informatika-monitoring/backend/internal/attachments"
 	"github.com/pikipici/informatika-monitoring/backend/internal/content"
 	"github.com/pikipici/informatika-monitoring/backend/internal/health"
 	"github.com/pikipici/informatika-monitoring/backend/internal/web"
@@ -52,6 +53,9 @@ type Deps struct {
 	// AdminContent enables authenticated editable content routes.
 	AdminContent content.AdminStore
 	ContentAudit AuditRecorder
+	// Attachments enables upload/list/delete of material attachments; with it,
+	// deleting a material also removes its files.
+	Attachments *attachments.Service
 }
 
 // NewRouterWithDeps builds the router from Deps.
@@ -91,6 +95,11 @@ func newRouter(deps Deps) http.Handler {
 		})
 		if deps.AdminContent != nil {
 			h := adminContent{store: deps.AdminContent, audit: deps.ContentAudit}
+			var att adminAttachments
+			if deps.Attachments != nil {
+				att = adminAttachments{svc: deps.Attachments, audit: deps.ContentAudit}
+				h.deleteMaterial = deps.Attachments.DeleteMaterial
+			}
 			router.Route("/api/v1/admin", func(r chi.Router) {
 				r.Use(deps.Admin.Require)
 				r.Get("/announcements", h.list(content.Announcement))
@@ -112,9 +121,20 @@ func newRouter(deps Deps) http.Handler {
 					r.Get("/{id}", h.get(content.Material))
 					r.Patch("/{id}", h.update(content.Material))
 					r.Delete("/{id}", h.delete(content.Material))
+					if att.svc != nil {
+						r.Get("/{id}/attachments", att.list)
+						r.Post("/{id}/attachments", att.upload)
+					}
 					r.NotFound(notFound)
 					r.MethodNotAllowed(methodNotAllowed)
 				})
+				if att.svc != nil {
+					r.Route("/attachments", func(r chi.Router) {
+						r.Delete("/{id}", att.delete)
+						r.NotFound(notFound)
+						r.MethodNotAllowed(methodNotAllowed)
+					})
+				}
 			})
 		}
 	}

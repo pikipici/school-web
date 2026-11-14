@@ -1,6 +1,7 @@
 package httpapi
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"io"
@@ -9,6 +10,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/pikipici/informatika-monitoring/backend/internal/attachments"
 	"github.com/pikipici/informatika-monitoring/backend/internal/content"
 )
 
@@ -17,6 +19,9 @@ const maxContentBody = 32 << 10
 type adminContent struct {
 	store content.AdminStore
 	audit AuditRecorder
+	// deleteMaterial, when set, replaces store.DeleteMaterial so attachment
+	// files are removed with the material.
+	deleteMaterial func(context.Context, int64) (string, error)
 }
 type contentRequest struct {
 	Title       string         `json:"title"`
@@ -203,6 +208,11 @@ func (a adminContent) delete(kind content.Kind) http.HandlerFunc {
 		var title string
 		if kind == content.Announcement {
 			title, e = a.store.DeleteAnnouncement(r.Context(), id)
+		} else if a.deleteMaterial != nil {
+			title, e = a.deleteMaterial(r.Context(), id)
+			if errors.Is(e, attachments.ErrMaterialNotFound) {
+				e = content.ErrNotFound
+			}
 		} else {
 			title, e = a.store.DeleteMaterial(r.Context(), id)
 		}

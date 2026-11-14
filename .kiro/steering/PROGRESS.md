@@ -2,16 +2,16 @@
 
 > Dokumen status aktual implementasi. Update setelah setiap task, verifikasi, commit, provisioning, dan deployment.
 >
-> Last updated: 14 November 2026, setelah Task 2.6
+> Last updated: 14 November 2026, setelah Task 2.11
 
 ## Ringkasan
 
 - Fase aktif: **Fase 2B — Lampiran PDF/PPT/PPTX** (disetujui 14 Nov 2026). Fase 0, 1, dan 2A sudah ditutup.
-- Progress Fase 2A: **8/8 selesai** (ditutup dengan pengecualian). Fase 2B (lampiran): **2/7** (2.9–2.10).
-- Task terakhir selesai: **2.10 — paket `attachments`** (cek isi, simpan aman, kuota)
-- Next task: **2.11 — API unggah dan hapus lampiran admin**. Daftar revisi desain: tampilan admin di 360px belum diverifikasi; paginasi 360px turun baris.
+- Progress Fase 2A: **8/8 selesai** (ditutup dengan pengecualian). Fase 2B (lampiran): **3/7** (2.9–2.11).
+- Task terakhir selesai: **2.11 — API unggah, daftar, dan hapus lampiran admin** (belum di produksi; nonaktif sampai `ATTACHMENTS_DIR` diisi)
+- Next task: **2.12 — unduh publik lewat Go**. Daftar revisi desain: tampilan admin di 360px belum diverifikasi; paginasi 360px turun baris.
 - Semua perbaikan gaya tautan sudah di produksi.
-- Local branch: `main`, working tree bersih
+- Local branch: `main`; commit 2B (`859e0c6`, `d2c446b`, dan Task 2.11) belum di-push
 - Semua commit sampai `12bcf48` sudah di `server/main`.
 - Produksi: **`https://fikriramaaulia.online`** aktif (Caddy + Let's Encrypt, berlaku s.d. 2027-02-11)
 - Rilis produksi: `20261113T233022Z-e4f640237316` (kode `e4f6402`), migrasi versi **6**. Pengumuman dan Materi aktif di produksi.
@@ -27,7 +27,7 @@
 | 1 | Database + login admin + HTTPS | DITUTUP 13 Nov 2026 | `.kiro/steering/PHASE1_PLAN.md`, `docs/F1_ACCEPTANCE.md` |
 | Hardening | HSTS 1 hari + CSP `enforce` | DONE, aktif di produksi | bagian Current Next Step |
 | 2A | Pengumuman + Materi teks | DITUTUP 14 Nov 2026 (dengan pengecualian) | `.kiro/steering/PHASE2_PLAN.md` |
-| 2B | Lampiran PDF/PPT/PPTX | 2/7 — berjalan | `.kiro/steering/PHASE2_PLAN.md` |
+| 2B | Lampiran PDF/PPT/PPTX | 3/7 — berjalan | `.kiro/steering/PHASE2_PLAN.md` |
 
 ## Fase 2A Tracker
 
