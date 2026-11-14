@@ -22,3 +22,11 @@ SELECT title FROM materials WHERE id=$1 FOR UPDATE;
 
 -- name: MaterialAttachmentKeys :many
 SELECT storage_key FROM material_attachments WHERE material_id=$1;
+
+-- name: PublishedMaterialExists :one
+SELECT EXISTS(SELECT 1 FROM materials WHERE id=$1 AND status='published');
+
+-- name: GetPublicAttachment :one
+SELECT * FROM material_attachments
+WHERE material_attachments.id = sqlc.arg(id)::bigint
+  AND material_attachments.material_id IN (SELECT m.id FROM materials m WHERE m.status = 'published');

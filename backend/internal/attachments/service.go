@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
+	"os"
 	"time"
 
 	"github.com/jackc/pgx/v5"
@@ -136,6 +137,50 @@ func (s *Service) List(ctx context.Context, materialID int64) ([]Attachment, err
 		out = append(out, fromRow(row))
 	}
 	return out, nil
+}
+
+// PublicList returns the attachments of a published material. A draft or
+// missing material gives ErrMaterialNotFound, so drafts never leak.
+func (s *Service) PublicList(ctx context.Context, materialID int64) ([]Attachment, error) {
+	ok, err := s.q.PublishedMaterialExists(ctx, materialID)
+	if err != nil {
+		return nil, err
+	}
+	if !ok {
+		return nil, ErrMaterialNotFound
+	}
+	rows, err := s.q.ListMaterialAttachments(ctx, materialID)
+	if err != nil {
+		return nil, err
+	}
+	out := make([]Attachment, 0, len(rows))
+	for _, row := range rows {
+		out = append(out, fromRow(row))
+	}
+	return out, nil
+}
+
+// PublicOpen returns an attachment of a published material and its open
+// file. The caller closes the file. A row whose file is gone is reported as
+// ErrNotFound and logged.
+func (s *Service) PublicOpen(ctx context.Context, id int64) (Attachment, *os.File, error) {
+	row, err := s.q.GetPublicAttachment(ctx, id)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return Attachment{}, nil, ErrNotFound
+	}
+	if err != nil {
+		return Attachment{}, nil, err
+	}
+	a := fromRow(row)
+	f, err := s.files.Open(a.Key)
+	if errors.Is(err, ErrNotFound) {
+		slog.Error("attachment file missing", "id", a.ID, "key", a.Key)
+		return Attachment{}, nil, ErrNotFound
+	}
+	if err != nil {
+		return Attachment{}, nil, err
+	}
+	return a, f, nil
 }
 
 // Delete removes one attachment: the row first, then its file.

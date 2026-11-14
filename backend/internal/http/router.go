@@ -81,6 +81,11 @@ func newRouter(deps Deps) http.Handler {
 			r.Get("/topics", listTopics(deps.PublicContent))
 			r.Get("/materials", listMaterials(deps.PublicContent))
 			r.Get("/materials/{id}", getMaterial(deps.PublicContent))
+			if deps.Attachments != nil {
+				pa := publicAttachments{svc: deps.Attachments}
+				r.Get("/materials/{id}/attachments", pa.list)
+				r.Get("/attachments/{id}", pa.download)
+			}
 			r.NotFound(notFound)
 			r.MethodNotAllowed(methodNotAllowed)
 		})

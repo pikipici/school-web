@@ -160,6 +160,7 @@ func newFixture(t *testing.T, o fixtureOpts) *fixture {
 			t.Fatal(err)
 		}
 		deps.Attachments = attachments.NewService(pool, store, clk.Now)
+		deps.PublicContent = content.New(pool, clk.Now)
 	}
 	return &fixture{
 		origin: o2,

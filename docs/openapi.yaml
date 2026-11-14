@@ -317,6 +317,78 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorEnvelope"
+  /api/v1/public/materials/{id}/attachments:
+    description: Hanya aktif bila ATTACHMENTS_DIR dikonfigurasi.
+    get:
+      summary: Daftar lampiran satu materi terbit (lama ke baru)
+      operationId: listPublicAttachments
+      parameters:
+        - $ref: "#/components/parameters/ID"
+      responses:
+        "200":
+          description: Lampiran materi.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/PublicAttachment"
+        "404":
+          description: Materi tidak ada atau belum terbit.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+  /api/v1/public/attachments/{id}:
+    description: Hanya aktif bila ATTACHMENTS_DIR dikonfigurasi.
+    get:
+      summary: Unduh lampiran dari materi terbit
+      description: >
+        Selalu sebagai unduhan (Content-Disposition attachment dengan nama ASCII cadangan dan filename* UTF-8),
+        X-Content-Type-Options nosniff, Content-Security-Policy "default-src 'none'; sandbox",
+        Cache-Control no-cache, dan ETag berupa SHA-256 berkas. Mendukung Range, If-Range, dan If-None-Match.
+        Tenggat tulis untuk rute ini 10 menit.
+      operationId: downloadPublicAttachment
+      parameters:
+        - $ref: "#/components/parameters/ID"
+        - name: Range
+          in: header
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Seluruh berkas.
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+            application/vnd.ms-powerpoint:
+              schema:
+                type: string
+                format: binary
+            application/vnd.openxmlformats-officedocument.presentationml.presentation:
+              schema:
+                type: string
+                format: binary
+        "206":
+          description: Sebagian berkas sesuai Range.
+        "304":
+          description: ETag cocok dengan If-None-Match.
+        "404":
+          description: Lampiran tidak ada, materinya belum terbit, atau berkasnya hilang dari disk.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorEnvelope"
+        "416":
+          description: Range di luar ukuran berkas.
   /api/v1/admin/announcements:
     get:
       summary: Semua pengumuman (draf dan terbit)
@@ -942,6 +1014,24 @@ components:
       properties:
         data:
           $ref: "#/components/schemas/Attachment"
+    PublicAttachment:
+      type: object
+      additionalProperties: false
+      description: Hanya yang perlu pengunjung; tanpa kunci penyimpanan, hash, atau waktu.
+      required: [id, name, kind, size]
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+          maxLength: 200
+        kind:
+          type: string
+          enum: [pdf, ppt, pptx]
+        size:
+          type: integer
+          format: int64
     LoginRequest:
       type: object
       additionalProperties: false
