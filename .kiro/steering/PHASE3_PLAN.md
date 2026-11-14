@@ -88,7 +88,7 @@ Mutasi admin: sesi + CSRF + Origin + audit. `PATCH` memakai `updatedAt` dan 409 
 | Task | Isi | Uji |
 |---|---|---|
 | 3.1 **DONE** | Migrasi `academic_years` (+ seed 2026/2027), `classes`, `groups` | uji skema: unik, satu tahun aktif, topik wajib, down/up |
-| 3.2 | Paket `progress`: validasi kelas/kelompok, nonaktif vs hapus, query publik aman | TDD + PostgreSQL nyata |
+| 3.2 **DONE** | Paket `progress`: validasi kelas/kelompok, nonaktif vs hapus, query publik aman | TDD + PostgreSQL nyata |
 | 3.3 | API admin kelas/kelompok + API publik `progress`/`summary` + audit | TDD HTTP: 401/403/409/422; publik tanpa email (uji kunci JSON) |
 | 3.4 | UI admin kelas/kelompok; `/progres/` memuat tabel, filter, cari, keadaan kosong/galat | klien API diuji; lint/typecheck/build |
 | 3.5 | Deploy + cek browser + `docs/F3A_ACCEPTANCE.md` (AC01, AC04 sebagian, AC18, AC20) | semua gerbang |
@@ -154,3 +154,9 @@ Status rencana: **DISETUJUI 14 Nov 2026.**
   - `down-to 7` menghapus ketiga tabel tanpa menyentuh Materi; `up` ulang tidak menggandakan seed. `goose validate`, `sqlc generate`, seluruh suite 2 kali, vet, build hijau.
   - **Uji mutan:** indeks satu-aktif dibuang → uji tahun ajaran gagal; indeks nama tanpa `lower()` → uji kelompok gagal.
   - Kolom kode akses ditambahkan nanti di Task 3.14. Migrasi 8 belum di produksi; ikut deploy Task 3.5.
+- **Task 3.2 selesai (15 Nov 2026).** RED: `no non-test Go files`. GREEN di `cbt-vps` dengan database uji: paket `backend/internal/progress` + `sql/queries/progress.sql`; 6 uji lulus, seluruh suite 2 kali, `-race`, vet, build, gofmt hijau.
+  - Validasi di Go (sama dengan DB): tahun `YYYY/YYYY` berurutan; kode kelas 1–20; nama kelas ≤ 80; nama kelompok 1–60 tanpa karakter kontrol; email dirapikan ke huruf kecil, kosong = tidak ada; topik dan kelas wajib; urutan ≥ 0. Semua dipangkas spasinya.
+  - Tahun ajaran: daftar (terbaru dulu), tambah (tidak aktif), **aktifkan** dalam satu transaksi (matikan yang lama dulu, baru nyalakan yang baru; ID tak ada → `ErrNotFound` dan tahun aktif tidak berubah).
+  - Kelas/kelompok: buat (selalu aktif), ubah dengan `updatedAt` (`ErrConflict` vs `ErrNotFound`), nonaktifkan lewat ubah, hapus (`ErrInUse` bila kelas masih punya kelompok; kelompok nanti juga `ErrInUse` saat sudah punya catatan 3B/3C). Nama ganda tanpa beda huruf → `ErrDuplicate`; tahun/kelas/topik tak dikenal → `ErrInvalidReference`. Kelompok bisa dipindah kelas.
+  - Publik: hanya tahun aktif, kelas aktif, kelompok aktif; urut kelas lalu urutan kelompok; filter kode kelas (tanpa beda huruf) dan cari nama (teks biasa, `%`/`_` tidak jadi wildcard); maks 60 karakter. Baris publik **persis** `classCode, complete, name, notebook, review, submission, topic, updatedAt` — tanpa ID, email, atau catatan (diuji lewat JSON). Di 3A semua kelompok `BELUM` / `BELUM_DICEK` / `BELUM_DITERIMA`. Ringkasan menghitung total, belum, sebagian, lengkap, tuntas. Daftar kosong dikirim sebagai `[]`.
+  - **Uji mutan:** filter kelompok aktif dibuang → gagal; filter tahun aktif dibuang → gagal; email disisipkan ke nama publik → gagal.
