@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Announcement, Material, PageMeta, getAnnouncement, getAnnouncements, getMaterial, getMaterials, getTopics } from "@/lib/api-client/content";
 import { formatWIB, validContentID } from "@/lib/format";
+import { KIND_LABEL, downloadURL, formatSize, getPublicAttachments, type PublicAttachment } from "@/lib/api-client/attachments";
 import { PlainText } from "./PlainText";
 
 function State({ kind, retry }: { kind: "loading"|"error"; retry?:()=>void }) { return <div className={`public-state ${kind}`} role={kind === "loading" ? "status" : "alert"} aria-live="polite"><p>{kind === "loading" ? "Memuat konten…" : "Konten tidak dapat dimuat. Silakan coba lagi."}</p>{retry && <button className="retry-button" type="button" onClick={retry}>Coba lagi</button>}</div>; }
@@ -22,7 +23,15 @@ function LoadedDetail({ type, id, back }: { type: "announcement" | "material"; i
   if (load.error) return <><State kind="error" retry={load.retry}/><Link href={back}>Kembali ke daftar</Link></>;
   if (!load.value) return <State kind="loading"/>;
   const body = "body" in load.value ? load.value.body : load.value.description;
-  return <article className="detail"><p><Link href={back}>Kembali ke daftar</Link></p>{"topic" in load.value && <p className="topic-label">{load.value.topic?.title ?? "Umum"}</p>}<h1 className="page-title">{load.value.title}</h1><time dateTime={load.value.publishedAt}>{formatWIB(load.value.publishedAt)}</time><PlainText value={body}/></article>;
+  return <article className="detail"><p><Link href={back}>Kembali ke daftar</Link></p>{"topic" in load.value && <p className="topic-label">{load.value.topic?.title ?? "Umum"}</p>}<h1 className="page-title">{load.value.title}</h1><time dateTime={load.value.publishedAt}>{formatWIB(load.value.publishedAt)}</time><PlainText value={body}/>{type === "material" && <MaterialAttachments materialId={id}/>}</article>;
+}
+function MaterialAttachments({ materialId }: { materialId: number }) {
+  const loader = useCallback((signal: AbortSignal) => getPublicAttachments(materialId, signal), [materialId]);
+  const load = useLoad<PublicAttachment[]>(loader, `att-${materialId}`);
+  if (load.error) return <section className="attachments" aria-labelledby="lampiran"><h2 id="lampiran">Lampiran</h2><div className="public-state error" role="alert"><p>Daftar lampiran tidak dapat dimuat.</p><button className="retry-button" type="button" onClick={load.retry}>Coba lagi</button></div></section>;
+  if (!load.value) return <p className="public-state loading" role="status">Memuat lampiran…</p>;
+  if (load.value.length === 0) return null;
+  return <section className="attachments" aria-labelledby="lampiran"><h2 id="lampiran">Lampiran</h2><ul className="attachment-list">{load.value.map(a=><li key={a.id}><a href={downloadURL(a.id)} download><span className="attachment-kind" aria-hidden="true">{KIND_LABEL[a.kind]}</span><span className="attachment-name">{a.name}</span></a><span className="attachment-meta"><span className="visually-hidden">Jenis </span>{KIND_LABEL[a.kind]} · {formatSize(a.size)}</span></li>)}</ul></section>;
 }
 export function Detail({ type }: { type: "announcement" | "material" }) {
   const id = validContentID(useSearchParams().get("id"));

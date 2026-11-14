@@ -1,6 +1,6 @@
 # Fase 2 — Pengumuman, Materi, dan Lampiran (Rencana)
 
-> Status: **DISETUJUI 13 Nov 2026 — 2A ditutup 14 Nov 2026; 2B berjalan (5/7: 2.9–2.13).**
+> Status: **DISETUJUI 13 Nov 2026 — 2A ditutup 14 Nov 2026; 2B berjalan (6/7: 2.9–2.14).**
 > Dibuat: 13 November 2026. Sumber: `PLAN.md` bagian 0 (keputusan lampiran), `DESIGN.md` (Beranda dan navigasi), Fase 1 (login admin, CSRF, audit).
 
 ## Tujuan
@@ -101,7 +101,7 @@ Lampiran membawa risiko yang berbeda (disk, unggahan besar, cadangan berkas, isi
 | 2.11 **DONE** | Unggah dan hapus admin (dialirkan, tenggat per-rute, 1 unggahan serentak) | TDD HTTP: >25 MB 413, tipe palsu 415, kuota penuh 507, CSRF |
 | 2.12 **DONE** | Unduh publik lewat Go | TDD: header benar, hanya untuk materi terbit, Range jalan |
 | 2.13 **DONE, aktif di produksi 14 Nov 2026** | Caddy: batas badan khusus jalur unggah; deploy: cadangan direktori lampiran | `caddy validate`, uji fungsi deploy |
-| 2.14 | UI unggah (progres, galat jelas), daftar lampiran di halaman publik | lint/typecheck/build |
+| 2.14 **DONE** | UI unggah (progres, galat jelas), daftar lampiran di halaman publik | lint/typecheck/build |
 | 2.15 | Deploy, cek browser (unggah PDF dan PPTX asli, unduh), gerbang 2B + `docs/F2B_ACCEPTANCE.md` | semua gerbang |
 
 Setiap task: uji gagal dulu, implementasi, uji/vet/build di VPS, commit.
@@ -186,3 +186,9 @@ User mengikuti semua rekomendasi: dibagi 2A lalu 2B; isi teks biasa; Pengumuman 
   - Rilis `20261114T030336Z-57438e043577`, **migrasi versi 7**. Cadangan `backups/pre-20261114T030336Z-57438e043577.dump` (20651 byte) dan snapshot lampiran `...attachments` (0 berkas, 0700) ditulis sebelum mutasi. Pre-flight mengonfirmasi direktori lampiran dapat ditulis layanan. Log deploy tidak memuat pola DSN/sandi lalu dihapus.
   - Dari luar lewat Caddy: unduh ID tak dikenal → `Lampiran tidak ditemukan.` (rute aktif); 2 MB anonim ke jalur unggah diteruskan ke app → 401; 2 MB ke login → 413; Beranda, `/materi/`, `/admin/login/` 200.
   - **Belum:** unggah sungguhan dengan sesi admin (berkas tertulis di disk produksi) dan unduh; itu bagian Task 2.15 bersama UI Task 2.14.
+- **Task 2.14 selesai (14 Nov 2026).** Tes klien ditulis bersamaan dengan klien, jadi **tidak ada RED ketat** yang diklaim. GREEN di `cbt-vps`: `npm ci`, **90 uji** Node (13 baru untuk lampiran), lint, typecheck, build statis hijau.
+  - Klien `frontend/src/lib/api-client/attachments.ts`: cek awal nama (.pdf/.ppt/.pptx, huruf besar/kecil bebas; .pptm/.ppsx/.pdf.exe ditolak), berkas kosong, dan >25 MiB sebelum mengirim apa pun; unggah multipart lewat `XMLHttpRequest` agar ada progres dan bisa dibatalkan (fetch tidak bisa melaporkan progres unggah); setiap kode galat server (`ATTACHMENT_LIMIT`, `MACRO_NOT_ALLOWED`, `STORAGE_QUOTA_EXCEEDED`, `SERVICE_BUSY`, dll.) jadi teks tetap; badan non-JSON seperti 413 dari Caddy dipetakan dari status; respons sukses divalidasi.
+  - Admin: bagian **Lampiran** di `/admin/materi/ubah/?id=` (hanya materi yang sudah disimpan; materi baru diberi petunjuk). Daftar dengan jenis, ukuran, waktu WIB; hitungan "n dari 5"; pilih berkas, tombol unggah, bilah `<progress>` berlabel persen + ukuran, **Batalkan unggahan**; hapus dengan konfirmasi di baris; formulir unggah diganti pesan saat sudah 5; galat fokus ke pesan, sesi habis dialihkan ke login.
+  - Publik: bagian **Lampiran** di `/materi/baca/?id=` berisi tautan unduh (`download`) dengan label jenis dan ukuran; tidak tampil bila kosong; galat + coba lagi.
+  - **E2E nyata di `cbt-vps`** (biner `api`/`adminctl` asli, database uji, direktori lampiran sementara, klien frontend asli lewat Node): login; unggah **PPTX asli** (28.356 B) dan PDF; PDF palsu ditolak dengan pesan tetap; daftar admin dan publik benar; unduhan PPTX identik byte-per-byte dengan `filename*` UTF-8; hapus → sisa 1, hapus ulang `not_found`; berkas di disk 1; halaman `/materi/baca/` dan `/admin/materi/ubah/` 200. Database uji dan direktori dibersihkan sesudahnya.
+  - **Belum:** tampilan di browser nyata (progres, 360px, keyboard) dan unggahan lewat Caddy produksi — Task 2.15.

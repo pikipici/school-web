@@ -22,6 +22,7 @@ import {
 import { getTopics, type Topic } from "@/lib/api-client/content";
 import { formatWIB, validContentID } from "@/lib/format";
 
+import { AttachmentManager } from "./AttachmentManager";
 import { useAdminSession } from "./useAdminSession";
 
 const ADMIN_HOME = "/admin/";
@@ -296,6 +297,14 @@ function Editor({ kind, id, csrf, onExpired }: { kind: ContentKind; id: number |
           {saving ? "Menyimpan…" : label.save}
         </button>
       </form>
+
+      {kind === "material" ? (
+        load.item ? (
+          <AttachmentManager materialId={load.item.id} csrf={csrf} onExpired={onExpired} />
+        ) : (
+          <p className="section-note">Lampiran PDF/PPT/PPTX bisa ditambahkan setelah materi disimpan. Buka lagi materi ini lewat tombol Ubah di dasbor.</p>
+        )
+      ) : null}
     </>
   );
 }
