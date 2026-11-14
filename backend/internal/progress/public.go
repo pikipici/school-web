@@ -31,9 +31,25 @@ const (
 )
 
 // PublicFilter narrows the public table. Empty fields mean no filter.
+// Status is a submission lane (BELUM, SEBAGIAN, LENGKAP) or TUNTAS.
 type PublicFilter struct {
-	Class string
-	Query string
+	Class  string
+	Query  string
+	Status string
+}
+
+// StatusComplete filters for groups whose three lanes are all done.
+const StatusComplete = "TUNTAS"
+
+func (f PublicFilter) keep(g PublicGroup) bool {
+	switch f.Status {
+	case "":
+		return true
+	case StatusComplete:
+		return g.Complete
+	default:
+		return string(g.Submission) == f.Status
+	}
 }
 
 type PublicClass struct {
@@ -77,6 +93,12 @@ type Summary struct {
 func (f PublicFilter) normalize() (PublicFilter, error) {
 	f.Class = strings.TrimSpace(f.Class)
 	f.Query = strings.TrimSpace(f.Query)
+	f.Status = strings.ToUpper(strings.TrimSpace(f.Status))
+	switch Submission(f.Status) {
+	case "", SubmissionNone, SubmissionPartial, SubmissionFull, StatusComplete:
+	default:
+		return f, fmt.Errorf("%w: status filter", ErrInvalid)
+	}
 	if f.Class != "" && !validClassCode(f.Class) {
 		return f, fmt.Errorf("%w: class filter", ErrInvalid)
 	}
@@ -115,7 +137,7 @@ func (s *Store) PublicProgress(ctx context.Context, f PublicFilter) (PublicProgr
 		return PublicProgress{}, err
 	}
 	for _, r := range rows {
-		out.Groups = append(out.Groups, PublicGroup{
+		g := PublicGroup{
 			Name:       r.Name,
 			ClassCode:  r.ClassCode,
 			Topic:      PublicTopic{Code: r.TopicCode, Title: r.TopicTitle},
@@ -124,19 +146,20 @@ func (s *Store) PublicProgress(ctx context.Context, f PublicFilter) (PublicProgr
 			Notebook:   NotebookNotReceived,
 			Complete:   false,
 			UpdatedAt:  r.UpdatedAt.Time,
-		})
+		}
+		if f.keep(g) {
+			out.Groups = append(out.Groups, g)
+		}
 	}
 	return out, nil
 }
 
-// PublicSummary counts every group on the unfiltered public table.
-func (s *Store) PublicSummary(ctx context.Context) (Summary, error) {
-	p, err := s.PublicProgress(ctx, PublicFilter{})
-	if err != nil {
-		return Summary{}, err
-	}
+// Summarize counts groups by submission lane and completion, and reports
+// the latest update time (nil when there are no groups).
+func Summarize(groups []PublicGroup) (Summary, *time.Time) {
 	var sum Summary
-	for _, g := range p.Groups {
+	var latest *time.Time
+	for _, g := range groups {
 		sum.Total++
 		switch g.Submission {
 		case SubmissionNone:
@@ -149,6 +172,20 @@ func (s *Store) PublicSummary(ctx context.Context) (Summary, error) {
 		if g.Complete {
 			sum.Complete++
 		}
+		if latest == nil || g.UpdatedAt.After(*latest) {
+			t := g.UpdatedAt
+			latest = &t
+		}
 	}
+	return sum, latest
+}
+
+// PublicSummary counts every group on the unfiltered public table.
+func (s *Store) PublicSummary(ctx context.Context) (Summary, error) {
+	p, err := s.PublicProgress(ctx, PublicFilter{})
+	if err != nil {
+		return Summary{}, err
+	}
+	sum, _ := Summarize(p.Groups)
 	return sum, nil
 }

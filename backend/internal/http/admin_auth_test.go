@@ -23,6 +23,7 @@ import (
 	"github.com/pikipici/informatika-monitoring/backend/internal/auth/users"
 	"github.com/pikipici/informatika-monitoring/backend/internal/content"
 	httpapi "github.com/pikipici/informatika-monitoring/backend/internal/http"
+	"github.com/pikipici/informatika-monitoring/backend/internal/progress"
 	"github.com/pikipici/informatika-monitoring/backend/internal/testdb"
 )
 
@@ -144,7 +145,7 @@ func newFixture(t *testing.T, o fixtureOpts) *fixture {
 	if o.secure {
 		o2 = "https://example.test"
 	}
-	deps := httpapi.Deps{Admin: auth, AdminContent: content.New(pool, clk.Now), ContentAudit: sink}
+	deps := httpapi.Deps{Admin: auth, AdminContent: content.New(pool, clk.Now), ContentAudit: sink, Progress: progress.New(pool, clk.Now)}
 	var attachDir string
 	if o.attachments {
 		attachDir = filepath.Join(t.TempDir(), "attachments")

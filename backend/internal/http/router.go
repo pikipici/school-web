@@ -12,6 +12,7 @@ import (
 	"github.com/pikipici/informatika-monitoring/backend/internal/attachments"
 	"github.com/pikipici/informatika-monitoring/backend/internal/content"
 	"github.com/pikipici/informatika-monitoring/backend/internal/health"
+	"github.com/pikipici/informatika-monitoring/backend/internal/progress"
 	"github.com/pikipici/informatika-monitoring/backend/internal/web"
 )
 
@@ -53,6 +54,9 @@ type Deps struct {
 	// AdminContent enables authenticated editable content routes.
 	AdminContent content.AdminStore
 	ContentAudit AuditRecorder
+	// Progress enables the class/group admin API and the real public
+	// progress table and summary.
+	Progress *progress.Store
 	// Attachments enables upload/list/delete of material attachments; with it,
 	// deleting a material also removes its files.
 	Attachments *attachments.Service
@@ -73,7 +77,12 @@ func newRouter(deps Deps) http.Handler {
 	router.Get("/healthz", healthz)
 	readiness := health.NewService(pinger)
 	router.Get("/readyz", readyz(readiness))
-	router.Get("/api/v1/public/summary", publicSummary)
+	if deps.Progress != nil {
+		router.Get("/api/v1/public/summary", publicProgressSummary(deps.Progress))
+		router.Get("/api/v1/public/progress", publicProgress(deps.Progress))
+	} else {
+		router.Get("/api/v1/public/summary", publicSummary)
+	}
 	if deps.PublicContent != nil {
 		router.Route("/api/v1/public", func(r chi.Router) {
 			r.Get("/announcements", listAnnouncements(deps.PublicContent))
@@ -98,7 +107,7 @@ func newRouter(deps Deps) http.Handler {
 			r.NotFound(notFound)
 			r.MethodNotAllowed(methodNotAllowed)
 		})
-		if deps.AdminContent != nil {
+		if deps.AdminContent != nil || deps.Progress != nil {
 			h := adminContent{store: deps.AdminContent, audit: deps.ContentAudit}
 			var att adminAttachments
 			if deps.Attachments != nil {
@@ -107,6 +116,12 @@ func newRouter(deps Deps) http.Handler {
 			}
 			router.Route("/api/v1/admin", func(r chi.Router) {
 				r.Use(deps.Admin.Require)
+				if deps.Progress != nil {
+					adminProgress{store: deps.Progress, audit: deps.ContentAudit}.routes(r)
+				}
+				if deps.AdminContent == nil {
+					return
+				}
 				r.Get("/announcements", h.list(content.Announcement))
 				r.Post("/announcements", h.create(content.Announcement))
 				r.Route("/announcements", func(r chi.Router) {

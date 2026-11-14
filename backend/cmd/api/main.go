@@ -23,6 +23,7 @@ import (
 	"github.com/pikipici/informatika-monitoring/backend/internal/db"
 	"github.com/pikipici/informatika-monitoring/backend/internal/health"
 	httpapi "github.com/pikipici/informatika-monitoring/backend/internal/http"
+	"github.com/pikipici/informatika-monitoring/backend/internal/progress"
 	"github.com/pikipici/informatika-monitoring/backend/internal/web"
 )
 
@@ -48,6 +49,7 @@ func run() error {
 	var adminContent content.AdminStore
 	var auditStore *audit.Store
 	var attachmentService *attachments.Service
+	var progressStore *progress.Store
 	if strings.TrimSpace(cfg.DatabaseURL) != "" {
 		pool, err := db.Open(ctx, cfg.DatabaseURL)
 		if err != nil {
@@ -58,6 +60,7 @@ func run() error {
 		contentStore := content.New(pool, nil)
 		publicContent, adminContent = contentStore, contentStore
 		auditStore = audit.New(pool, nil)
+		progressStore = progress.New(pool, nil)
 		if cfg.AttachmentsDir != "" {
 			files, err := attachments.NewStore(attachments.Options{Dir: cfg.AttachmentsDir})
 			if err != nil {
@@ -85,7 +88,7 @@ func run() error {
 
 	server := &http.Server{
 		Addr:              cfg.Address,
-		Handler:           httpapi.NewRouterWithDeps(httpapi.Deps{Pinger: pinger, PublicDir: cfg.PublicDir, Admin: admin, CSPMode: cfg.CSPMode, PublicContent: publicContent, AdminContent: adminContent, ContentAudit: auditStore, Attachments: attachmentService}),
+		Handler:           httpapi.NewRouterWithDeps(httpapi.Deps{Pinger: pinger, PublicDir: cfg.PublicDir, Admin: admin, CSPMode: cfg.CSPMode, PublicContent: publicContent, AdminContent: adminContent, ContentAudit: auditStore, Attachments: attachmentService, Progress: progressStore}),
 		ReadHeaderTimeout: 5 * time.Second,
 		ReadTimeout:       15 * time.Second,
 		WriteTimeout:      15 * time.Second,
