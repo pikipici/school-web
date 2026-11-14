@@ -43,4 +43,4 @@ Unggah berkas dilakukan dengan memasang berkas ke `<input type="file">` lewat De
 
 ## Temuan lain
 
-- Proses uji lama `/tmp/informatika-monitoring-task06` (Task 0.6) masih mendengarkan di `*:18300`. Bukan produksi; belum dimatikan.
+- Proses uji lama `/tmp/informatika-monitoring-task06` (Task 0.6) yang mendengarkan di `*:18300` dimatikan 14 Nov 2026 atas permintaan user (SIGTERM; port bebas; layanan produksi tidak tersentuh, `readyz` ok). Berkas binernya masih ada di `/tmp`.
