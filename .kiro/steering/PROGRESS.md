@@ -2,7 +2,7 @@
 
 > Dokumen status aktual implementasi. Update setelah setiap task, verifikasi, commit, provisioning, dan deployment.
 >
-> Last updated: 14 November 2026, setelah Task 2.12
+> Last updated: 14 November 2026, setelah Task 2.15 (cek browser lampiran) dan pembersihan proses uji lama
 
 ## Ringkasan
 
@@ -11,7 +11,7 @@
 - Task terakhir selesai: **2.15 — deploy dan cek browser lampiran** (`docs/F2B_ACCEPTANCE.md`)
 - Next task: **persetujuan tutup Fase 2B**, lalu rencana fase berikutnya. Daftar revisi desain: tampilan admin di 360px sudah diukur untuk editor materi; paginasi 360px turun baris; judul "Lampiran" publik.
 - Semua perbaikan gaya tautan sudah di produksi.
-- Local branch: `main`; semua commit sampai `57438e0` sudah di `origin`/`server`; commit catatan aktivasi 2.13 belum di-push.
+- Local branch: `main`; semua commit sampai `d3918f3` sudah di `origin`/`server` (yang dideploy). Commit dokumen `490c6b3`, `3e46e2e`, `2f9ba59`, dan pembaruan ini belum di-push (user yang push).
 - Produksi: **`https://fikriramaaulia.online`** aktif (Caddy + Let's Encrypt, berlaku s.d. 2027-02-11)
 - Rilis produksi: `20261114T075621Z-d3918f34507a` (kode `d3918f3`), migrasi versi **7**. Pengumuman, Materi, dan lampiran (unggah admin + unduh publik) aktif di produksi.
 - PostgreSQL aplikasi: aktif, readiness PASS
@@ -42,6 +42,20 @@
 | 2.8 | Gerbang 2A + `docs/F2A_ACCEPTANCE.md` | DONE (pengecualian: admin 360px) | `e86f851` | Gerbang otomatis PASS pada `e86f851` (`deploy.sh --check`: 12 paket Go, 77 uji frontend, build, latihan cadangan; `-race`; 59 uji fungsi deploy; audit produksi 0). Terbuka: cek 360px/zoom/keyboard oleh user; deploy perbaikan gaya tautan `e86f851` |
 
 Keputusan Fase 2 (disetujui user 13 Nov 2026): dibagi 2A lalu 2B; isi teks biasa (tanpa Markdown/HTML); Pengumuman punya draf/terbit dan sematkan; hapus permanen dengan jejak audit; topik Materi opsional (tanpa topik = Umum); ID tetap `bigint`.
+
+## Fase 2B Tracker
+
+| Task | Scope | Status | Commit | Verification |
+|---|---|---|---|---|
+| 2.9 | Migrasi `material_attachments` + direktori data | DONE | `859e0c6` | RED 6 uji skema; trigger maks 5 per materi (uji konkurensi 12 sisipan → 5; mutan tanpa `FOR UPDATE` gagal 4/5); `down-to 6` bersih |
+| 2.10 | Paket `attachments`: cek isi, makro, simpan atomik, kuota | DONE | `d2c446b` | RED `no non-test Go files`; PDF/PPT/PPTX sintetis + PPTX asli; bom ZIP tidak dibuka; mutan cek makro → 2 uji gagal; `-race` |
+| 2.11 | API admin unggah/daftar/hapus | DONE | `ad5745c` | RED build; 8 uji layanan + 5 uji HTTP: 401/403, 201, 413, 415, 409, 507, busy; mutan pembersihan → gagal; full suite 2x, `-race`, vet, build |
+| 2.12 | Unduh publik lewat Go | DONE | `aaf0f73` | RED 404; header `attachment`/`nosniff`/`sandbox`/`no-cache`/ETag; Range 206/416, 304; mutan filter terbit → draf bocor terdeteksi |
+| 2.13 | Caddy, unit `ReadWritePaths`, `ATTACHMENTS_DIR`, snapshot | DONE, aktif di produksi | `57438e0`, `905d463` | Caddy nyata di port uji: 8/8; 89 uji fungsi deploy + 3 mutan; aktivasi produksi rilis `20261114T030336Z-57438e043577`, migrasi 7 |
+| 2.14 | UI unggah admin + daftar lampiran publik | DONE | `d3918f3` | 90 uji frontend (tanpa RED ketat), lint, typecheck, build; E2E klien asli + API asli + DB uji |
+| 2.15 | Deploy, cek browser, `docs/F2B_ACCEPTANCE.md` | DONE (menunggu persetujuan tutup) | `490c6b3`, `3e46e2e` | Rilis `20261114T075621Z-d3918f34507a`; Edge produksi: unggah PDF + PPTX asli, palsu ditolak, draf 404, unduhan identik SHA-256, hapus bersih, 360px OK, audit lengkap; latihan pulih snapshot lulus |
+
+Pengecualian 2B: `.ppt` asli belum diuji; unggahan besar (20–25 MB), bilah progres, dan tombol Batalkan belum terlihat; keyboard/zoom 200% bagian Lampiran belum dicek; tanpa antivirus; snapshot di disk yang sama.
 
 ## Sources of Truth
 
@@ -371,54 +385,53 @@ Caddy:   2.11.9
 
 Current provisioning state:
 
-- Database `informatika_monitoring` (versi migrasi 3) dan role aplikasi non-superuser: PRESENT
+- Database `informatika_monitoring` (versi migrasi **7**) dan role aplikasi non-superuser: PRESENT
 - Database uji `informatika_monitoring_test` + role sendiri (tanpa akses produksi): PRESENT; kredensial `/home/ubuntu/.informatika-monitoring-test.env` (0600)
-- `.env` produksi (0600, `ubuntu`): `APP_ADDR`, `PUBLIC_DIR`, `DATABASE_URL`, `ADMIN_COOKIE_SECURE=true`, `CSP_MODE=enforce`
-- Cadangan otomatis sebelum migrasi: `/home/ubuntu/informatika-monitoring/backups/` (10 terakhir)
+- `.env` produksi (0600, `ubuntu`): `APP_ADDR`, `PUBLIC_DIR`, `DATABASE_URL`, `ADMIN_COOKIE_SECURE=true`, `CSP_MODE=enforce`, `ATTACHMENTS_DIR=/home/ubuntu/informatika-monitoring-data/attachments`
+- Direktori lampiran `/home/ubuntu/informatika-monitoring-data/attachments` (0750, `ubuntu`, di luar rilis): 0 berkas setelah uji dibersihkan
+- Unit systemd dengan `ReadWritePaths` ke direktori lampiran; unit lama di `/etc/systemd/system/informatika-monitoring-api.service.bak-20261114`
+- Cadangan otomatis sebelum deploy: `/home/ubuntu/informatika-monitoring/backups/` — `pre-<rilis>.dump` dan `pre-<rilis>.attachments/` (10 terakhir)
 - DNS `fikriramaaulia.online`: A ke `43.134.111.212`, Cloudflare **DNS only** (wajib tetap abu-abu agar sertifikat bisa diperpanjang)
 - Firewall Tencent: TCP 80 dan 443 terbuka; 8300 dan 5432 tidak terjangkau dari luar (terverifikasi)
-- HSTS `max-age=86400`; cadangan Caddyfile lama `/etc/caddy/Caddyfile.bak-hsts3600`
+- HSTS `max-age=86400`; Caddy membatasi badan 27 MB hanya untuk `POST /api/v1/admin/materials/<id>/attachments`, 1 MB lainnya; Caddyfile lama `/etc/caddy/Caddyfile.bak-hsts3600` dan `/etc/caddy/Caddyfile.bak-20261114`
+- Proses uji lama `/tmp/informatika-monitoring-task06` di port 18300 dimatikan 14 Nov 2026; berkas binernya masih di `/tmp`
 
 ## Current Backend Contract
 
-Di produksi (`docs/openapi.yaml` 0.2.0):
+Di produksi (`docs/openapi.yaml` 0.4.0, 19 jalur):
 
 - `GET /healthz`, `GET /readyz`, `GET /api/v1/public/summary` (zero state).
-- `POST /api/v1/admin/auth/login`, `POST /api/v1/admin/auth/logout`, `GET /api/v1/admin/auth/me` — sesi server-side, cookie `__Host-admin_session`, CSRF + Origin, pembatas percobaan, audit.
+- Auth admin: login, logout, me — sesi server-side, cookie `__Host-admin_session`, CSRF + Origin, pembatas percobaan, audit.
+- Publik baca-saja (hanya terbit): Pengumuman, Topik, Materi, daftar lampiran materi, unduh lampiran.
+- Admin: CRUD Pengumuman/Materi (konflik 409, audit); lampiran Materi unggah (maks 25 MiB, 5 per materi, kuota 2 GiB), daftar, hapus; hapus materi ikut menghapus berkasnya.
+- Frontend: Beranda, daftar/detail Pengumuman dan Materi (dengan tautan unduh), dasbor admin dan editor dengan bagian Lampiran.
 - Go menyajikan ekspor statis Next.js dengan Content-Security-Policy berbasis hash per halaman.
 - CLI server `bin/current/adminctl` (`create-admin`, `reset-password`).
 
-Di kode, belum di produksi:
-
-- Tabel `announcements`, `topics` (K1–K7), `materials` (Task 2.1).
-- Paket Go `content` + query sqlc untuk validasi, create/update, aturan terbit pertama, topik opsional, dan optimistic concurrency (Task 2.2).
-- API publik Pengumuman/Topik/Materi: published-only, detail aman, filter topik, dan paginasi berbatas (Task 2.3).
-- API admin CRUD Pengumuman/Materi dengan sesi, CSRF, Origin, optimistic concurrency, hapus permanen, dan audit aman (Task 2.4).
-- Frontend publik Beranda, daftar/detail Pengumuman dan Materi, filter topik, paginasi, serta perender teks biasa aman (Task 2.5).
-
 Belum ada:
 
-- UI admin Pengumuman/Materi (Task 2.6).
-- Lampiran (Fase 2B).
 - Kelas, kelompok, pengumpulan, evaluasi, portal kelompok.
+- 2FA admin.
 
 ## Safety and Scope Status
 
 Tetap berlaku:
 
 - Tanpa Gmail API/IMAP/sinkronisasi inbox, tanpa AI grading, tanpa data siswa asli.
-- Tanpa upload dari siswa. Upload hanya untuk lampiran Materi dari guru (Fase 2B, belum dibangun).
+- Tanpa upload dari siswa. Upload hanya lampiran Materi dari guru (PDF/PPT/PPTX, cek isi, makro ditolak, tanpa antivirus).
 - Frontend tidak mengakses database; tanpa Route Handlers/Server Actions Next.js.
 - Tidak ada deploy/restart produksi tanpa persetujuan user.
 - Agen tidak bisa memperbarui `main` di remote; itu dilakukan user.
 
 ## Blockers / Pending External Decisions
 
-1. Tidak ada blocker untuk Task 2.6.
-2. Docker tidak tersedia di `cbt-vps`; uji integrasi memakai database uji PostgreSQL lokal.
-3. 7 advisory npm moderate (alat dev saja) masih terbuka sejak Fase 0.
-4. HSTS 1 tahun menunggu kira-kira dua minggu HTTPS stabil (sekitar 27 Nov 2026).
-5. Komponen UI belum punya uji otomatis; hanya logika klien API.
+1. Penutupan Fase 2B menunggu persetujuan user (pengecualian di `docs/F2B_ACCEPTANCE.md`).
+2. Berkas `.ppt` asli untuk uji perlu disediakan user.
+3. Docker tidak tersedia di `cbt-vps`; uji integrasi memakai database uji PostgreSQL lokal.
+4. 7 advisory npm moderate (alat dev saja) masih terbuka sejak Fase 0.
+5. HSTS 1 tahun menunggu kira-kira dua minggu HTTPS stabil (sekitar 27 Nov 2026).
+6. Komponen UI belum punya uji otomatis; hanya logika klien API.
+7. Snapshot lampiran ada di disk yang sama; belum ada cadangan ke luar server.
 
 ## Task 0.10–0.11 Deployment Evidence
 
@@ -447,11 +460,19 @@ The remote deploy command passed Go test/vet/build, `sqlc generate`, frontend `n
 
 ## Current Next Step
 
-Task 2.5 selesai. Saat dilanjutkan:
+Fase 2B selesai dikerjakan (7/7) dan aktif di produksi. Saat dilanjutkan:
 
-1. Sinkronkan commit lokal yang belum ada di `origin`/`server` sesuai workflow project.
-2. Task 2.6 — frontend admin: daftar/form Pengumuman dan Materi, terbitkan/tarik, hapus dengan konfirmasi, serta state loading/kosong/galat/sukses.
-3. Lanjut 2.7–2.8 sesuai `.kiro/steering/PHASE2_PLAN.md`. Migrasi 4–6 baru masuk produksi saat deploy Task 2.7 (cadangan otomatis berjalan sebelumnya).
+1. User push commit dokumen yang belum ada di `origin`/`server`.
+2. User memutuskan: tutup Fase 2B dengan pengecualian, atau uji dulu `.ppt` asli dan unggahan besar (20–25 MB, progres, Batalkan).
+3. Setelah ditutup: rencana fase berikutnya (modul Progres Tugas Kelompok atau revisi desain), dengan persetujuan user.
+
+Selesai 14 Nov 2026 (Fase 2B):
+
+- 2.9–2.12: skema lampiran, paket `attachments`, API admin unggah/hapus, unduh publik — semua TDD di `cbt-vps` dengan uji mutan.
+- 2.13: Caddy (27 MB hanya jalur unggah), unit `ReadWritePaths`, `ATTACHMENTS_DIR`, snapshot lampiran di `deploy.sh`; diaktifkan di produksi atas izin user (migrasi 7).
+- 2.14: UI unggah admin (progres, batal, hapus dengan konfirmasi) dan daftar unduh publik.
+- 2.15: deploy `d3918f3`, cek Edge nyata, `docs/F2B_ACCEPTANCE.md`.
+- Proses uji lama di port 18300 dimatikan atas permintaan user.
 
 Selesai sebelum jeda (13 Nov 2026):
 
