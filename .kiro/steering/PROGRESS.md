@@ -8,8 +8,8 @@
 
 - Fase aktif: **Fase 2B — Lampiran PDF/PPT/PPTX** (disetujui 14 Nov 2026). Fase 0, 1, dan 2A sudah ditutup.
 - Progress Fase 2A: **8/8 selesai** (ditutup dengan pengecualian). Fase 2B (lampiran): **4/7** (2.9–2.12).
-- Task terakhir selesai: **2.12 — unduh publik lewat Go** (belum di produksi; nonaktif sampai `ATTACHMENTS_DIR` diisi)
-- Next task: **2.13 — batas Caddy jalur unggah, `ReadWritePaths` systemd, `ATTACHMENTS_DIR` di `deploy.sh`, cadangan direktori lampiran** (mengubah konfigurasi server; butuh izin). Daftar revisi desain: tampilan admin di 360px belum diverifikasi; paginasi 360px turun baris.
+- Task terakhir selesai: **2.12 — unduh publik lewat Go**; **2.13 disiapkan** (Caddy, unit, `deploy.sh`, runbook teruji; belum dipasang di produksi)
+- Next task: **aktivasi 2.13 di produksi (butuh izin)**, lalu 2.14 UI unggah. Daftar revisi desain: tampilan admin di 360px belum diverifikasi; paginasi 360px turun baris.
 - Semua perbaikan gaya tautan sudah di produksi.
 - Local branch: `main`; commit 2B (`859e0c6`, `d2c446b`, `ad5745c`, dan Task 2.12) belum di-push
 - Semua commit sampai `12bcf48` sudah di `server/main`.

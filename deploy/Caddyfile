@@ -20,8 +20,24 @@ fikriramaaulia.online {
 		-Server
 	}
 
-	# Login bodies are under 4 KiB. Raise this per path when file uploads exist.
-	request_body {
+	# Login and content bodies are under 64 KiB. Only the attachment upload
+	# route may send more: up to 25 MiB of file plus multipart framing. The Go
+	# app enforces the exact per-file limit; this only stops oversize bodies
+	# before they reach it.
+	@upload {
+		method POST
+		path_regexp ^/api/v1/admin/materials/[0-9]+/attachments$
+	}
+	@not_upload {
+		not {
+			method POST
+			path_regexp ^/api/v1/admin/materials/[0-9]+/attachments$
+		}
+	}
+	request_body @upload {
+		max_size 27MB
+	}
+	request_body @not_upload {
 		max_size 1MB
 	}
 

@@ -120,6 +120,52 @@ sudo systemctl start informatika-monitoring-api.service
 
 Prefer restoring into a scratch database first (`createdb`, restore, inspect) when time allows.
 
+## Material attachments (Lampiran)
+
+Attachments are off until `ATTACHMENTS_DIR` is set in `.env`. The files live outside the checkout and releases, at `/home/ubuntu/informatika-monitoring-data/attachments` (owner `ubuntu`, mode `0750`), under server-chosen UUID names.
+
+What `deploy.sh` enforces when `ATTACHMENTS_DIR` is set:
+
+- The value is a plain absolute path (no `.`/`..`, no trailing slash), outside the checkout, an existing real directory owned by the deployment user, with no permissions for other users.
+- The running unit's `ReadWritePaths` covers it. The unit uses `ProtectSystem=strict` and `ProtectHome=read-only`, so without that line the service cannot write uploads.
+- Before any mutation, every stored attachment is snapshotted to `backups/pre-<release>.attachments/`. Stored files are never changed after upload, so the snapshot uses hard links (no extra disk) on the same filesystem and copies otherwise; it is verified file by file (name and size). In-progress `.upload-*` temp files are skipped. The newest `BACKUPS_TO_KEEP` snapshots are kept. `--check` rehearses the snapshot into its temporary build directory and discards it.
+
+The snapshot sits on the same disk as the data. It protects against deletion and bad deploys, not against losing the VPS disk; copy `backups/` off the server for that.
+
+### One-time activation (changes production; do it with approval)
+
+Order matters: the unit must allow writes before the app is told to use the directory, and Caddy must allow large bodies before uploads are tried.
+
+```bash
+cd /home/ubuntu/informatika-monitoring
+# 1. Service unit with ReadWritePaths (takes effect on the next restart).
+sudo install -m 0644 deploy/informatika-monitoring-api.service /etc/systemd/system/informatika-monitoring-api.service
+sudo systemctl daemon-reload
+systemctl show -p ReadWritePaths informatika-monitoring-api.service
+# 2. Caddy: 27 MB only for POST /api/v1/admin/materials/<id>/attachments, 1 MB elsewhere.
+sudo install -m 0644 deploy/Caddyfile /etc/caddy/Caddyfile
+sudo caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile
+sudo systemctl reload caddy
+# 3. Enable attachments (append one line; .env stays mode 600).
+printf 'ATTACHMENTS_DIR=/home/ubuntu/informatika-monitoring-data/attachments\n' >> .env
+# 4. Deploy: checks the directory and unit, snapshots, restarts.
+bash deploy/deploy.sh --remote
+```
+
+Undo: remove the `ATTACHMENTS_DIR` line from `.env` and restart the service (upload routes disappear; stored files and rows stay). Caddy and the unit line can stay; they only widen what the app may receive or write.
+
+### Restoring attachments (manual)
+
+Stop the service, copy the snapshot back, start it. Restore the matching `pre-<release>.dump` at the same time so database rows and files agree.
+
+```bash
+sudo systemctl stop informatika-monitoring-api.service
+cp -a /home/ubuntu/informatika-monitoring/backups/pre-<release>.attachments/. /home/ubuntu/informatika-monitoring-data/attachments/
+sudo systemctl start informatika-monitoring-api.service
+```
+
+Files that exist on disk but not in the database after a restore are harmless orphans; rows whose file is missing return 404 on download and are logged.
+
 ## Admin account
 
 After the first deploy that ships the migrations, create the single admin on the server. `adminctl` asks for the password on the terminal (twice, hidden) and never accepts it as an argument or environment variable:
@@ -136,7 +182,7 @@ Piped input (`--password-stdin`) is supported for automation. Account changes ar
 
 ## Deploy-script tests
 
-`make test-deploy` (or `bash deploy/tests/test_deploy_functions.sh`) unit-tests the security-sensitive helpers in `deploy.sh`: `.env` and test-database file parsing, the `_test` safeguard, and the libpq environment helper. It is part of `make verify` and touches nothing outside a temporary directory.
+`make test-deploy` (or `bash deploy/tests/test_deploy_functions.sh`) unit-tests the security-sensitive helpers in `deploy.sh`: `.env` and test-database file parsing, the `_test` safeguard, the libpq environment helper, and the attachment directory, unit `ReadWritePaths`, snapshot/restore, and snapshot pruning helpers. It is part of `make verify` and touches nothing outside a temporary directory.
 
 ## Manual verification
 

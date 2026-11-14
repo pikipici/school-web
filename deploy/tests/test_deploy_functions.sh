@@ -17,7 +17,7 @@ extract() {
 }
 
 FUNCS=""
-for fn in dsn_database_name load_test_database parse_environment with_pg_env; do
+for fn in dsn_database_name load_test_database parse_environment with_pg_env unit_allows_write check_attachments_dir snapshot_attachments prune_attachment_snapshots; do
   body="$(extract "$fn")"
   [[ -n "$body" ]] || { echo "FATAL: function $fn not found in deploy.sh" >&2; exit 2; }
   FUNCS+="$body"$'\n'
@@ -128,7 +128,7 @@ run_parse() { # content mode
   chmod "$2" "$ENV_FILE"
   APP_PORT=8300
   PUBLIC_LINK="/srv/app/public"
-  APP_ADDR="" PUBLIC_DIR="" DB_DSN="" ADMIN_COOKIE_SECURE="" CSP_MODE=""
+  APP_ADDR="" PUBLIC_DIR="" DB_DSN="" ADMIN_COOKIE_SECURE="" CSP_MODE="" ATTACHMENTS_DIR="" ATTACHMENTS_SEEN=false
   parse_environment
   printf '%s' "$ADMIN_COOKIE_SECURE"
 }
@@ -161,6 +161,103 @@ check "env: CSP_MODE=disabled rejected" fail run_parse "${BASE_ENV}CSP_MODE=disa
 check "env: CSP_MODE empty rejected" fail run_parse "${BASE_ENV}CSP_MODE=\n" 600
 check "env: duplicate CSP_MODE rejected" fail run_parse "${BASE_ENV}CSP_MODE=off\nCSP_MODE=enforce\n" 600
 check "env: wrong port rejected" fail run_parse "APP_ADDR=:9000\nPUBLIC_DIR=/srv/app/public\nDATABASE_URL=$PROD_DSN\n" 600
+
+run_parse_att() { run_parse "$1" 600 >/dev/null; printf '%s' "$ATTACHMENTS_DIR"; }
+t_att_expect() { [[ "$(run_parse_att "$1")" == "$2" ]] || fail "unexpected ATTACHMENTS_DIR"; }
+check "env: ATTACHMENTS_DIR absent" ok t_att_expect "$BASE_ENV" ""
+check "env: ATTACHMENTS_DIR set" ok t_att_expect "${BASE_ENV}ATTACHMENTS_DIR=/srv/data/attachments\n" /srv/data/attachments
+check "env: ATTACHMENTS_DIR quoted" ok t_att_expect "${BASE_ENV}ATTACHMENTS_DIR='/srv/data/attachments'\n" /srv/data/attachments
+for bad in "data/attachments" "/srv/data/attachments/" "/srv/../etc" "/srv/./data" "/srv//data" "/srv/data attachments" "/srv/\$(id)" ""; do
+  check "env: ATTACHMENTS_DIR '$bad' rejected" fail run_parse "${BASE_ENV}ATTACHMENTS_DIR=$bad\n" 600
+done
+check "env: duplicate ATTACHMENTS_DIR rejected" fail run_parse "${BASE_ENV}ATTACHMENTS_DIR=/a/b\nATTACHMENTS_DIR=/a/c\n" 600
+
+# ---- unit_allows_write -------------------------------------------------------
+check "unit rw: exact path" ok unit_allows_write "/srv/data/attachments" /srv/data/attachments
+check "unit rw: parent path" ok unit_allows_write "/srv/data" /srv/data/attachments
+check "unit rw: dash prefix and several entries" ok unit_allows_write "/var/lib/x -/srv/data/attachments/" /srv/data/attachments
+check "unit rw: empty rejected" fail unit_allows_write "" /srv/data/attachments
+check "unit rw: unrelated rejected" fail unit_allows_write "/var/lib/x /srv/other" /srv/data/attachments
+check "unit rw: sibling prefix rejected" fail unit_allows_write "/srv/data/attach" /srv/data/attachments
+check "unit rw: glob not expanded" fail unit_allows_write "/*" /srv/data/attachments
+
+# ---- check_attachments_dir ---------------------------------------------------
+run_att_check() { # dir unit_rw_paths
+  ATTACHMENTS_DIR="$1"
+  ROOT_DIR="$WORK/root"
+  SERVICE_NAME=test.service
+  FAKE_RW="$2"
+  sudo_systemctl() { printf '%s\n' "$FAKE_RW"; }
+  check_attachments_dir
+}
+mkdir -p "$WORK/root" "$WORK/data/att" "$WORK/data/open" "$WORK/root/att"
+chmod 750 "$WORK/data/att" "$WORK/root/att"
+chmod 755 "$WORK/data/open"
+ln -sfn "$WORK/data/att" "$WORK/data/link"
+check "att dir: unset is fine" ok run_att_check "" ""
+check "att dir: private directory allowed by unit" ok run_att_check "$WORK/data/att" "$WORK/data"
+check "att dir: unit without ReadWritePaths rejected" fail run_att_check "$WORK/data/att" ""
+check "att dir: world-readable rejected" fail run_att_check "$WORK/data/open" "$WORK/data"
+check "att dir: symlink rejected" fail run_att_check "$WORK/data/link" "$WORK/data"
+check "att dir: missing rejected" fail run_att_check "$WORK/data/none" "$WORK/data"
+check "att dir: inside checkout rejected" fail run_att_check "$WORK/root/att" "$WORK/root"
+
+# ---- snapshot_attachments / restore -----------------------------------------
+K1=0f8fad5b-d9cb-469f-a165-70867728950e
+K2=7c9e6679-7425-40de-944b-e07fc1f90ae7
+make_store() { # dir
+  rm -rf -- "$1"; mkdir -m 750 -- "$1"
+  printf '%%PDF-1.7 one' >"$1/$K1"
+  printf 'PK pptx two' >"$1/$K2"
+  printf 'partial' >"$1/.upload-123"
+  printf 'stray' >"$1/notes.txt"
+  chmod 640 "$1/$K1" "$1/$K2"
+}
+t_snapshot_and_restore() {
+  local store="$WORK/snap/store" backups="$WORK/snap/backups"
+  mkdir -p "$WORK/snap"; make_store "$store"; rm -rf -- "$backups"; mkdir -m 700 -- "$backups"
+  ATTACHMENTS_DIR="$store"
+  snapshot_attachments "$backups/pre-r1.attachments" || fail "snapshot failed"
+  [[ "$(cd "$backups/pre-r1.attachments" && ls -A | sort | tr '\n' ' ')" == "$K1 $K2 " ]] || fail "snapshot holds $(ls -A "$backups/pre-r1.attachments")"
+  [[ ! -e "$backups/pre-r1.attachments.partial" ]] || fail "partial left behind"
+  [[ "$(stat -c %i "$store/$K1")" == "$(stat -c %i "$backups/pre-r1.attachments/$K1")" ]] || fail "same filesystem should hard-link"
+  # Disaster: the files are deleted. Restore exactly as docs/DEPLOYMENT.md says.
+  rm -f -- "$store/$K1" "$store/$K2"
+  cp -a -- "$backups/pre-r1.attachments/." "$store/"
+  cmp -s "$store/$K1" <(printf '%%PDF-1.7 one') || fail "K1 not restored"
+  cmp -s "$store/$K2" <(printf 'PK pptx two') || fail "K2 not restored"
+  [[ "$(stat -c %a "$store/$K1")" == 640 ]] || fail "mode not preserved"
+}
+t_snapshot_empty() {
+  local store="$WORK/snap/empty"
+  rm -rf -- "$store"; mkdir -m 750 -- "$store"
+  ATTACHMENTS_DIR="$store"
+  snapshot_attachments "$WORK/snap/empty.attachments" && [[ -d "$WORK/snap/empty.attachments" ]]
+}
+t_snapshot_existing_dest_fails() {
+  local store="$WORK/snap/store2"
+  make_store "$store"
+  ATTACHMENTS_DIR="$store"
+  mkdir -p "$WORK/snap/taken/x"
+  ! snapshot_attachments "$WORK/snap/taken" || fail "overwrote an existing snapshot"
+  [[ ! -e "$WORK/snap/taken.partial" ]] || fail "partial left behind"
+}
+check "snapshot: UUID files only, hard-linked, restorable" ok t_snapshot_and_restore
+check "snapshot: empty store" ok t_snapshot_empty
+check "snapshot: never replaces an existing snapshot" ok t_snapshot_existing_dest_fails
+
+t_prune() {
+  BACKUP_DIR="$WORK/prune"; BACKUPS_TO_KEEP=2
+  rm -rf -- "$BACKUP_DIR"; mkdir -p "$BACKUP_DIR/keep-me"
+  local i
+  for i in 1 2 3 4; do
+    mkdir "$BACKUP_DIR/pre-r$i.attachments"; touch "$BACKUP_DIR/pre-r$i.attachments/f"
+    touch -d "2026-11-0$i 00:00" "$BACKUP_DIR/pre-r$i.attachments"
+  done
+  prune_attachment_snapshots
+  [[ "$(cd "$BACKUP_DIR" && ls -A | sort | tr '\n' ' ')" == "keep-me pre-r3.attachments pre-r4.attachments " ]] || fail "left $(ls -A "$BACKUP_DIR")"
+}
+check "prune: keeps newest snapshots and unrelated entries" ok t_prune
 
 # ---- with_pg_env -------------------------------------------------------------
 t_pg_env_exposes_vars() {

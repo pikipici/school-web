@@ -100,7 +100,7 @@ Lampiran membawa risiko yang berbeda (disk, unggahan besar, cadangan berkas, isi
 | 2.10 **DONE** | Paket `attachments`: validasi isi (magic bytes, cek ZIP berisi `ppt/` untuk PPTX, OLE untuk PPT, tolak makro), nama UUID, tulis atomik (sementara lalu `rename`), kuota dan sisa disk | TDD dengan berkas contoh asli dan berkas palsu |
 | 2.11 **DONE** | Unggah dan hapus admin (dialirkan, tenggat per-rute, 1 unggahan serentak) | TDD HTTP: >25 MB 413, tipe palsu 415, kuota penuh 507, CSRF |
 | 2.12 **DONE** | Unduh publik lewat Go | TDD: header benar, hanya untuk materi terbit, Range jalan |
-| 2.13 | Caddy: batas badan khusus jalur unggah; deploy: cadangan direktori lampiran | `caddy validate`, uji fungsi deploy |
+| 2.13 **SIAP (belum aktif di produksi)** | Caddy: batas badan khusus jalur unggah; deploy: cadangan direktori lampiran | `caddy validate`, uji fungsi deploy |
 | 2.14 | UI unggah (progres, galat jelas), daftar lampiran di halaman publik | lint/typecheck/build |
 | 2.15 | Deploy, cek browser (unggah PDF dan PPTX asli, unduh), gerbang 2B + `docs/F2B_ACCEPTANCE.md` | semua gerbang |
 
@@ -175,3 +175,10 @@ User mengikuti semua rekomendasi: dibagi 2A lalu 2B; isi teks biasa; Pengumuman 
   - **Uji mutan:** filter `status = 'published'` di query unduh dibuang → uji draf gagal (draf terunduh 200).
   - Tenggat tulis 10 menit per rute; seperti 2.11, belum teruji di server nyata (dicek di Task 2.15).
   - OpenAPI 0.4.0: dua path publik dan skema `PublicAttachment` (YAML valid, semua `$ref` terselesaikan).
+- **Task 2.13 disiapkan (14 Nov 2026), produksi tidak disentuh.** Aktivasi butuh izin user (langkah di `docs/DEPLOYMENT.md`, bagian *Material attachments*).
+  - `deploy/Caddyfile`: `request_body` 27 MB hanya untuk `POST /api/v1/admin/materials/<angka>/attachments`, 1 MB untuk semua lainnya. `caddy validate` dan `caddy fmt` bersih. **Diuji nyata** dengan Caddy 2.11.9 di port loopback lain (admin API mati) dan upstream palsu: badan kecil 200; 2 MB ke login 413; 2 MB dan 25 MiB + 64 KiB ke jalur unggah diteruskan utuh; 28 MB ke jalur unggah 413; PUT, jalur mirip (`/attachments/x`), dan id bukan angka 413.
+  - `deploy/informatika-monitoring-api.service`: `ReadWritePaths=/home/ubuntu/informatika-monitoring-data/attachments` (satu-satunya jalur tulis).
+  - `deploy/deploy.sh`: `.env` menerima `ATTACHMENTS_DIR` (opsional, sekali, jalur absolut polos). Bila diisi, pre-flight menolak direktori di dalam checkout, symlink, milik user lain, atau terbuka untuk user lain, dan menolak bila `ReadWritePaths` unit yang berjalan tidak mencakupnya. Sebelum mutasi, semua lampiran (hanya nama UUID; berkas `.upload-*` dilewati) di-snapshot ke `backups/pre-<rilis>.attachments/` dengan hard link (tanpa tambahan disk; disalin bila beda filesystem), dicek nama+ukuran per berkas, lalu dipangkas ke 10 terbaru. `--check` merehearse snapshot ke direktori sementara. Pesan rollback menyebut snapshot.
+  - Uji fungsi deploy: **89 lulus** (sebelumnya 59): parsing `ATTACHMENTS_DIR`, `unit_allows_write`, `check_attachments_dir`, snapshot + **pemulihan** (berkas dihapus lalu dipulihkan sesuai runbook, isi dan mode 0640 sama), snapshot tidak menimpa yang ada, pemangkasan. Tiga uji mutan (cek unit dibuang, filter UUID dibuang, cek izin user lain dibuang) masing-masing menggagalkan satu uji yang tepat. `bash -n` bersih.
+  - **Belum:** pemasangan unit/Caddyfile dan baris `.env` di produksi; uji unggah 25 MB lewat Caddy produksi ke app sungguhan; snapshot di produksi (masih 0 berkas).
+  - **Temuan:** proses uji lama `/tmp/informatika-monitoring-task06` (dari Task 0.6, user `ubuntu`) masih mendengarkan di `*:18300` sejak sekitar 12 Nov. Bukan produksi; belum dimatikan, menunggu persetujuan user.

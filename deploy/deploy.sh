@@ -41,9 +41,12 @@ RELEASE_ID=""
 DB_DSN=""
 TEST_DB_DSN=""
 BACKUP_FILE=""
+ATTACHMENTS_SNAPSHOT=""
 BACKUP_DIR="$ROOT_DIR/backups"
 ADMIN_COOKIE_SECURE=""
 CSP_MODE=""
+ATTACHMENTS_DIR=""
+ATTACHMENTS_SEEN=false
 APP_ADDR=""
 PUBLIC_DIR=""
 OLD_BIN_TARGET=""
@@ -73,7 +76,7 @@ parse_environment() {
   while IFS= read -r line || [[ -n "$line" ]]; do
     line="${line%$'\r'}"
     [[ -z "$line" || "$line" =~ ^[[:space:]]*# ]] && continue
-    [[ "$line" =~ ^(APP_ADDR|PUBLIC_DIR|DATABASE_URL|GOOSE_DBSTRING|ADMIN_COOKIE_SECURE|CSP_MODE)=(.*)$ ]] || fail ".env contains unsupported or malformed assignment"
+    [[ "$line" =~ ^(APP_ADDR|PUBLIC_DIR|DATABASE_URL|GOOSE_DBSTRING|ADMIN_COOKIE_SECURE|CSP_MODE|ATTACHMENTS_DIR)=(.*)$ ]] || fail ".env contains unsupported or malformed assignment"
     key="${BASH_REMATCH[1]}"; raw="${BASH_REMATCH[2]}"
     if [[ "$raw" =~ ^\'([^\']*)\'$ ]]; then value="${BASH_REMATCH[1]}"
     elif [[ "$raw" =~ ^\"([^\"\\]*)\"$ ]]; then value="${BASH_REMATCH[1]}"
@@ -91,6 +94,12 @@ parse_environment() {
         [[ -z "$CSP_MODE" ]] || fail "duplicate CSP_MODE"
         [[ "${value,,}" =~ ^(enforce|report-only|off)$ ]] || fail "CSP_MODE must be enforce, report-only, or off"
         CSP_MODE="${value,,}" ;;
+      ATTACHMENTS_DIR)
+        [[ "$ATTACHMENTS_SEEN" == false ]] || fail "duplicate ATTACHMENTS_DIR"
+        ATTACHMENTS_SEEN=true
+        [[ -n "$value" ]] || fail "ATTACHMENTS_DIR must not be empty (remove the line to disable attachments)"
+        [[ "$value" =~ ^/[A-Za-z0-9._/-]+$ && "$value" != */ && "/$value/" != */../* && "/$value/" != */./* && "$value" != *//* ]] || fail "ATTACHMENTS_DIR must be a plain absolute path without . or .. segments or a trailing slash"
+        ATTACHMENTS_DIR="$value" ;;
       DATABASE_URL|GOOSE_DBSTRING)
         [[ -z "$DB_DSN" ]] || fail "define only one of DATABASE_URL or GOOSE_DBSTRING"
         DB_DSN="$value" ;;
@@ -184,11 +193,79 @@ check_port_owner() {
   log "port $APP_PORT listener belongs to $SERVICE_NAME cgroup"
 }
 
+# Succeeds when the space-separated systemd ReadWritePaths value ($1) contains
+# $2 or one of its parent directories. Entries may carry a "-" (ignore missing)
+# or "+" prefix.
+unit_allows_write() {
+  local entry dir="$2"
+  local -a entries
+  read -ra entries <<<"$1"
+  for entry in "${entries[@]}"; do
+    entry="${entry#[-+]}"
+    entry="${entry%/}"
+    [[ -n "$entry" ]] || continue
+    [[ "$dir" == "$entry" || "$dir" == "$entry"/* ]] && return 0
+  done
+  return 1
+}
+
+# The attachment directory must be private to the deployment user, live outside
+# the release tree, and be writable by the hardened service unit.
+check_attachments_dir() {
+  [[ -n "$ATTACHMENTS_DIR" ]] || { log "ATTACHMENTS_DIR not set; attachments stay disabled"; return 0; }
+  local uid owner mode_bits rw
+  [[ "$ATTACHMENTS_DIR/" != "$ROOT_DIR/"* ]] || fail "ATTACHMENTS_DIR must be outside $ROOT_DIR so releases and checkouts never touch it"
+  [[ -d "$ATTACHMENTS_DIR" && ! -L "$ATTACHMENTS_DIR" ]] || fail "ATTACHMENTS_DIR must be an existing directory, not a symlink"
+  uid="$(id -u)"; owner="$(stat -c %u "$ATTACHMENTS_DIR")"; mode_bits="$(stat -c %a "$ATTACHMENTS_DIR")"
+  [[ "$owner" == "$uid" ]] || fail "ATTACHMENTS_DIR must be owned by deployment user uid $uid"
+  (( (8#$mode_bits & 8#007) == 0 )) || fail "ATTACHMENTS_DIR must not grant other-user permissions (use chmod 750)"
+  rw="$(sudo_systemctl show --property=ReadWritePaths --value)" || fail "cannot query service ReadWritePaths"
+  unit_allows_write "$rw" "$ATTACHMENTS_DIR" || fail "$SERVICE_NAME cannot write ATTACHMENTS_DIR: install the unit with ReadWritePaths (docs/DEPLOYMENT.md, Lampiran)"
+  log "attachments directory verified (writable by $SERVICE_NAME)"
+}
+
+# Snapshots every stored attachment (UUID-named files only; in-progress
+# .upload-* temp files are skipped) into $1. Stored files are never modified
+# after upload, so hard links are a complete copy at no extra disk cost; across
+# filesystems the files are copied instead. The snapshot is checked file by
+# file before it is moved into place.
+snapshot_attachments() {
+  local dest="$1" partial="$1.partial" src_list dst_list
+  local uuid='[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}'
+  [[ ! -e "$dest" && ! -L "$dest" ]] || return 1
+  rm -rf -- "$partial"
+  mkdir -m 0700 -- "$partial" || return 1
+  local -a files
+  mapfile -d '' files < <(find "$ATTACHMENTS_DIR" -mindepth 1 -maxdepth 1 -type f -regextype posix-extended -regex ".*/$uuid" -print0)
+  if ((${#files[@]} > 0)); then
+    if [[ "$(stat -c %d "$ATTACHMENTS_DIR")" == "$(stat -c %d "$partial")" ]]; then
+      cp -al -t "$partial" -- "${files[@]}" || { rm -rf -- "$partial"; return 1; }
+    else
+      cp -a -t "$partial" -- "${files[@]}" || { rm -rf -- "$partial"; return 1; }
+    fi
+  fi
+  src_list="$(cd "$ATTACHMENTS_DIR" && find . -mindepth 1 -maxdepth 1 -type f -regextype posix-extended -regex "\./$uuid" -printf '%f %s\n' | sort)"
+  dst_list="$(cd "$partial" && find . -mindepth 1 -maxdepth 1 -type f -printf '%f %s\n' | sort)"
+  [[ "$src_list" == "$dst_list" ]] || { rm -rf -- "$partial"; return 1; }
+  mv -T -- "$partial" "$dest" || { rm -rf -- "$partial"; return 1; }
+}
+
+# Keeps only the newest $BACKUPS_TO_KEEP attachment snapshots.
+prune_attachment_snapshots() {
+  local -a old
+  local d
+  mapfile -t old < <(find "$BACKUP_DIR" -mindepth 1 -maxdepth 1 -type d -name 'pre-*.attachments' -printf '%T@ %p\n' | sort -rn | tail -n +"$((BACKUPS_TO_KEEP + 1))" | cut -d' ' -f2-)
+  for d in "${old[@]}"; do
+    [[ "$d" == "$BACKUP_DIR"/pre-*.attachments ]] && rm -rf -- "$d"
+  done
+  return 0
+}
+
 preflight() {
   log "=== PRE-FLIGHT ==="
   [[ "$mode" == check || "$ROOT_DIR" == "$REMOTE_DIR" ]] || fail "remote checkout mismatch: expected $REMOTE_DIR"
   local cmd dirty available_mb root_dev releases_parent_dev
-  for cmd in git go gofmt node npm sqlc goose psql pg_dump pg_restore curl python3 sudo systemctl ss stat df mktemp tar sed sort grep readlink ln mv install timeout id cut cp chmod date; do require_command "$cmd"; done
+  for cmd in git go gofmt node npm sqlc goose psql pg_dump pg_restore curl python3 sudo systemctl ss stat df mktemp tar sed sort grep readlink ln mv install timeout id cut cp chmod date find wc; do require_command "$cmd"; done
   parse_environment
   load_test_database
   dirty="$(git -C "$ROOT_DIR" status --porcelain)"; [[ -z "$dirty" ]] || fail "working tree is dirty; preserve or commit changes before deployment"
@@ -211,6 +288,7 @@ preflight() {
   [[ ! -e "$RELEASES_DIR" ]] || releases_parent_dev="$(stat -c %d "$RELEASES_DIR")"
   [[ "$root_dev" == "$releases_parent_dev" ]] || fail "release and stable links must be on the same filesystem"
   check_port_owner
+  check_attachments_dir
   log "pre-flight passed at $SOURCE_HEAD (secrets redacted)"
 }
 
@@ -274,6 +352,7 @@ rollback() {
   if [[ "$ok" == true ]]; then log "rollback restored prior links and verified readiness"; else log "ERROR: rollback did not restore a verified healthy service" >&2; fi
   log "database migrations are forward-only; inspect migration state"
   [[ -z "$BACKUP_FILE" ]] || log "pre-deploy database backup: $BACKUP_FILE (restore steps: docs/DEPLOYMENT.md)"
+  [[ -z "$ATTACHMENTS_SNAPSHOT" ]] || log "pre-deploy attachment snapshot: $ATTACHMENTS_SNAPSHOT"
   exit 1
 }
 
@@ -300,6 +379,13 @@ deploy_release() {
     backup_database "$BACKUP_FILE" || { BACKUP_FILE=""; fail "database backup failed; nothing was changed"; }
     log "database backup written: $BACKUP_FILE ($(stat -c %s "$BACKUP_FILE") bytes)"
     prune_backups
+  fi
+  if [[ -n "$ATTACHMENTS_DIR" ]]; then
+    mkdir -p -m 0700 "$BACKUP_DIR"
+    ATTACHMENTS_SNAPSHOT="$BACKUP_DIR/pre-$RELEASE_ID.attachments"
+    snapshot_attachments "$ATTACHMENTS_SNAPSHOT" || { ATTACHMENTS_SNAPSHOT=""; fail "attachment snapshot failed; nothing was changed"; }
+    log "attachment snapshot written: $ATTACHMENTS_SNAPSHOT ($(find "$ATTACHMENTS_SNAPSHOT" -type f | wc -l) files)"
+    prune_attachment_snapshots
   fi
 
   MUTATION_STARTED=true
@@ -334,6 +420,10 @@ if [[ "$mode" == check ]]; then
   if find "$ROOT_DIR/backend/sql/migrations" -maxdepth 1 -type f -name '*.sql' -print -quit | grep -q .; then
     backup_database "$BUILD_ROOT/rehearsal.dump" || fail "backup rehearsal failed"
     log "backup rehearsal passed ($(stat -c %s "$BUILD_ROOT/rehearsal.dump") bytes, discarded)"
+  fi
+  if [[ -n "$ATTACHMENTS_DIR" ]]; then
+    snapshot_attachments "$BUILD_ROOT/attachments-rehearsal" || fail "attachment snapshot rehearsal failed"
+    log "attachment snapshot rehearsal passed ($(find "$BUILD_ROOT/attachments-rehearsal" -type f | wc -l) files, discarded)"
   fi
   log "CHECK ONLY: used temporary source/build/cache; no migration, release write, symlink swap, restart, or runtime mutation performed"
   exit 0
