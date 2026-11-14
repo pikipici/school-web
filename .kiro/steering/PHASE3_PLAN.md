@@ -1,6 +1,6 @@
 # Fase 3 — Modul Progres Tugas Kelompok (Rencana)
 
-> Status: **USULAN 14 Nov 2026 — menunggu persetujuan user.** Belum ada kode.
+> Status: **DISETUJUI 14 Nov 2026** (user mengikuti semua rekomendasi). 3A dimulai.
 > Sumber: `PLAN.md` bagian 1–7, 9, 10, 14 (AC01–AC24); `DESIGN.md`; pola Fase 1–2 (sesi, CSRF, audit, `?id=` untuk ekspor statis).
 
 ## Tujuan
@@ -87,7 +87,7 @@ Mutasi admin: sesi + CSRF + Origin + audit. `PATCH` memakai `updatedAt` dan 409 
 
 | Task | Isi | Uji |
 |---|---|---|
-| 3.1 | Migrasi `academic_years` (+ seed 2026/2027), `classes`, `groups` | uji skema: unik, satu tahun aktif, topik wajib, down/up |
+| 3.1 **DONE** | Migrasi `academic_years` (+ seed 2026/2027), `classes`, `groups` | uji skema: unik, satu tahun aktif, topik wajib, down/up |
 | 3.2 | Paket `progress`: validasi kelas/kelompok, nonaktif vs hapus, query publik aman | TDD + PostgreSQL nyata |
 | 3.3 | API admin kelas/kelompok + API publik `progress`/`summary` + audit | TDD HTTP: 401/403/409/422; publik tanpa email (uji kunci JSON) |
 | 3.4 | UI admin kelas/kelompok; `/progres/` memuat tabel, filter, cari, keadaan kosong/galat | klien API diuji; lint/typecheck/build |
@@ -133,10 +133,24 @@ Setiap task: uji gagal dulu, implementasi, uji/vet/build di `cbt-vps`, commit, c
 7. **Salah input guru.** Putaran dan temuan bisa dikoreksi; semuanya beraudit; temuan terbit diarsipkan, bukan dihapus.
 8. **Data siswa.** Tidak menyimpan nama anggota; email kelompok hanya admin.
 
-## Keputusan yang saya butuhkan dari user
+## Keputusan user (14 Nov 2026)
 
-1. Setuju dibagi 3A–3D, dan partisipasi tanya jawab + CSV jadi Fase 4?
-2. Nama anggota kelompok **tidak** disimpan (K5)?
-3. Sesi kelompok maksimal 7 hari (K16), atau lebih pendek?
-4. Berapa kelas dan kira-kira berapa kelompok per kelas tahun ini? (untuk menguji tampilan 360px dengan jumlah baris yang wajar)
-5. Kelompok perlu bisa melihat riwayat putaran pengumpulannya sendiri (tanggal + PPT/PDF), atau cukup status + temuan?
+User mengikuti semua rekomendasi:
+
+1. Dibagi 3A–3D; partisipasi tanya jawab, rekap, dan CSV menjadi Fase 4.
+2. Nama anggota kelompok **tidak** disimpan (K5).
+3. Sesi kelompok maksimal **7 hari** (K16).
+4. Jumlah kelas/kelompok belum diberikan; uji tampilan memakai data contoh **4 kelas × 7 kelompok** (28 baris) di database uji, bukan data siswa.
+5. Kelompok **bisa melihat riwayat putarannya sendiri** (tanggal terima WIB, PPT/PDF), tanpa pengirim, subjek, nama berkas, atau catatan internal.
+
+Status rencana: **DISETUJUI 14 Nov 2026.**
+
+## Catatan pelaksanaan
+
+- **Task 3.1 selesai (14 Nov 2026).** RED: 5 uji skema baru gagal (`relation "academic_years" does not exist`). GREEN di `cbt-vps` dengan database uji: migrasi `00008_create_progress_groups`.
+  - `academic_years`: label `YYYY/YYYY` dengan tahun kedua = pertama + 1, unik; default tidak aktif; **paling banyak satu aktif** (indeks unik parsial; "minimal satu" dijaga di Go); seed `2026/2027` aktif; tukar tahun aktif dalam satu `UPDATE` boleh.
+  - `classes`: kode 1–20 karakter (huruf/angka/spasi/titik/strip, diawali huruf/angka), unik per tahun **tanpa beda huruf besar/kecil**; nama opsional ≤ 80 tanpa karakter kontrol; tahun yang punya kelas tidak bisa dihapus.
+  - `study_groups` (bukan `groups`, karena `GROUPS` kata kunci SQL): nama 1–60 karakter tanpa karakter kontrol, unik per kelas tanpa beda huruf; topik **wajib**; email opsional, huruf kecil, format email, ≤ 254; urutan ≥ 0; default aktif; kelas yang punya kelompok dan topik yang dipakai tidak bisa dihapus. Tidak ada kolom nama anggota.
+  - `down-to 7` menghapus ketiga tabel tanpa menyentuh Materi; `up` ulang tidak menggandakan seed. `goose validate`, `sqlc generate`, seluruh suite 2 kali, vet, build hijau.
+  - **Uji mutan:** indeks satu-aktif dibuang → uji tahun ajaran gagal; indeks nama tanpa `lower()` → uji kelompok gagal.
+  - Kolom kode akses ditambahkan nanti di Task 3.14. Migrasi 8 belum di produksi; ikut deploy Task 3.5.
