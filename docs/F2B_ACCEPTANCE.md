@@ -1,7 +1,7 @@
 # Fase 2B — Lampiran Materi: Acceptance
 
 > Tanggal: 14 November 2026. Produksi: [fikriramaaulia.online](https://fikriramaaulia.online), rilis `20261114T075621Z-d3918f34507a` (kode `d3918f3`), migrasi versi 7.
-> Status: **SIAP DITUTUP dengan pengecualian** (lihat bagian akhir). Penutupan menunggu persetujuan user.
+> Status: **DITUTUP 14 Nov 2026 dengan pengecualian** atas persetujuan user (lihat bagian akhir). Fase berikutnya belum disetujui.
 
 ## Gerbang
 
@@ -12,7 +12,7 @@
 | Unduhan hanya untuk materi terbit; header aman | PASS | Uji HTTP + uji mutan; produksi: materi draf → 404, setelah terbit → 200 dengan `attachment`, `nosniff`, `default-src 'none'; sandbox`; SHA-256 unduhan sama persis dengan berkas asli |
 | Cadangan mencakup lampiran dan bisa dipulihkan | PASS | Uji fungsi deploy (89) termasuk pulihkan; deploy produksi menulis snapshot; `deploy.sh --check` di produksi merehearse snapshot 1 berkas; latihan pulih dari salinan hard link ke direktori sementara: berkas identik, mode 0640 |
 | Deploy + smoke; cek browser dengan PDF dan PPTX asli | PASS | Deploy exit 0, smoke lulus; Edge nyata: unggah, daftar, terbit, unduh, hapus |
-| User menyetujui fase berikutnya | MENUNGGU | — |
+| User menyetujui penutupan 2B | PASS (14 Nov 2026, dengan pengecualian) | Instruksi user: "Tutup Fase 2B dengan pengecualian" |
 
 ## Cek browser produksi (Edge, 14 Nov 2026 16.44–16.53 WIB)
 

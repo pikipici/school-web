@@ -1,6 +1,6 @@
 # Fase 2 — Pengumuman, Materi, dan Lampiran (Rencana)
 
-> Status: **DISETUJUI 13 Nov 2026 — 2A ditutup 14 Nov 2026; 2B berjalan (6/7: 2.9–2.14).**
+> Status: **DISETUJUI 13 Nov 2026 — 2A ditutup 14 Nov 2026; 2B ditutup 14 Nov 2026 (7/7, dengan pengecualian; lihat `docs/F2B_ACCEPTANCE.md`).**
 > Dibuat: 13 November 2026. Sumber: `PLAN.md` bagian 0 (keputusan lampiran), `DESIGN.md` (Beranda dan navigasi), Fase 1 (login admin, CSRF, audit).
 
 ## Tujuan
@@ -133,12 +133,12 @@ User mengikuti semua rekomendasi: dibagi 2A lalu 2B; isi teks biasa; Pengumuman 
 
 ## Gerbang selesai 2B
 
-- [ ] Validasi isi terbukti dengan berkas asli dan palsu; makro ditolak.
-- [ ] Batas ukuran, jumlah, kuota, dan sisa disk terbukti uji.
-- [ ] Unduhan hanya untuk materi terbit; header aman.
-- [ ] Cadangan mencakup direktori lampiran dan terbukti bisa dipulihkan.
-- [ ] Deploy + smoke lulus; cek browser nyata dengan PDF dan PPTX asli.
-- [ ] User menyetujui fase berikutnya.
+- [x] Validasi isi terbukti dengan berkas asli dan palsu; makro ditolak. Pengecualian: `.ppt` asli belum diuji.
+- [x] Batas ukuran, jumlah, kuota, dan sisa disk terbukti uji. Pengecualian: unggahan besar lewat produksi belum dicoba.
+- [x] Unduhan hanya untuk materi terbit; header aman.
+- [x] Cadangan mencakup direktori lampiran dan terbukti bisa dipulihkan.
+- [x] Deploy + smoke lulus; cek browser nyata dengan PDF dan PPTX asli. Pengecualian: keyboard/zoom 200% dan progres/Batalkan belum terlihat.
+- [x] User menyetujui penutupan 2B dengan pengecualian (14 Nov 2026). Fase berikutnya belum disetujui.
 
 ## Catatan pelaksanaan
 

@@ -6,10 +6,10 @@
 
 ## Ringkasan
 
-- Fase aktif: **Fase 2B — Lampiran PDF/PPT/PPTX** (disetujui 14 Nov 2026). Fase 0, 1, dan 2A sudah ditutup.
-- Progress Fase 2A: **8/8 selesai** (ditutup dengan pengecualian). Fase 2B (lampiran): **7/7** (2.9–2.15), siap ditutup dengan pengecualian; menunggu persetujuan user.
+- Fase aktif: **belum ada** — Fase 0, 1, 2A, dan 2B sudah ditutup. Fase berikutnya menunggu rencana dan persetujuan user.
+- Progress Fase 2A: **8/8 selesai** (ditutup dengan pengecualian). Fase 2B (lampiran): **7/7** (2.9–2.15), **ditutup 14 Nov 2026 dengan pengecualian**.
 - Task terakhir selesai: **2.15 — deploy dan cek browser lampiran** (`docs/F2B_ACCEPTANCE.md`)
-- Next task: **persetujuan tutup Fase 2B**, lalu rencana fase berikutnya. Daftar revisi desain: tampilan admin di 360px sudah diukur untuk editor materi; paginasi 360px turun baris; judul "Lampiran" publik.
+- Next task: **rencana fase berikutnya** (perlu persetujuan user). Daftar revisi desain: tampilan admin di 360px sudah diukur untuk editor materi; paginasi 360px turun baris; judul "Lampiran" publik.
 - Semua perbaikan gaya tautan sudah di produksi.
 - Local branch: `main`; semua commit sampai `d3918f3` sudah di `origin`/`server` (yang dideploy). Commit dokumen `490c6b3`, `3e46e2e`, `2f9ba59`, dan pembaruan ini belum di-push (user yang push).
 - Produksi: **`https://fikriramaaulia.online`** aktif (Caddy + Let's Encrypt, berlaku s.d. 2027-02-11)
@@ -26,7 +26,7 @@
 | 1 | Database + login admin + HTTPS | DITUTUP 13 Nov 2026 | `.kiro/steering/PHASE1_PLAN.md`, `docs/F1_ACCEPTANCE.md` |
 | Hardening | HSTS 1 hari + CSP `enforce` | DONE, aktif di produksi | bagian Current Next Step |
 | 2A | Pengumuman + Materi teks | DITUTUP 14 Nov 2026 (dengan pengecualian) | `.kiro/steering/PHASE2_PLAN.md` |
-| 2B | Lampiran PDF/PPT/PPTX | 7/7 — siap ditutup (menunggu persetujuan) | `.kiro/steering/PHASE2_PLAN.md` |
+| 2B | Lampiran PDF/PPT/PPTX | DITUTUP 14 Nov 2026 (dengan pengecualian) | `.kiro/steering/PHASE2_PLAN.md` |
 
 ## Fase 2A Tracker
 
@@ -53,7 +53,7 @@ Keputusan Fase 2 (disetujui user 13 Nov 2026): dibagi 2A lalu 2B; isi teks biasa
 | 2.12 | Unduh publik lewat Go | DONE | `aaf0f73` | RED 404; header `attachment`/`nosniff`/`sandbox`/`no-cache`/ETag; Range 206/416, 304; mutan filter terbit → draf bocor terdeteksi |
 | 2.13 | Caddy, unit `ReadWritePaths`, `ATTACHMENTS_DIR`, snapshot | DONE, aktif di produksi | `57438e0`, `905d463` | Caddy nyata di port uji: 8/8; 89 uji fungsi deploy + 3 mutan; aktivasi produksi rilis `20261114T030336Z-57438e043577`, migrasi 7 |
 | 2.14 | UI unggah admin + daftar lampiran publik | DONE | `d3918f3` | 90 uji frontend (tanpa RED ketat), lint, typecheck, build; E2E klien asli + API asli + DB uji |
-| 2.15 | Deploy, cek browser, `docs/F2B_ACCEPTANCE.md` | DONE (menunggu persetujuan tutup) | `490c6b3`, `3e46e2e` | Rilis `20261114T075621Z-d3918f34507a`; Edge produksi: unggah PDF + PPTX asli, palsu ditolak, draf 404, unduhan identik SHA-256, hapus bersih, 360px OK, audit lengkap; latihan pulih snapshot lulus |
+| 2.15 | Deploy, cek browser, `docs/F2B_ACCEPTANCE.md` | DONE | `490c6b3`, `3e46e2e` | Rilis `20261114T075621Z-d3918f34507a`; Edge produksi: unggah PDF + PPTX asli, palsu ditolak, draf 404, unduhan identik SHA-256, hapus bersih, 360px OK, audit lengkap; latihan pulih snapshot lulus |
 
 Pengecualian 2B: `.ppt` asli belum diuji; unggahan besar (20–25 MB), bilah progres, dan tombol Batalkan belum terlihat; keyboard/zoom 200% bagian Lampiran belum dicek; tanpa antivirus; snapshot di disk yang sama.
 
@@ -425,7 +425,7 @@ Tetap berlaku:
 
 ## Blockers / Pending External Decisions
 
-1. Penutupan Fase 2B menunggu persetujuan user (pengecualian di `docs/F2B_ACCEPTANCE.md`).
+1. Fase 2B ditutup 14 Nov 2026; pengecualian di `docs/F2B_ACCEPTANCE.md`. Fase berikutnya belum direncanakan.
 2. Berkas `.ppt` asli untuk uji perlu disediakan user.
 3. Docker tidak tersedia di `cbt-vps`; uji integrasi memakai database uji PostgreSQL lokal.
 4. 7 advisory npm moderate (alat dev saja) masih terbuka sejak Fase 0.
@@ -460,11 +460,11 @@ The remote deploy command passed Go test/vet/build, `sqlc generate`, frontend `n
 
 ## Current Next Step
 
-Fase 2B selesai dikerjakan (7/7) dan aktif di produksi. Saat dilanjutkan:
+Fase 2B ditutup 14 Nov 2026 dengan pengecualian dan aktif di produksi. Saat dilanjutkan:
 
 1. User push commit dokumen yang belum ada di `origin`/`server`.
-2. User memutuskan: tutup Fase 2B dengan pengecualian, atau uji dulu `.ppt` asli dan unggahan besar (20–25 MB, progres, Batalkan).
-3. Setelah ditutup: rencana fase berikutnya (modul Progres Tugas Kelompok atau revisi desain), dengan persetujuan user.
+2. Opsional: uji `.ppt` asli dan unggahan besar (20–25 MB, progres, Batalkan) untuk menghapus pengecualian 2B.
+3. Rencana fase berikutnya (modul Progres Tugas Kelompok atau revisi desain), dengan persetujuan user.
 
 Selesai 14 Nov 2026 (Fase 2B):
 
