@@ -7,13 +7,13 @@
 ## Ringkasan
 
 - Fase aktif: **Fase 2B — Lampiran PDF/PPT/PPTX** (disetujui 14 Nov 2026). Fase 0, 1, dan 2A sudah ditutup.
-- Progress Fase 2A: **8/8 selesai** (ditutup dengan pengecualian). Fase 2B (lampiran): **6/7** (2.9–2.14).
-- Task terakhir selesai: **2.14 — UI unggah admin dan daftar lampiran publik** (belum di produksi)
-- Next task: **2.15 — deploy, cek browser dengan PDF/PPTX asli (dan .ppt dari user), `docs/F2B_ACCEPTANCE.md`**. Daftar revisi desain: tampilan admin di 360px belum diverifikasi; paginasi 360px turun baris.
+- Progress Fase 2A: **8/8 selesai** (ditutup dengan pengecualian). Fase 2B (lampiran): **7/7** (2.9–2.15), siap ditutup dengan pengecualian; menunggu persetujuan user.
+- Task terakhir selesai: **2.15 — deploy dan cek browser lampiran** (`docs/F2B_ACCEPTANCE.md`)
+- Next task: **persetujuan tutup Fase 2B**, lalu rencana fase berikutnya. Daftar revisi desain: tampilan admin di 360px sudah diukur untuk editor materi; paginasi 360px turun baris; judul "Lampiran" publik.
 - Semua perbaikan gaya tautan sudah di produksi.
 - Local branch: `main`; semua commit sampai `57438e0` sudah di `origin`/`server`; commit catatan aktivasi 2.13 belum di-push.
 - Produksi: **`https://fikriramaaulia.online`** aktif (Caddy + Let's Encrypt, berlaku s.d. 2027-02-11)
-- Rilis produksi: `20261114T030336Z-57438e043577` (kode `57438e0`), migrasi versi **7**. Pengumuman, Materi, dan API lampiran aktif di produksi (UI unggah belum ada).
+- Rilis produksi: `20261114T075621Z-d3918f34507a` (kode `d3918f3`), migrasi versi **7**. Pengumuman, Materi, dan lampiran (unggah admin + unduh publik) aktif di produksi.
 - PostgreSQL aplikasi: aktif, readiness PASS
 - Admin: satu akun `fikri`; login dan logout lewat browser terbukti di audit
 
@@ -26,7 +26,7 @@
 | 1 | Database + login admin + HTTPS | DITUTUP 13 Nov 2026 | `.kiro/steering/PHASE1_PLAN.md`, `docs/F1_ACCEPTANCE.md` |
 | Hardening | HSTS 1 hari + CSP `enforce` | DONE, aktif di produksi | bagian Current Next Step |
 | 2A | Pengumuman + Materi teks | DITUTUP 14 Nov 2026 (dengan pengecualian) | `.kiro/steering/PHASE2_PLAN.md` |
-| 2B | Lampiran PDF/PPT/PPTX | 6/7 — berjalan | `.kiro/steering/PHASE2_PLAN.md` |
+| 2B | Lampiran PDF/PPT/PPTX | 7/7 — siap ditutup (menunggu persetujuan) | `.kiro/steering/PHASE2_PLAN.md` |
 
 ## Fase 2A Tracker
 

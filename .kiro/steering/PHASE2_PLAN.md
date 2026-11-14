@@ -102,7 +102,7 @@ Lampiran membawa risiko yang berbeda (disk, unggahan besar, cadangan berkas, isi
 | 2.12 **DONE** | Unduh publik lewat Go | TDD: header benar, hanya untuk materi terbit, Range jalan |
 | 2.13 **DONE, aktif di produksi 14 Nov 2026** | Caddy: batas badan khusus jalur unggah; deploy: cadangan direktori lampiran | `caddy validate`, uji fungsi deploy |
 | 2.14 **DONE** | UI unggah (progres, galat jelas), daftar lampiran di halaman publik | lint/typecheck/build |
-| 2.15 | Deploy, cek browser (unggah PDF dan PPTX asli, unduh), gerbang 2B + `docs/F2B_ACCEPTANCE.md` | semua gerbang |
+| 2.15 **DONE (menunggu persetujuan tutup)** | Deploy, cek browser (unggah PDF dan PPTX asli, unduh), gerbang 2B + `docs/F2B_ACCEPTANCE.md` | semua gerbang |
 
 Setiap task: uji gagal dulu, implementasi, uji/vet/build di VPS, commit.
 
@@ -193,3 +193,4 @@ User mengikuti semua rekomendasi: dibagi 2A lalu 2B; isi teks biasa; Pengumuman 
   - **E2E nyata di `cbt-vps`** (biner `api`/`adminctl` asli, database uji, direktori lampiran sementara, klien frontend asli lewat Node): login; unggah **PPTX asli** (28.356 B) dan PDF; PDF palsu ditolak dengan pesan tetap; daftar admin dan publik benar; unduhan PPTX identik byte-per-byte dengan `filename*` UTF-8; hapus → sisa 1, hapus ulang `not_found`; berkas di disk 1; halaman `/materi/baca/` dan `/admin/materi/ubah/` 200. Database uji dan direktori dibersihkan sesudahnya.
   - **Belum:** tampilan di browser nyata (progres, 360px, keyboard) dan unggahan lewat Caddy produksi — Task 2.15.
 - **Task 2.15 — deploy selesai (14 Nov 2026), cek browser belum.** `d3918f3` → rilis `20261114T075621Z-d3918f34507a` (exit 0; semua gerbang; cadangan `pre-20261114T075621Z-d3918f34507a.dump` 25708 byte; snapshot lampiran 0 berkas; log tanpa pola rahasia, dihapus). Dari PC user: `/`, `/materi/`, `/materi/baca/`, `/admin/login/`, `/admin/materi/ubah/` 200 dengan CSP; bundel JS memuat UI unggah; unduh ID tak dikenal JSON 404. Alat browser agen gagal terhubung ke Edge debug (`403` pada `ws://127.0.0.1:9222`), jadi unggah lewat browser menunggu user.
+- **Task 2.15 — cek browser selesai (14 Nov 2026).** Edge nyata di produksi: unggah PDF asli dan PPTX asli, HTML bernama `.pdf` ditolak, draf tidak bocor (404), terbit → unduhan identik (SHA-256), hapus lampiran dan hapus materi membersihkan disk, 360px tanpa geser samping, audit lengkap. `deploy.sh --check` dan latihan pulih snapshot lulus. Bukti dan pengecualian (`.ppt` asli, unggahan besar/progres/batal, keyboard/zoom) di `docs/F2B_ACCEPTANCE.md`. Materi uji dihapus. **2B siap ditutup, menunggu persetujuan user.**
