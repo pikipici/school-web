@@ -1,6 +1,6 @@
 # Fase 3B — Pengumpulan dan Buku Tulis: Acceptance
 
-> Tanggal: 15 November 2026. Produksi: [fikriramaaulia.online](https://fikriramaaulia.online), rilis `20261115T122908Z-f660abcc6378` (kode `f660abc`), migrasi versi 9.
+> Tanggal: 15 November 2026. Produksi: [fikriramaaulia.online](https://fikriramaaulia.online), rilis `20261115T125117Z-a2d9fc52cbba` (kode `a2d9fc5`, termasuk perbaikan hapus kelompok), migrasi versi 9.
 > Status: **SIAP DITUTUP dengan pengecualian.** Penutupan menunggu persetujuan user.
 
 ## Gerbang
@@ -33,7 +33,7 @@
 
 ## Temuan
 
-1. **Kelompok tidak bisa dihapus setelah buku tulis pernah disimpan**, walau kemudian dibatalkan dan kosong: baris `group_notebooks` tetap ada dan `ON DELETE RESTRICT` menolak. **Diperbaiki** (15 Nov 2026): `DeleteGroup` kini membuang baris buku tulis yang "belum diterima, tanpa catatan" dalam transaksi yang sama sebelum menghapus kelompok; buku diterima, buku bercatatan, dan putaran tetap menolak (`IN_USE`), dan penolakan tidak menyentuh baris buku. RED mereproduksi kasus produksi; GREEN + seluruh suite 2 kali + `-race`; mutan "hapus semua baris buku" tertangkap. Data uji `UJI` dihapus setelah perbaikan dideploy.
+1. **Kelompok tidak bisa dihapus setelah buku tulis pernah disimpan**, walau kemudian dibatalkan dan kosong: baris `group_notebooks` tetap ada dan `ON DELETE RESTRICT` menolak. **Diperbaiki** (15 Nov 2026): `DeleteGroup` kini membuang baris buku tulis yang "belum diterima, tanpa catatan" dalam transaksi yang sama sebelum menghapus kelompok; buku diterima, buku bercatatan, dan putaran tetap menolak (`IN_USE`), dan penolakan tidak menyentuh baris buku. RED mereproduksi kasus produksi; GREEN + seluruh suite 2 kali + `-race`; mutan "hapus semua baris buku" tertangkap. Data uji `UJI` dihapus setelah perbaikan dideploy (rilis `20261115T125117Z-a2d9fc52cbba`, cadangan 44271 B): Kelompok 1 dengan baris buku kosong terhapus lewat UI (audit `progress.group_deleted` 19.52.15), lalu kelas (`progress.class_deleted` 19.52.42); produksi 0 kelas, 0 kelompok, 0 buku, 0 putaran.
 
 ## Pengecualian
 
