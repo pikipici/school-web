@@ -9,7 +9,7 @@
 - Fase aktif: **Fase 3B — Pengumpulan dan buku tulis** (rencana Fase 3 disetujui 14 Nov 2026). Fase 0, 1, 2A, 2B, dan **3A** sudah ditutup.
 - Progress Fase 2A: **8/8 selesai** (ditutup dengan pengecualian). Fase 2B (lampiran): **7/7** (2.9–2.15), **ditutup 14 Nov 2026 dengan pengecualian**. Fase 3: **9/17** — 3A ditutup 15 Nov 2026; 3B (3.6–3.9) di produksi, menunggu persetujuan tutup.
 - Task terakhir selesai: **3.9 — deploy 3B + cek browser** (`docs/F3B_ACCEPTANCE.md`); 3B menunggu persetujuan tutup
-- Next task: **perbaikan hapus kelompok dengan buku tulis kosong**, lalu tutup 3B dan mulai 3C.
+- Next task: **deploy perbaikan hapus kelompok** (sudah di kode + uji), hapus data uji `UJI`, lalu tutup 3B dan mulai 3C.
 - Semua perbaikan gaya tautan sudah di produksi.
 - Local branch: `main`; produksi rilis `20261115T122908Z-f660abcc6378` (kode `f660abc`, migrasi 9). Commit dokumen sesudahnya belum di-push.
 - Produksi: **`https://fikriramaaulia.online`** aktif (Caddy + Let's Encrypt, berlaku s.d. 2027-02-11)
@@ -495,7 +495,7 @@ The remote deploy command passed Go test/vet/build, `sqlc generate`, frontend `n
 
 Fase 3B (3.6–3.9) di produksi, menunggu persetujuan tutup (`docs/F3B_ACCEPTANCE.md`). Saat dilanjutkan:
 
-1. Perbaikan kecil: hapus kelompok harus membuang baris buku tulis kosong (belum diterima, tanpa catatan) lebih dulu; lalu hapus kelas `UJI` + Kelompok 1 (id 4) yang tertinggal nonaktif di produksi.
+1. Deploy perbaikan hapus kelompok (sudah di kode), lalu hapus kelas `UJI` + Kelompok 1 (id 4) yang tertinggal nonaktif di produksi lewat UI.
 2. Tutup 3B, lalu 3C (pemeriksaan dan temuan) sesuai `.kiro/steering/PHASE3_PLAN.md`.
 3. Opsional: zoom 200% `/progres/`; 360 px halaman detail kelompok; `.ppt` asli dan unggahan besar untuk pengecualian 2B.
 

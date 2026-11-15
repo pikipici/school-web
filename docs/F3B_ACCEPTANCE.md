@@ -33,7 +33,7 @@
 
 ## Temuan
 
-1. **Kelompok tidak bisa dihapus setelah buku tulis pernah disimpan**, walau kemudian dibatalkan dan kosong: baris `group_notebooks` tetap ada dan `ON DELETE RESTRICT` menolak. Akibatnya kelas `UJI` + Kelompok 1 (id 4) tertinggal di produksi dalam keadaan nonaktif. Usul perbaikan kecil: saat hapus kelompok, buang dulu baris buku tulis yang "belum diterima, tanpa catatan" dalam satu transaksi; baru setelah itu data uji bisa dihapus lewat UI.
+1. **Kelompok tidak bisa dihapus setelah buku tulis pernah disimpan**, walau kemudian dibatalkan dan kosong: baris `group_notebooks` tetap ada dan `ON DELETE RESTRICT` menolak. **Diperbaiki** (15 Nov 2026): `DeleteGroup` kini membuang baris buku tulis yang "belum diterima, tanpa catatan" dalam transaksi yang sama sebelum menghapus kelompok; buku diterima, buku bercatatan, dan putaran tetap menolak (`IN_USE`), dan penolakan tidak menyentuh baris buku. RED mereproduksi kasus produksi; GREEN + seluruh suite 2 kali + `-race`; mutan "hapus semua baris buku" tertangkap. Data uji `UJI` dihapus setelah perbaikan dideploy.
 
 ## Pengecualian
 

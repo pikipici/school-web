@@ -445,13 +445,27 @@ func (s *Store) UpdateGroup(ctx context.Context, id int64, expected time.Time, i
 	return groupOut(v), nil
 }
 
-// DeleteGroup removes a group and returns its name. Once later parts add
-// records that reference the group, the database refuses and ErrInUse is
-// returned; the teacher deactivates the group instead.
+// DeleteGroup removes a group and returns its name. A group with submission
+// rounds or a received/annotated notebook is refused with ErrInUse (the
+// teacher deactivates it instead). An empty notebook row (ticked and then
+// unticked, no note) is not a record and is removed with the group, in one
+// transaction, so a refused delete leaves it untouched.
 func (s *Store) DeleteGroup(ctx context.Context, id int64) (string, error) {
-	name, err := s.q.DeleteGroup(ctx, id)
+	tx, err := s.db.Begin(ctx)
+	if err != nil {
+		return "", err
+	}
+	defer tx.Rollback(context.WithoutCancel(ctx))
+	q := s.q.WithTx(tx)
+	if err := q.DeleteEmptyNotebook(ctx, id); err != nil {
+		return "", err
+	}
+	name, err := q.DeleteGroup(ctx, id)
 	if err != nil {
 		return "", deleteError(err)
+	}
+	if err := tx.Commit(ctx); err != nil {
+		return "", err
 	}
 	return name, nil
 }

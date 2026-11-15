@@ -125,3 +125,7 @@ RETURNING *;
 
 -- name: GroupExists :one
 SELECT EXISTS(SELECT 1 FROM study_groups WHERE id = $1);
+
+-- name: DeleteEmptyNotebook :exec
+-- A notebook row that says "not received" with no note carries no record.
+DELETE FROM group_notebooks WHERE group_id = $1 AND NOT is_received AND note = '';

@@ -301,3 +301,55 @@ func TestPublicUpdatedAtFollowsSubmissionChanges(t *testing.T) {
 		t.Fatalf("updatedAt after delete = %v, want %v", got, w.clk.now)
 	}
 }
+
+func TestDeleteGroupIgnoresAnEmptyNotebookRecord(t *testing.T) {
+	w := newWorld(t)
+	ctx := context.Background()
+
+	// Ticked then unticked, no note: nothing real is left, so delete works.
+	if _, err := w.s.SetNotebook(ctx, w.group.ID, progress.NotebookInput{Received: true}, w.actor); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := w.s.SetNotebook(ctx, w.group.ID, progress.NotebookInput{Received: false}, w.actor); err != nil {
+		t.Fatal(err)
+	}
+	if name, err := w.s.DeleteGroup(ctx, w.group.ID); err != nil || name != "Kelompok 1" {
+		t.Fatalf("delete group with an empty notebook row = %q, %v", name, err)
+	}
+	var n int
+	if err := w.pool.QueryRow(ctx, "select count(*) from group_notebooks").Scan(&n); err != nil || n != 0 {
+		t.Fatalf("notebook rows left = %d (%v)", n, err)
+	}
+
+	// A received notebook, or one with a note, is a real record: refuse.
+	c, err := w.s.Class(ctx, w.group.ClassID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, in := range []progress.NotebookInput{{Received: true}, {Received: false, Note: "belum lengkap"}} {
+		g := mustGroup(t, w.s, c.ID, topic(t, w.pool, "K2"), "Kelompok "+strings.Repeat("x", len(in.Note)+1), "", 0)
+		if _, err := w.s.SetNotebook(ctx, g.ID, in, w.actor); err != nil {
+			t.Fatal(err)
+		}
+		if _, err := w.s.DeleteGroup(ctx, g.ID); !errors.Is(err, progress.ErrInUse) {
+			t.Errorf("delete group with notebook %+v = %v, want ErrInUse", in, err)
+		}
+	}
+
+	// Rounds still block, and a refused delete keeps the empty notebook row.
+	g := mustGroup(t, w.s, c.ID, topic(t, w.pool, "K3"), "Kelompok Putaran", "", 0)
+	w.group = g
+	w.record(t, 0, ppt(w.clk.now.Add(-time.Hour)))
+	if _, err := w.s.SetNotebook(ctx, g.ID, progress.NotebookInput{Received: false}, w.actor); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := w.s.DeleteGroup(ctx, g.ID); !errors.Is(err, progress.ErrInUse) {
+		t.Errorf("delete group with a round = %v, want ErrInUse", err)
+	}
+	if err := w.pool.QueryRow(ctx, "select count(*) from group_notebooks where group_id = $1", g.ID).Scan(&n); err != nil || n != 1 {
+		t.Errorf("refused delete removed the notebook row (n=%d, %v)", n, err)
+	}
+	if _, err := w.s.DeleteGroup(ctx, 999999); !errors.Is(err, progress.ErrNotFound) {
+		t.Errorf("delete missing group = %v", err)
+	}
+}
