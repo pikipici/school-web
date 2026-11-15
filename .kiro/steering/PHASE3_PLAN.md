@@ -91,7 +91,7 @@ Mutasi admin: sesi + CSRF + Origin + audit. `PATCH` memakai `updatedAt` dan 409 
 | 3.2 **DONE** | Paket `progress`: validasi kelas/kelompok, nonaktif vs hapus, query publik aman | TDD + PostgreSQL nyata |
 | 3.3 **DONE** | API admin kelas/kelompok + API publik `progress`/`summary` + audit | TDD HTTP: 401/403/409/422; publik tanpa email (uji kunci JSON) |
 | 3.4 **DONE** | UI admin kelas/kelompok; `/progres/` memuat tabel, filter, cari, keadaan kosong/galat | klien API diuji; lint/typecheck/build |
-| 3.5 | Deploy + cek browser + `docs/F3A_ACCEPTANCE.md` (AC01, AC04 sebagian, AC18, AC20) | semua gerbang |
+| 3.5 **DONE (menunggu persetujuan tutup 3A)** | Deploy + cek browser + `docs/F3A_ACCEPTANCE.md` (AC01, AC04 sebagian, AC18, AC20) | semua gerbang |
 
 ### 3B — Pengumpulan dan buku tulis
 
@@ -172,3 +172,4 @@ Status rencana: **DISETUJUI 14 Nov 2026.**
   - Admin: menu admin (Dasbor / Kelas dan kelompok). `/admin/kelas/`: pilih tahun, jadikan aktif (konfirmasi), tambah tahun; daftar kelas dengan jumlah kelompok, ubah di baris, aktifkan/nonaktifkan, hapus hanya bila 0 kelompok (konfirmasi). `/admin/kelompok/?kelas=`: daftar, tambah (topik wajib, email opsional dengan tombol isi format juknis, urutan), ubah di baris, aktifkan/nonaktifkan, hapus (konfirmasi). Konflik dan "tidak ditemukan" memuat ulang daftar; sesi habis dialihkan ke login.
   - **E2E nyata di `cbt-vps`** (biner asli, database uji, klien frontend asli lewat Node): **4 kelas × 7 kelompok** dibuat lewat API; publik 28 baris semuanya `BELUM` dan **tanpa `email`/`@`**; nama ganda → `duplicate`; ubah basi → `conflict`; hapus kelas berisi → `in_use`; satu kelompok + kelas 9D dinonaktifkan → publik 20 baris, kelas 9A–9C; filter `9b` + "kelompok 7" → satu baris; ringkasan 20; halaman `/progres/`, `/admin/kelas/`, `/admin/kelompok/?kelas=1` 200. Database uji dibersihkan.
   - **Belum:** tampilan di browser nyata (360 px, zoom 200%, keyboard) — Task 3.5.
+- **Task 3.5 selesai (15 Nov 2026).** Deploy `0700f32` (rilis `20261114T223049Z-0700f3215c1b`, migrasi 8 setelah cadangan), cek Edge menemukan meluap 360 px dan kata terpotong; diperbaiki `eff11c6`, deploy ulang (rilis `20261115T002336Z-eff11c66953c`), diukur ulang lulus. Data uji `UJI` dibuat dan dihapus lewat UI; audit tercatat. Bukti dan pengecualian di `docs/F3A_ACCEPTANCE.md`. **3A siap ditutup, menunggu persetujuan user.**
