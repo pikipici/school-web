@@ -8,14 +8,25 @@ import {
   createGroup,
   createYear,
   deleteClass,
+  deleteRound,
+  draftFromRound,
+  fromWIBInput,
+  getNotebook,
   getPublicProgress,
   listClasses,
   listGroups,
+  listRounds,
   messageForProgress,
+  putNotebook,
+  recordRound,
+  roundLabel,
   suggestEmail,
+  suggestSubject,
+  toWIBInput,
   updateGroup,
   validateClass,
   validateGroup,
+  validateRound,
   validateYearLabel,
   type GroupDraft
 } from "./progress.ts";
@@ -188,5 +199,99 @@ describe("admin", () => {
     }) as typeof fetch;
     await assert.rejects(listClasses(null, undefined, { fetch: offline }), (e: unknown) => e instanceof ProgressError && e.kind === "network");
     assert.match(messageForProgress("in_use"), /Nonaktifkan/);
+  });
+});
+
+describe("submission rounds", () => {
+  const baseDraft = { receivedAt: "2026-11-15T08:30", senderEmail: "", subject: "", ppt: true, pdf: false, pptFilename: "", pdfFilename: "", note: "" };
+  const now = new Date("2026-11-15T03:00:00Z"); // 10.00 WIB
+  const wireRound = {
+    id: 5,
+    groupId: 7,
+    roundNumber: 0,
+    receivedAt: "2026-11-15T01:30:00Z",
+    senderEmail: null,
+    subject: "",
+    ppt: true,
+    pdf: false,
+    pptFilename: "",
+    pdfFilename: "",
+    note: "",
+    createdAt: T,
+    updatedAt: T
+  };
+
+  it("converts WIB wall-clock time both ways", () => {
+    assert.equal(toWIBInput("2026-11-15T01:30:00Z"), "2026-11-15T08:30");
+    assert.equal(toWIBInput("2026-11-14T20:00:00Z"), "2026-11-15T03:00");
+    assert.equal(fromWIBInput("2026-11-15T08:30"), "2026-11-15T08:30:00+07:00");
+    assert.equal(Date.parse(fromWIBInput("2026-11-15T08:30") ?? ""), Date.parse("2026-11-15T01:30:00Z"));
+    for (const bad of ["", "2026-11-15", "2026-02-30T08:00", "2026-11-15T25:00", "15/11/2026 08:30"]) assert.equal(fromWIBInput(bad), null, bad);
+  });
+
+  it("labels rounds and suggests the juknis subject", () => {
+    assert.equal(roundLabel(0), "Pengumpulan awal");
+    assert.equal(roundLabel(2), "Revisi 2");
+    assert.equal(suggestSubject(0, "9A", "Kelompok 1", "Struktur Data (Graf dan Tree)"), "Proyek Informatika IX - 9A - Kelompok 1 - Struktur Data");
+    assert.equal(suggestSubject(1, "9A", "Kelompok 1", "Blogspot"), "REVISI 1 - Proyek Informatika IX - 9A - Kelompok 1 - Blogspot");
+  });
+
+  it("validates like the server", () => {
+    assert.deepEqual(validateRound(baseDraft, now), {});
+    assert.deepEqual(validateRound({ ...baseDraft, receivedAt: "2026-11-15T10:04" }, now), {}, "small clock skew is fine");
+    assert.ok(validateRound({ ...baseDraft, receivedAt: "2026-11-15T11:00" }, now).receivedAt, "future");
+    assert.ok(validateRound({ ...baseDraft, receivedAt: "" }, now).receivedAt);
+    assert.ok(validateRound({ ...baseDraft, ppt: false }, now).files);
+    assert.ok(validateRound({ ...baseDraft, pdfFilename: "a.pdf" }, now).pdfFilename, "pdf name without pdf");
+    assert.ok(validateRound({ ...baseDraft, pptFilename: "dir/a.pptx" }, now).pptFilename);
+    assert.ok(validateRound({ ...baseDraft, senderEmail: "bukan" }, now).senderEmail);
+    assert.ok(validateRound({ ...baseDraft, subject: "a\nb" }, now).subject);
+    assert.ok(validateRound({ ...baseDraft, note: "é".repeat(2001) }, now).note);
+  });
+
+  it("records with the next number, WIB time as an instant, and CSRF", async () => {
+    const f = fakeFetch(() => json(201, { data: wireRound }));
+    const r = await recordRound(7, 0, { ...baseDraft, pdfFilename: "ignored" }, CSRF, { fetch: f.fetch }).catch((e) => e);
+    // pdfFilename without pdf is a validation error: nothing is sent.
+    assert.ok(r instanceof ProgressError && r.kind === "validation");
+    assert.equal(f.calls.length, 0);
+
+    await recordRound(7, 0, { ...baseDraft, receivedAt: "2026-11-14T08:30", senderEmail: " Kelompok1@Gmail.com ", pptFilename: " Graf.pptx " }, CSRF, { fetch: f.fetch });
+    const call = f.calls[0];
+    assert.equal(call.url, "/api/v1/admin/groups/7/submissions");
+    assert.equal(headers(call)["X-CSRF-Token"], CSRF);
+    assert.deepEqual(JSON.parse(String(call.init.body)), {
+      roundNumber: 0,
+      receivedAt: "2026-11-14T08:30:00+07:00",
+      senderEmail: "kelompok1@gmail.com",
+      subject: "",
+      ppt: true,
+      pdf: false,
+      pptFilename: "Graf.pptx",
+      pdfFilename: "",
+      note: ""
+    });
+  });
+
+  it("lists rounds with the computed lane and maps NOT_LAST_ROUND", async () => {
+    const f = fakeFetch(() => json(200, { data: { submission: "SEBAGIAN", rounds: [wireRound] } }));
+    const out = await listRounds(7, undefined, { fetch: f.fetch });
+    assert.equal(out.submission, "SEBAGIAN");
+    assert.equal(draftFromRound(out.rounds[0]).receivedAt, "2026-11-15T08:30");
+    const bad = fakeFetch(() => json(200, { data: { submission: "SELESAI", rounds: [] } }));
+    await assert.rejects(listRounds(7, undefined, { fetch: bad.fetch }), (e: unknown) => e instanceof ProgressError && e.kind === "server");
+    const busy = fakeFetch(() => json(409, errorBody("NOT_LAST_ROUND")));
+    await assert.rejects(deleteRound(5, CSRF, { fetch: busy.fetch }), (e: unknown) => e instanceof ProgressError && e.kind === "not_last");
+  });
+
+  it("notebook: rejects inconsistent replies; sends null time for 'now'", async () => {
+    const f = fakeFetch(() => json(200, { data: { received: true, receivedAt: T, note: "", updatedAt: T } }));
+    await putNotebook(7, { received: true, receivedAt: "", note: " biru " }, CSRF, { fetch: f.fetch });
+    assert.equal(f.calls[0].init.method, "PUT");
+    assert.deepEqual(JSON.parse(String(f.calls[0].init.body)), { received: true, receivedAt: null, note: "biru" });
+    await putNotebook(7, { received: false, receivedAt: "2026-11-15T08:30", note: "" }, CSRF, { fetch: f.fetch });
+    assert.deepEqual(JSON.parse(String(f.calls[1].init.body)), { received: false, receivedAt: null, note: "" });
+    const odd = fakeFetch(() => json(200, { data: { received: true, receivedAt: null, note: "", updatedAt: null } }));
+    await assert.rejects(getNotebook(7, undefined, { fetch: odd.fetch }), (e: unknown) => e instanceof ProgressError && e.kind === "server");
   });
 });

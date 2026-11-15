@@ -221,3 +221,10 @@ fieldset.form-field legend { margin-bottom: 6px; font-weight: 600; }
 .form-field input[type="text"], .form-field input[type="email"], .form-field input[type="number"] { width: 100%; min-width: 0; }
 .admin-row .inline-form { grid-column: 1 / -1; }
 .status-inactive { background: var(--surface-muted); color: var(--ink); }
+
+/* Pengumpulan dan buku tulis (Task 3.8) */
+.inline-form .form-span { grid-column: 1 / -1; }
+.field-hint.field-error { color: var(--danger); font-weight: 600; }
+.round-list .admin-row-meta + .admin-row-meta { margin-top: 4px; }
+.round-list .lane-chip { overflow-wrap: anywhere; }
+.form-field input[type="datetime-local"] { max-width: 100%; }

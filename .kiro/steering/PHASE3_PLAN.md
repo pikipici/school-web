@@ -99,7 +99,7 @@ Mutasi admin: sesi + CSRF + Origin + audit. `PATCH` memakai `updatedAt` dan 409 
 |---|---|---|
 | 3.6 **DONE** | Migrasi `submission_rounds`, `group_notebooks` | uji skema: unik `(group, round)`, minimal satu berkas per putaran |
 | 3.7 **DONE** | Status pengumpulan terhitung; catat/ubah/hapus putaran; buku tulis; audit dalam transaksi | TDD: AC02, AC03, AC08; klik ganda 409 |
-| 3.8 | UI admin "Catat Pengumpulan" + buku tulis di detail kelompok; publik menampilkan status | lint/typecheck/build + E2E |
+| 3.8 **DONE** | UI admin "Catat Pengumpulan" + buku tulis di detail kelompok; publik menampilkan status | lint/typecheck/build + E2E |
 | 3.9 | Deploy + cek browser + `docs/F3B_ACCEPTANCE.md` | semua gerbang |
 
 ### 3C — Pemeriksaan
@@ -188,3 +188,8 @@ Status rencana: **DISETUJUI 14 Nov 2026.**
   - HTTP: `GET/POST /groups/{id}/submissions`, `PATCH/DELETE /submissions/{id}` (409 `NOT_LAST_ROUND`), `GET/PUT /groups/{id}/notebook`; kelompok bercatatan tidak bisa dihapus (409 `IN_USE`). Publik tidak memuat email/subjek/catatan (diuji).
   - **Uji mutan:** audit ditulis di luar transaksi dengan galat diabaikan → uji atomik gagal; lajur dari putaran terakhir saja → uji AC08 gagal.
   - OpenAPI 0.6.0: 29 jalur, skema `SubmissionRound(Write)`, `GroupNotebook`; semua `$ref` terselesaikan.
+- **Task 3.8 selesai (15 Nov 2026).** Tes klien ditulis bersama kode, jadi **tidak ada RED ketat** yang diklaim. GREEN di `cbt-vps`: `npm ci`, **108 uji** Node (6 baru), lint 0 masalah, typecheck, build statis (rute baru `/admin/kelompok/detail/`).
+  - Klien: `getGroup`, `listRounds`, `recordRound`, `updateRound`, `deleteRound`, `getNotebook`, `putNotebook`; validasi putaran sama dengan Go; konversi waktu WIB untuk `datetime-local` (`toWIBInput`/`fromWIBInput`, tanggal mustahil ditolak); `roundLabel` ("Pengumpulan awal", "Revisi n"); saran subjek juknis (`REVISI 1 - Proyek Informatika IX - 9A - Kelompok 1 - Struktur Data`); kode `NOT_LAST_ROUND` jadi pesan tetap.
+  - UI `/admin/kelompok/detail/?id=` (tombol **Pengumpulan** di tiap baris kelompok): identitas kelompok, lajur Pengumpulan teks + ikon + warna, daftar putaran terbaru dulu (waktu WIB, PPT/PDF + nama berkas, pengirim, subjek, catatan guru), ubah di baris, hapus hanya putaran terakhir dengan konfirmasi; formulir **Catat Pengumpulan** dengan nomor berikutnya otomatis, waktu bawaan sekarang (WIB), pengirim bawaan email kelompok, tombol isi subjek juknis, centang PPT/PDF (nama berkas muncul hanya bila dicentang). Bagian **Buku tulis**: centang diterima + tanggal + catatan. Konflik, "bukan terakhir", dan "tidak ditemukan" memuat ulang data.
+  - **E2E nyata di `cbt-vps`** (biner asli, database uji, klien asli): BELUM → PPT saja SEBAGIAN (AC02) → PDF LENGKAP (AC03) → revisi PPT saja tetap LENGKAP (AC08); klik ganda `conflict`; hapus putaran pertama `not_last`; hapus terakhir; ubah putaran 0 tambah PDF; ubah basi `conflict`; buku tulis diterima → publik `SUDAH_DITERIMA`; hapus kelompok bercatatan `in_use`; publik tanpa email/catatan/nama berkas/subjek; halaman detail 200; audit 6 baris berurutan. Database uji dibersihkan.
+  - **Belum:** tampilan di browser nyata (360 px, keyboard, `datetime-local` di HP) — Task 3.9.

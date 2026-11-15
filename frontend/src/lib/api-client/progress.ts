@@ -92,6 +92,7 @@ export type ProgressErrorKind =
   | "conflict"
   | "duplicate"
   | "in_use"
+  | "not_last"
   | "reference"
   | "validation"
   | "invalid_request"
@@ -105,6 +106,7 @@ const MESSAGES: Record<ProgressErrorKind, string> = {
   conflict: "Data ini sudah diubah di tempat lain. Daftar dimuat ulang; periksa lalu ulangi.",
   duplicate: "Nama atau kode itu sudah dipakai (huruf besar/kecil dianggap sama).",
   in_use: "Masih punya data terkait, jadi tidak bisa dihapus. Nonaktifkan saja.",
+  not_last: "Hanya putaran terakhir yang bisa dihapus. Koreksi putaran lama lewat Ubah.",
   reference: "Tahun ajaran, kelas, atau topik yang dipilih tidak ada. Muat ulang halaman.",
   validation: "Isian belum sesuai aturan. Periksa lalu coba lagi.",
   invalid_request: "Permintaan tidak valid. Muat ulang halaman, lalu coba lagi.",
@@ -132,6 +134,7 @@ const CODE_TO_KIND: Record<string, ProgressErrorKind> = {
   CONFLICT: "conflict",
   DUPLICATE: "duplicate",
   IN_USE: "in_use",
+  NOT_LAST_ROUND: "not_last",
   INVALID_REFERENCE: "reference",
   VALIDATION_ERROR: "validation",
   INVALID_REQUEST: "invalid_request",
@@ -405,4 +408,196 @@ export async function deleteGroup(id: number, csrf: string, deps: ProgressDeps =
   requireId(id);
   const res = await write("DELETE", `/api/v1/admin/groups/${id}`, csrf, undefined, deps);
   if (res.status !== 204) throw errorFrom(res.status, res.body);
+}
+
+// ---- submissions and notebook (3B) -------------------------------------------
+
+export interface SubmissionRound {
+  id: number;
+  groupId: number;
+  roundNumber: number;
+  receivedAt: string;
+  senderEmail: string | null;
+  subject: string;
+  ppt: boolean;
+  pdf: boolean;
+  pptFilename: string;
+  pdfFilename: string;
+  note: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface RoundDraft {
+  /** Wall-clock time in WIB as typed in a datetime-local input: YYYY-MM-DDTHH:mm. */
+  receivedAt: string;
+  senderEmail: string;
+  subject: string;
+  ppt: boolean;
+  pdf: boolean;
+  pptFilename: string;
+  pdfFilename: string;
+  note: string;
+}
+
+export interface GroupNotebook {
+  received: boolean;
+  receivedAt: string | null;
+  note: string;
+  updatedAt: string | null;
+}
+
+export const ROUND_LIMITS = { subject: 300, fileName: 200, note: 2000, notebookNote: 1000 } as const;
+
+const WIB_OFFSET_MS = 7 * 60 * 60 * 1000;
+const LOCAL = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})$/;
+
+/** ISO instant -> "YYYY-MM-DDTHH:mm" in WIB, for a datetime-local input. */
+export function toWIBInput(iso: string | Date): string {
+  const d = new Date(new Date(iso).getTime() + WIB_OFFSET_MS);
+  return d.toISOString().slice(0, 16);
+}
+
+/** "YYYY-MM-DDTHH:mm" typed in WIB -> ISO instant with +07:00, or null if malformed. */
+export function fromWIBInput(local: string): string | null {
+  const m = LOCAL.exec(local.trim());
+  if (!m) return null;
+  const iso = `${m[1]}-${m[2]}-${m[3]}T${m[4]}:${m[5]}:00+07:00`;
+  const t = Date.parse(iso);
+  if (Number.isNaN(t) || toWIBInput(new Date(t)) !== local.trim()) return null;
+  return iso;
+}
+
+/** "Awal" for round 0, "Revisi n" afterwards. */
+export function roundLabel(n: number): string {
+  return n === 0 ? "Pengumpulan awal" : `Revisi ${n}`;
+}
+
+/** Suggested subject from the juknis, e.g. "REVISI 1 - Proyek Informatika IX - 9A - Kelompok 1 - Struktur Data". */
+export function suggestSubject(round: number, classCode: string, groupName: string, topicTitle: string): string {
+  const topic = topicTitle.replace(/\s*\(.*\)\s*$/, "").trim();
+  const base = `Proyek Informatika IX - ${classCode} - ${groupName} - ${topic}`;
+  return round === 0 ? base : `REVISI ${round} - ${base}`;
+}
+
+export type RoundErrors = Partial<Record<"receivedAt" | "files" | "pptFilename" | "pdfFilename" | "senderEmail" | "subject" | "note", string>>;
+
+const CONTROL = /[\u0000-\u001f\u007f]/;
+const badFileName = (s: string) => chars(s) > ROUND_LIMITS.fileName || CONTROL.test(s) || /[/\\]/.test(s);
+
+export function validateRound(d: RoundDraft, now: Date = new Date()): RoundErrors {
+  const e: RoundErrors = {};
+  const iso = fromWIBInput(d.receivedAt);
+  if (!iso) e.receivedAt = "Isi tanggal dan jam email diterima (WIB).";
+  else if (Date.parse(iso) > now.getTime() + 5 * 60 * 1000) e.receivedAt = "Waktu terima tidak boleh di masa depan.";
+  if (!d.ppt && !d.pdf) e.files = "Centang PPT, PDF, atau keduanya.";
+  if (!d.ppt && d.pptFilename.trim() !== "") e.pptFilename = "Kosongkan nama berkas PPT, atau centang PPT.";
+  else if (badFileName(d.pptFilename.trim())) e.pptFilename = "Nama berkas paling banyak 200 karakter, tanpa / atau \\.";
+  if (!d.pdf && d.pdfFilename.trim() !== "") e.pdfFilename = "Kosongkan nama berkas PDF, atau centang PDF.";
+  else if (badFileName(d.pdfFilename.trim())) e.pdfFilename = "Nama berkas paling banyak 200 karakter, tanpa / atau \\.";
+  const sender = d.senderEmail.trim().toLowerCase();
+  if (sender !== "" && (sender.length > PROGRESS_LIMITS.email || !EMAIL.test(sender))) e.senderEmail = "Alamat pengirim tidak valid.";
+  const subject = d.subject.trim();
+  if (chars(subject) > ROUND_LIMITS.subject || CONTROL.test(subject)) e.subject = "Subjek paling banyak 300 karakter, satu baris.";
+  if (chars(d.note.trim()) > ROUND_LIMITS.note) e.note = "Catatan paling banyak 2.000 karakter.";
+  return e;
+}
+
+function parseRound(v: unknown): SubmissionRound | null {
+  if (!isRecord(v) || !isInt(v.id, 1) || !isInt(v.groupId, 1) || !isInt(v.roundNumber, 0) || !isDate(v.receivedAt)) return null;
+  if (!(v.senderEmail === null || isStr(v.senderEmail)) || !isStr(v.subject) || typeof v.ppt !== "boolean" || typeof v.pdf !== "boolean") return null;
+  if (!isStr(v.pptFilename) || !isStr(v.pdfFilename) || !isStr(v.note) || !isDate(v.createdAt) || !isDate(v.updatedAt)) return null;
+  return {
+    id: v.id,
+    groupId: v.groupId,
+    roundNumber: v.roundNumber,
+    receivedAt: v.receivedAt,
+    senderEmail: v.senderEmail,
+    subject: v.subject,
+    ppt: v.ppt,
+    pdf: v.pdf,
+    pptFilename: v.pptFilename,
+    pdfFilename: v.pdfFilename,
+    note: v.note,
+    createdAt: v.createdAt,
+    updatedAt: v.updatedAt
+  };
+}
+
+function parseNotebook(v: unknown): GroupNotebook | null {
+  if (!isRecord(v) || typeof v.received !== "boolean" || !isStr(v.note)) return null;
+  if (!(v.receivedAt === null || isDate(v.receivedAt)) || !(v.updatedAt === null || isDate(v.updatedAt))) return null;
+  if (v.received !== (v.receivedAt !== null)) return null;
+  return { received: v.received, receivedAt: v.receivedAt, note: v.note, updatedAt: v.updatedAt };
+}
+
+const roundBody = (d: RoundDraft) => ({
+  receivedAt: fromWIBInput(d.receivedAt),
+  senderEmail: d.senderEmail.trim().toLowerCase(),
+  subject: d.subject.trim(),
+  ppt: d.ppt,
+  pdf: d.pdf,
+  pptFilename: d.ppt ? d.pptFilename.trim() : "",
+  pdfFilename: d.pdf ? d.pdfFilename.trim() : "",
+  note: d.note.trim()
+});
+
+export const draftFromRound = (r: SubmissionRound): RoundDraft => ({
+  receivedAt: toWIBInput(r.receivedAt),
+  senderEmail: r.senderEmail ?? "",
+  subject: r.subject,
+  ppt: r.ppt,
+  pdf: r.pdf,
+  pptFilename: r.pptFilename,
+  pdfFilename: r.pdfFilename,
+  note: r.note
+});
+
+export async function getGroup(id: number, signal?: AbortSignal, deps: ProgressDeps = {}): Promise<StudyGroup> {
+  requireId(id);
+  return data(await get(`/api/v1/admin/groups/${id}`, signal, deps), 200, parseGroup);
+}
+
+export async function listRounds(groupId: number, signal?: AbortSignal, deps: ProgressDeps = {}): Promise<{ submission: Submission; rounds: SubmissionRound[] }> {
+  requireId(groupId);
+  return data(await get(`/api/v1/admin/groups/${groupId}/submissions`, signal, deps), 200, (v) => {
+    if (!isRecord(v) || !oneOf(v.submission, SUBMISSIONS)) return null;
+    const rounds = list(parseRound)(v.rounds);
+    return rounds ? { submission: v.submission, rounds } : null;
+  });
+}
+
+export async function recordRound(groupId: number, roundNumber: number, d: RoundDraft, csrf: string, deps: ProgressDeps = {}): Promise<SubmissionRound> {
+  requireId(groupId);
+  if (!isInt(roundNumber, 0) || Object.keys(validateRound(d)).length) throw new ProgressError("validation");
+  return data(await write("POST", `/api/v1/admin/groups/${groupId}/submissions`, csrf, { roundNumber, ...roundBody(d) }, deps), 201, parseRound);
+}
+
+export async function updateRound(id: number, d: RoundDraft, updatedAt: string, csrf: string, deps: ProgressDeps = {}): Promise<SubmissionRound> {
+  requireId(id);
+  if (Object.keys(validateRound(d)).length) throw new ProgressError("validation");
+  return data(await write("PATCH", `/api/v1/admin/submissions/${id}`, csrf, { ...roundBody(d), updatedAt }, deps), 200, parseRound);
+}
+
+export async function deleteRound(id: number, csrf: string, deps: ProgressDeps = {}): Promise<void> {
+  requireId(id);
+  const res = await write("DELETE", `/api/v1/admin/submissions/${id}`, csrf, undefined, deps);
+  if (res.status !== 204) throw errorFrom(res.status, res.body);
+}
+
+export async function getNotebook(groupId: number, signal?: AbortSignal, deps: ProgressDeps = {}): Promise<GroupNotebook> {
+  requireId(groupId);
+  return data(await get(`/api/v1/admin/groups/${groupId}/notebook`, signal, deps), 200, parseNotebook);
+}
+
+export async function putNotebook(
+  groupId: number,
+  d: { received: boolean; receivedAt: string; note: string },
+  csrf: string,
+  deps: ProgressDeps = {}
+): Promise<GroupNotebook> {
+  requireId(groupId);
+  const at = d.received && d.receivedAt.trim() !== "" ? fromWIBInput(d.receivedAt) : null;
+  if ((d.received && d.receivedAt.trim() !== "" && !at) || chars(d.note.trim()) > ROUND_LIMITS.notebookNote) throw new ProgressError("validation");
+  return data(await write("PUT", `/api/v1/admin/groups/${groupId}/notebook`, csrf, { received: d.received, receivedAt: at, note: d.note.trim() }, deps), 200, parseNotebook);
 }

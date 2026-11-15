@@ -292,6 +292,9 @@ function Manager({ classId, csrf, onExpired }: { classId: number; csrf: string; 
                   </div>
                 ) : (
                   <div className="admin-row-actions">
+                    <Link className="button-primary" href={`/admin/kelompok/detail/?id=${g.id}`}>
+                      Pengumpulan<span className="visually-hidden"> {g.name}</span>
+                    </Link>
                     <button className="button-secondary" type="button" disabled={busy} onClick={() => { setEditId(g.id); setEdit(draftOf(g)); setEditErrors({}); }}>
                       Ubah<span className="visually-hidden"> {g.name}</span>
                     </button>
