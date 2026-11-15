@@ -100,7 +100,7 @@ Mutasi admin: sesi + CSRF + Origin + audit. `PATCH` memakai `updatedAt` dan 409 
 | 3.6 **DONE** | Migrasi `submission_rounds`, `group_notebooks` | uji skema: unik `(group, round)`, minimal satu berkas per putaran |
 | 3.7 **DONE** | Status pengumpulan terhitung; catat/ubah/hapus putaran; buku tulis; audit dalam transaksi | TDD: AC02, AC03, AC08; klik ganda 409 |
 | 3.8 **DONE** | UI admin "Catat Pengumpulan" + buku tulis di detail kelompok; publik menampilkan status | lint/typecheck/build + E2E |
-| 3.9 | Deploy + cek browser + `docs/F3B_ACCEPTANCE.md` | semua gerbang |
+| 3.9 **DONE (menunggu persetujuan tutup 3B)** | Deploy + cek browser + `docs/F3B_ACCEPTANCE.md` | semua gerbang |
 
 ### 3C — Pemeriksaan
 

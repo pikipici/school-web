@@ -7,13 +7,13 @@
 ## Ringkasan
 
 - Fase aktif: **Fase 3B — Pengumpulan dan buku tulis** (rencana Fase 3 disetujui 14 Nov 2026). Fase 0, 1, 2A, 2B, dan **3A** sudah ditutup.
-- Progress Fase 2A: **8/8 selesai** (ditutup dengan pengecualian). Fase 2B (lampiran): **7/7** (2.9–2.15), **ditutup 14 Nov 2026 dengan pengecualian**. Fase 3: **8/17** — 3A (3.1–3.5) **ditutup 15 Nov 2026 dengan pengecualian**; 3B berjalan (3.6–3.8).
-- Task terakhir selesai: **3.8 — UI catat pengumpulan dan buku tulis** (belum di produksi)
-- Next task: **3.9 — deploy 3B (migrasi 9), cek browser, `docs/F3B_ACCEPTANCE.md`** (butuh push + izin deploy). Daftar revisi desain: paginasi 360px turun baris; judul "Lampiran" publik; zoom 200% halaman progres belum dicek.
+- Progress Fase 2A: **8/8 selesai** (ditutup dengan pengecualian). Fase 2B (lampiran): **7/7** (2.9–2.15), **ditutup 14 Nov 2026 dengan pengecualian**. Fase 3: **9/17** — 3A ditutup 15 Nov 2026; 3B (3.6–3.9) di produksi, menunggu persetujuan tutup.
+- Task terakhir selesai: **3.9 — deploy 3B + cek browser** (`docs/F3B_ACCEPTANCE.md`); 3B menunggu persetujuan tutup
+- Next task: **perbaikan hapus kelompok dengan buku tulis kosong**, lalu tutup 3B dan mulai 3C.
 - Semua perbaikan gaya tautan sudah di produksi.
-- Local branch: `main`; semua commit sampai `f660abc` sudah di `origin`/`server`. Produksi masih `eff11c6` (3B belum dideploy).
+- Local branch: `main`; produksi rilis `20261115T122908Z-f660abcc6378` (kode `f660abc`, migrasi 9). Commit dokumen sesudahnya belum di-push.
 - Produksi: **`https://fikriramaaulia.online`** aktif (Caddy + Let's Encrypt, berlaku s.d. 2027-02-11)
-- Rilis produksi: `20261115T002336Z-eff11c66953c` (kode `eff11c6`), migrasi versi **8**. Pengumuman, Materi, dan lampiran (unggah admin + unduh publik) aktif di produksi.
+- Rilis produksi: `20261115T122908Z-f660abcc6378` (kode `f660abc`), migrasi versi **9**. Pengumuman, Materi, dan lampiran (unggah admin + unduh publik) aktif di produksi.
 - PostgreSQL aplikasi: aktif, readiness PASS
 - Admin: satu akun `fikri`; login dan logout lewat browser terbukti di audit
 
@@ -27,7 +27,7 @@
 | Hardening | HSTS 1 hari + CSP `enforce` | DONE, aktif di produksi | bagian Current Next Step |
 | 2A | Pengumuman + Materi teks | DITUTUP 14 Nov 2026 (dengan pengecualian) | `.kiro/steering/PHASE2_PLAN.md` |
 | 2B | Lampiran PDF/PPT/PPTX | DITUTUP 14 Nov 2026 (dengan pengecualian) | `.kiro/steering/PHASE2_PLAN.md` |
-| 3 | Progres Tugas Kelompok (3A kelas/kelompok, 3B pengumpulan, 3C pemeriksaan, 3D portal) | DISETUJUI 14 Nov 2026; **3A DITUTUP 15 Nov 2026** (dengan pengecualian); 3B berjalan (8/17) | `.kiro/steering/PHASE3_PLAN.md`, `docs/F3A_ACCEPTANCE.md` |
+| 3 | Progres Tugas Kelompok (3A kelas/kelompok, 3B pengumpulan, 3C pemeriksaan, 3D portal) | DISETUJUI 14 Nov 2026; **3A DITUTUP 15 Nov 2026** (dengan pengecualian); 3B selesai dikerjakan (9/17), menunggu persetujuan tutup | `.kiro/steering/PHASE3_PLAN.md`, `docs/F3A_ACCEPTANCE.md` |
 
 ## Fase 2A Tracker
 
@@ -77,7 +77,7 @@ Pengecualian 3A: zoom 200% belum dicek; lebar 700 dan 1000 px tidak terukur; bel
 | 3.6 | Migrasi `submission_rounds`, `group_notebooks` | DONE | `ca7cd57` | RED 7 uji skema; minimal satu berkas, nomor urut tanpa lompat, unik per kelompok, kelompok bercatatan tidak bisa dihapus; konkurensi 10 → 1 (3×); 2 mutan tertangkap. Kunci `FOR UPDATE` trigger tidak dibuktikan uji |
 | 3.7 | Lajur terhitung; catat/ubah/hapus putaran; buku tulis; audit dalam transaksi | DONE | `6e26777` | RED build; 6 uji paket + 2 uji HTTP: AC02/AC03/AC08, klik ganda 409, `NOT_LAST_ROUND`, `IN_USE`; audit gagal → perubahan batal; 2 mutan tertangkap; OpenAPI 0.6.0 |
 | 3.8 | UI Catat Pengumpulan + buku tulis | DONE | `f660abc` | 108 uji frontend (tanpa RED ketat), lint 0, typecheck, build; E2E nyata AC02/AC03/AC08, konflik, `not_last`, `in_use`, publik tanpa data privat, audit 6 baris |
-| 3.9 | Deploy + cek browser + `docs/F3B_ACCEPTANCE.md` | PENDING | — | Butuh izin deploy (migrasi 9) |
+| 3.9 | Deploy + cek browser + `docs/F3B_ACCEPTANCE.md` | DONE (menunggu persetujuan tutup) | — | Rilis `20261115T122908Z-f660abcc6378`, migrasi 9 setelah cadangan; Edge produksi: catat PPT → PDF → Lengkap, validasi tanpa berkas, buku tulis, hapus berurutan, publik tanpa data privat, audit 8 baris. Temuan: kelompok tak bisa dihapus setelah buku tulis pernah disimpan (kelas `UJI` dinonaktifkan) |
 
 ## Sources of Truth
 
@@ -493,11 +493,11 @@ The remote deploy command passed Go test/vet/build, `sqlc generate`, frontend `n
 
 ## Current Next Step
 
-Fase 3B sudah dikerjakan sampai 3.8 (kode, uji, E2E); belum di produksi. Saat dilanjutkan:
+Fase 3B (3.6–3.9) di produksi, menunggu persetujuan tutup (`docs/F3B_ACCEPTANCE.md`). Saat dilanjutkan:
 
-1. Task 3.9 — deploy 3B (migrasi 9 + kolom `study_groups.progress_updated_at`; cadangan otomatis sebelum migrasi), cek Edge (360 px, keyboard, `datetime-local` di HP), `docs/F3B_ACCEPTANCE.md`. Butuh izin deploy.
-2. Lalu 3C (pemeriksaan dan temuan) sesuai `.kiro/steering/PHASE3_PLAN.md`.
-3. Opsional: zoom 200% `/progres/`; `.ppt` asli dan unggahan besar untuk pengecualian 2B.
+1. Perbaikan kecil: hapus kelompok harus membuang baris buku tulis kosong (belum diterima, tanpa catatan) lebih dulu; lalu hapus kelas `UJI` + Kelompok 1 (id 4) yang tertinggal nonaktif di produksi.
+2. Tutup 3B, lalu 3C (pemeriksaan dan temuan) sesuai `.kiro/steering/PHASE3_PLAN.md`.
+3. Opsional: zoom 200% `/progres/`; 360 px halaman detail kelompok; `.ppt` asli dan unggahan besar untuk pengecualian 2B.
 
 Selesai 15 Nov 2026 (Fase 3B, belum di produksi):
 
