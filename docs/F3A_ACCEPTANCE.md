@@ -1,7 +1,7 @@
 # Fase 3A — Kelas, Kelompok, Tabel Publik: Acceptance
 
 > Tanggal: 15 November 2026. Produksi: [fikriramaaulia.online](https://fikriramaaulia.online), rilis `20261115T002336Z-eff11c66953c` (kode `eff11c6`), migrasi versi 8.
-> Status: **SIAP DITUTUP dengan pengecualian.** Penutupan menunggu persetujuan user.
+> Status: **DITUTUP 15 Nov 2026 dengan pengecualian** atas persetujuan user.
 
 ## Gerbang
 

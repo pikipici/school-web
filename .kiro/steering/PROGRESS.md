@@ -6,12 +6,12 @@
 
 ## Ringkasan
 
-- Fase aktif: **Fase 3A — Kelas, kelompok, tabel publik** (rencana Fase 3 disetujui 14 Nov 2026). Fase 0, 1, 2A, dan 2B sudah ditutup.
-- Progress Fase 2A: **8/8 selesai** (ditutup dengan pengecualian). Fase 2B (lampiran): **7/7** (2.9–2.15), **ditutup 14 Nov 2026 dengan pengecualian**.
-- Task terakhir selesai: **3.5 — deploy 3A + cek browser** (`docs/F3A_ACCEPTANCE.md`); 3A menunggu persetujuan tutup
-- Next task: **persetujuan tutup 3A**, lalu **3.6 — migrasi `submission_rounds`, `group_notebooks`**. Daftar revisi desain: tampilan admin di 360px sudah diukur untuk editor materi; paginasi 360px turun baris; judul "Lampiran" publik.
+- Fase aktif: **Fase 3B — Pengumpulan dan buku tulis** (rencana Fase 3 disetujui 14 Nov 2026). Fase 0, 1, 2A, 2B, dan **3A** sudah ditutup.
+- Progress Fase 2A: **8/8 selesai** (ditutup dengan pengecualian). Fase 2B (lampiran): **7/7** (2.9–2.15), **ditutup 14 Nov 2026 dengan pengecualian**. Fase 3: **5/17** — 3A (3.1–3.5) **ditutup 15 Nov 2026 dengan pengecualian**.
+- Task terakhir selesai: **3.5 — deploy 3A + cek browser** (`docs/F3A_ACCEPTANCE.md`)
+- Next task: **3.6 — migrasi `submission_rounds`, `group_notebooks`**. Daftar revisi desain: paginasi 360px turun baris; judul "Lampiran" publik; zoom 200% halaman progres belum dicek.
 - Semua perbaikan gaya tautan sudah di produksi.
-- Local branch: `main`; semua commit sampai `d3918f3` sudah di `origin`/`server` (yang dideploy). Commit dokumen `490c6b3`, `3e46e2e`, `2f9ba59`, dan pembaruan ini belum di-push (user yang push).
+- Local branch: `main`; semua commit sampai `eff11c6` sudah di `origin`/`server` (yang dideploy). Commit dokumen `61ed793` dan penutupan 3A belum di-push (user yang push).
 - Produksi: **`https://fikriramaaulia.online`** aktif (Caddy + Let's Encrypt, berlaku s.d. 2027-02-11)
 - Rilis produksi: `20261115T002336Z-eff11c66953c` (kode `eff11c6`), migrasi versi **8**. Pengumuman, Materi, dan lampiran (unggah admin + unduh publik) aktif di produksi.
 - PostgreSQL aplikasi: aktif, readiness PASS
@@ -27,7 +27,7 @@
 | Hardening | HSTS 1 hari + CSP `enforce` | DONE, aktif di produksi | bagian Current Next Step |
 | 2A | Pengumuman + Materi teks | DITUTUP 14 Nov 2026 (dengan pengecualian) | `.kiro/steering/PHASE2_PLAN.md` |
 | 2B | Lampiran PDF/PPT/PPTX | DITUTUP 14 Nov 2026 (dengan pengecualian) | `.kiro/steering/PHASE2_PLAN.md` |
-| 3 | Progres Tugas Kelompok (3A kelas/kelompok, 3B pengumpulan, 3C pemeriksaan, 3D portal) | DISETUJUI 14 Nov 2026; 3A selesai dikerjakan (5/17), menunggu persetujuan tutup | `.kiro/steering/PHASE3_PLAN.md` |
+| 3 | Progres Tugas Kelompok (3A kelas/kelompok, 3B pengumpulan, 3C pemeriksaan, 3D portal) | DISETUJUI 14 Nov 2026; **3A DITUTUP 15 Nov 2026** (dengan pengecualian); 3B berikutnya (5/17) | `.kiro/steering/PHASE3_PLAN.md`, `docs/F3A_ACCEPTANCE.md` |
 
 ## Fase 2A Tracker
 
@@ -57,6 +57,18 @@ Keputusan Fase 2 (disetujui user 13 Nov 2026): dibagi 2A lalu 2B; isi teks biasa
 | 2.15 | Deploy, cek browser, `docs/F2B_ACCEPTANCE.md` | DONE | `490c6b3`, `3e46e2e` | Rilis `20261114T075621Z-d3918f34507a`; Edge produksi: unggah PDF + PPTX asli, palsu ditolak, draf 404, unduhan identik SHA-256, hapus bersih, 360px OK, audit lengkap; latihan pulih snapshot lulus |
 
 Pengecualian 2B: `.ppt` asli belum diuji; unggahan besar (20–25 MB), bilah progres, dan tombol Batalkan belum terlihat; keyboard/zoom 200% bagian Lampiran belum dicek; tanpa antivirus; snapshot di disk yang sama.
+
+## Fase 3A Tracker
+
+| Task | Scope | Status | Commit | Verification |
+|---|---|---|---|---|
+| 3.1 | Migrasi `academic_years` (+ seed 2026/2027), `classes`, `study_groups` | DONE | `db4c8f2` | RED 5 uji skema; satu tahun aktif, unik tanpa beda huruf, topik wajib, tanpa nama anggota; `down-to 7` bersih; 2 mutan tertangkap |
+| 3.2 | Paket `progress`: validasi, nonaktif vs hapus, tabel publik aman | DONE | `2e4d50d` | RED `no non-test Go files`; 6 uji PostgreSQL nyata; kunci JSON publik persis; 3 mutan (filter aktif, tahun aktif, email bocor) tertangkap |
+| 3.3 | API admin tahun/kelas/kelompok + API publik `progress`/`summary` + audit | DONE | `3a72265` | RED build; 3 uji HTTP: 401/403/409/422/404, audit tanpa email, filter status; 2 mutan tertangkap; OpenAPI 0.5.0 |
+| 3.4 | UI `/admin/kelas/`, `/admin/kelompok/`, tabel `/progres/` | DONE | `0700f32` | 102 uji frontend (tanpa RED ketat), lint 0, typecheck, build; E2E 4 kelas × 7 kelompok tanpa email |
+| 3.5 | Deploy + cek browser + `docs/F3A_ACCEPTANCE.md` | DONE | `eff11c6`, `61ed793` | Migrasi 8 setelah cadangan; Edge menemukan meluap 360 px dan kata terpotong → diperbaiki dan dideploy ulang (rilis `20261115T002336Z-eff11c66953c`); keyboard + saring OK; data uji dihapus; audit 6 baris |
+
+Pengecualian 3A: zoom 200% belum dicek; lebar 700 dan 1000 px tidak terukur; belum ada uji komponen UI; audit masih fail-open; validator OpenAPI tidak dijalankan; tambah tahun ajaran baru belum dicoba di produksi. **Ditutup 15 Nov 2026 atas persetujuan user.**
 
 ## Sources of Truth
 
@@ -386,7 +398,7 @@ Caddy:   2.11.9
 
 Current provisioning state:
 
-- Database `informatika_monitoring` (versi migrasi **7**) dan role aplikasi non-superuser: PRESENT
+- Database `informatika_monitoring` (versi migrasi **8**) dan role aplikasi non-superuser: PRESENT; tabel progres kosong (0 kelas, 0 kelompok) setelah data uji dihapus
 - Database uji `informatika_monitoring_test` + role sendiri (tanpa akses produksi): PRESENT; kredensial `/home/ubuntu/.informatika-monitoring-test.env` (0600)
 - `.env` produksi (0600, `ubuntu`): `APP_ADDR`, `PUBLIC_DIR`, `DATABASE_URL`, `ADMIN_COOKIE_SECURE=true`, `CSP_MODE=enforce`, `ATTACHMENTS_DIR=/home/ubuntu/informatika-monitoring-data/attachments`
 - Direktori lampiran `/home/ubuntu/informatika-monitoring-data/attachments` (0750, `ubuntu`, di luar rilis): 0 berkas setelah uji dibersihkan
@@ -399,19 +411,23 @@ Current provisioning state:
 
 ## Current Backend Contract
 
-Di produksi (`docs/openapi.yaml` 0.4.0, 19 jalur):
+Di produksi (`docs/openapi.yaml` 0.5.0, 26 jalur):
 
-- `GET /healthz`, `GET /readyz`, `GET /api/v1/public/summary` (zero state).
+- `GET /healthz`, `GET /readyz`.
+- `GET /api/v1/public/summary` — angka nyata (`totalGroups`, `none`, `partial`, `full`, `complete`, `manualUpdate`, `updatedAt`).
+- `GET /api/v1/public/progress` — tahun aktif, kelas dan kelompok aktif, tanpa email; filter `class`, `q`, `status`.
 - Auth admin: login, logout, me — sesi server-side, cookie `__Host-admin_session`, CSRF + Origin, pembatas percobaan, audit.
 - Publik baca-saja (hanya terbit): Pengumuman, Topik, Materi, daftar lampiran materi, unduh lampiran.
 - Admin: CRUD Pengumuman/Materi (konflik 409, audit); lampiran Materi unggah (maks 25 MiB, 5 per materi, kuota 2 GiB), daftar, hapus; hapus materi ikut menghapus berkasnya.
-- Frontend: Beranda, daftar/detail Pengumuman dan Materi (dengan tautan unduh), dasbor admin dan editor dengan bagian Lampiran.
+- Admin: tahun ajaran (tambah, aktifkan), kelas dan kelompok (CRUD, nonaktifkan, pindah kelas), audit `progress.*` tanpa email.
+- Frontend: Beranda, daftar/detail Pengumuman dan Materi (dengan tautan unduh), `/progres/` dengan tabel nyata, dasbor admin, editor dengan bagian Lampiran, `/admin/kelas/`, `/admin/kelompok/`.
 - Go menyajikan ekspor statis Next.js dengan Content-Security-Policy berbasis hash per halaman.
 - CLI server `bin/current/adminctl` (`create-admin`, `reset-password`).
 
 Belum ada:
 
-- Kelas, kelompok, pengumpulan, evaluasi, portal kelompok.
+- Pengumpulan PPT/PDF dan buku tulis (3B), pemeriksaan dan temuan (3C), portal kelompok dengan kode akses (3D).
+- Tanya jawab antarkelompok, rekap, CSV (Fase 4).
 - 2FA admin.
 
 ## Safety and Scope Status
@@ -426,7 +442,7 @@ Tetap berlaku:
 
 ## Blockers / Pending External Decisions
 
-1. Fase 2B ditutup 14 Nov 2026; pengecualian di `docs/F2B_ACCEPTANCE.md`. Fase berikutnya belum direncanakan.
+1. Fase 3A ditutup 15 Nov 2026; pengecualian di `docs/F3A_ACCEPTANCE.md`. 3B siap dimulai; tidak ada blocker.
 2. Berkas `.ppt` asli untuk uji perlu disediakan user.
 3. Docker tidak tersedia di `cbt-vps`; uji integrasi memakai database uji PostgreSQL lokal.
 4. 7 advisory npm moderate (alat dev saja) masih terbuka sejak Fase 0.
@@ -461,11 +477,21 @@ The remote deploy command passed Go test/vet/build, `sqlc generate`, frontend `n
 
 ## Current Next Step
 
-Fase 2B ditutup 14 Nov 2026 dengan pengecualian dan aktif di produksi. Saat dilanjutkan:
+Fase 3A ditutup 15 Nov 2026 dengan pengecualian dan aktif di produksi. Saat dilanjutkan:
 
 1. User push commit dokumen yang belum ada di `origin`/`server`.
-2. Opsional: uji `.ppt` asli dan unggahan besar (20–25 MB, progres, Batalkan) untuk menghapus pengecualian 2B.
-3. Rencana fase berikutnya (modul Progres Tugas Kelompok atau revisi desain), dengan persetujuan user.
+2. Task 3.6 — migrasi `submission_rounds` dan `group_notebooks` (uji skema dulu), lalu 3.7–3.9 sesuai `.kiro/steering/PHASE3_PLAN.md`. Audit untuk catat putaran direncanakan di dalam transaksi yang sama.
+3. Opsional: zoom 200% `/progres/`; `.ppt` asli dan unggahan besar untuk pengecualian 2B.
+
+Selesai 15 Nov 2026 (Fase 3A):
+
+- 3.1–3.3: migrasi 8 (tahun ajaran, kelas, kelompok), paket `progress`, API admin + publik — TDD di `cbt-vps` dengan uji mutan.
+- 3.4: UI admin kelas/kelompok dan tabel `/progres/`.
+- 3.5: deploy, cek Edge, perbaikan tampilan 360 px, deploy ulang, `docs/F3A_ACCEPTANCE.md`; ditutup atas persetujuan user.
+
+Selesai 14 Nov 2026 (Fase 2B dan rencana Fase 3):
+
+- Fase 2B ditutup dengan pengecualian; rencana Fase 3 (`PHASE3_PLAN.md`) disetujui dengan semua rekomendasi.
 
 Selesai 14 Nov 2026 (Fase 2B):
 
