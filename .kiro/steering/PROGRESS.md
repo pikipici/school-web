@@ -7,9 +7,9 @@
 ## Ringkasan
 
 - Fase aktif: **Fase 3B — Pengumpulan dan buku tulis** (rencana Fase 3 disetujui 14 Nov 2026). Fase 0, 1, 2A, 2B, dan **3A** sudah ditutup.
-- Progress Fase 2A: **8/8 selesai** (ditutup dengan pengecualian). Fase 2B (lampiran): **7/7** (2.9–2.15), **ditutup 14 Nov 2026 dengan pengecualian**. Fase 3: **5/17** — 3A (3.1–3.5) **ditutup 15 Nov 2026 dengan pengecualian**.
-- Task terakhir selesai: **3.5 — deploy 3A + cek browser** (`docs/F3A_ACCEPTANCE.md`)
-- Next task: **3.6 — migrasi `submission_rounds`, `group_notebooks`**. Daftar revisi desain: paginasi 360px turun baris; judul "Lampiran" publik; zoom 200% halaman progres belum dicek.
+- Progress Fase 2A: **8/8 selesai** (ditutup dengan pengecualian). Fase 2B (lampiran): **7/7** (2.9–2.15), **ditutup 14 Nov 2026 dengan pengecualian**. Fase 3: **6/17** — 3A (3.1–3.5) **ditutup 15 Nov 2026 dengan pengecualian**; 3B berjalan (3.6).
+- Task terakhir selesai: **3.6 — migrasi `submission_rounds`, `group_notebooks`** (belum di produksi)
+- Next task: **3.7 — status pengumpulan terhitung; catat/ubah/hapus putaran; buku tulis; audit dalam transaksi**. Daftar revisi desain: paginasi 360px turun baris; judul "Lampiran" publik; zoom 200% halaman progres belum dicek.
 - Semua perbaikan gaya tautan sudah di produksi.
 - Local branch: `main`; semua commit sampai `eff11c6` sudah di `origin`/`server` (yang dideploy). Commit dokumen `61ed793` dan penutupan 3A belum di-push (user yang push).
 - Produksi: **`https://fikriramaaulia.online`** aktif (Caddy + Let's Encrypt, berlaku s.d. 2027-02-11)
@@ -27,7 +27,7 @@
 | Hardening | HSTS 1 hari + CSP `enforce` | DONE, aktif di produksi | bagian Current Next Step |
 | 2A | Pengumuman + Materi teks | DITUTUP 14 Nov 2026 (dengan pengecualian) | `.kiro/steering/PHASE2_PLAN.md` |
 | 2B | Lampiran PDF/PPT/PPTX | DITUTUP 14 Nov 2026 (dengan pengecualian) | `.kiro/steering/PHASE2_PLAN.md` |
-| 3 | Progres Tugas Kelompok (3A kelas/kelompok, 3B pengumpulan, 3C pemeriksaan, 3D portal) | DISETUJUI 14 Nov 2026; **3A DITUTUP 15 Nov 2026** (dengan pengecualian); 3B berikutnya (5/17) | `.kiro/steering/PHASE3_PLAN.md`, `docs/F3A_ACCEPTANCE.md` |
+| 3 | Progres Tugas Kelompok (3A kelas/kelompok, 3B pengumpulan, 3C pemeriksaan, 3D portal) | DISETUJUI 14 Nov 2026; **3A DITUTUP 15 Nov 2026** (dengan pengecualian); 3B berjalan (6/17) | `.kiro/steering/PHASE3_PLAN.md`, `docs/F3A_ACCEPTANCE.md` |
 
 ## Fase 2A Tracker
 

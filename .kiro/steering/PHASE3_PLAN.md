@@ -97,7 +97,7 @@ Mutasi admin: sesi + CSRF + Origin + audit. `PATCH` memakai `updatedAt` dan 409 
 
 | Task | Isi | Uji |
 |---|---|---|
-| 3.6 | Migrasi `submission_rounds`, `group_notebooks` | uji skema: unik `(group, round)`, minimal satu berkas per putaran |
+| 3.6 **DONE** | Migrasi `submission_rounds`, `group_notebooks` | uji skema: unik `(group, round)`, minimal satu berkas per putaran |
 | 3.7 | Status pengumpulan terhitung; catat/ubah/hapus putaran; buku tulis; audit dalam transaksi | TDD: AC02, AC03, AC08; klik ganda 409 |
 | 3.8 | UI admin "Catat Pengumpulan" + buku tulis di detail kelompok; publik menampilkan status | lint/typecheck/build + E2E |
 | 3.9 | Deploy + cek browser + `docs/F3B_ACCEPTANCE.md` | semua gerbang |
@@ -174,3 +174,10 @@ Status rencana: **DISETUJUI 14 Nov 2026.**
   - **Belum:** tampilan di browser nyata (360 px, zoom 200%, keyboard) — Task 3.5.
 - **Task 3.5 selesai (15 Nov 2026).** Deploy `0700f32` (rilis `20261114T223049Z-0700f3215c1b`, migrasi 8 setelah cadangan), cek Edge menemukan meluap 360 px dan kata terpotong; diperbaiki `eff11c6`, deploy ulang (rilis `20261115T002336Z-eff11c66953c`), diukur ulang lulus. Data uji `UJI` dibuat dan dihapus lewat UI; audit tercatat. Bukti dan pengecualian di `docs/F3A_ACCEPTANCE.md`. **3A siap ditutup, menunggu persetujuan user.**
 - **3A ditutup 15 Nov 2026** atas instruksi user ("Tutup Fase 3A"), dengan pengecualian di `docs/F3A_ACCEPTANCE.md`.
+- **Task 3.6 selesai (15 Nov 2026).** RED: 7 uji skema baru gagal (`relation "submission_rounds" does not exist`). GREEN di `cbt-vps` dengan database uji: migrasi `00009_create_submissions`; `goose validate`, `sqlc generate`, seluruh suite 2 kali, vet, build hijau.
+  - `submission_rounds`: satu baris per putaran (0 = awal, 1+ = revisi), waktu terima wajib, pengirim opsional (email huruf kecil ≤ 254), subjek ≤ 300 tanpa karakter kontrol, centang PPT/PDF dengan **minimal satu**, nama berkas hanya boleh diisi untuk jenis yang dicentang (≤ 200, tanpa `/`, `\`, karakter kontrol), catatan internal ≤ 2000, `recorded_by` → `admin_users` (`SET NULL` bila admin dihapus; catatan tetap). Unik `(group_id, round_number)`; trigger mewajibkan **nomor berikutnya tanpa lompat** (putaran pertama harus 0) setelah mengunci baris kelompok.
+  - `group_notebooks`: satu baris per kelompok (kunci = `group_id`), `is_received` wajib sejalan dengan `received_at`, catatan ≤ 1000, `updated_by` `SET NULL`.
+  - Kelompok yang sudah punya putaran atau baris buku **tidak bisa dihapus** (`RESTRICT` → `IN_USE` dari 3.2); kelompok kosong tetap bisa. `down-to 8` menghapus kedua tabel tanpa menyentuh kelompok; `up` ulang bersih.
+  - Uji konkurensi: 10 sisipan putaran 0 serentak → tepat 1 berhasil, lulus 3 kali. **Jujur:** indeks unik saja sudah cukup membuat uji ini lulus, jadi kunci `FOR UPDATE` di trigger tidak dibuktikan oleh uji ini (yang ia lindungi: dua sisipan berbeda nomor yang sama-sama membaca maks lama).
+  - **Uji mutan:** cek nomor berikutnya dimatikan → uji "gap in rounds" gagal; cek minimal satu berkas dibuang → uji "no file in round" gagal.
+  - Migrasi 9 belum di produksi; ikut deploy Task 3.9.
