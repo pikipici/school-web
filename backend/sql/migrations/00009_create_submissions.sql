@@ -3,6 +3,11 @@
 -- Gmail by hand. Nothing here is read from email and no file is stored; these
 -- are the teacher's notes about each submission round (PLAN.md 6B/6D).
 
+-- When any record of the group last changed (rounds, notebook). The public
+-- "Terakhir Diperbarui" column uses the later of this and updated_at, so a
+-- deleted round still moves the date forward.
+ALTER TABLE study_groups ADD COLUMN progress_updated_at timestamptz;
+
 -- One row per round: 0 = first submission, 1+ = revisions. A revision that
 -- only carries a PPT never erases an earlier PDF; the submission lane is
 -- computed from all rounds together.
@@ -86,3 +91,4 @@ DROP TABLE group_notebooks;
 DROP TRIGGER submission_rounds_next_number_before_insert ON submission_rounds;
 DROP FUNCTION submission_rounds_next_number();
 DROP TABLE submission_rounds;
+ALTER TABLE study_groups DROP COLUMN progress_updated_at;

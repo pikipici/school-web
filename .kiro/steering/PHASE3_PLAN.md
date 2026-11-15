@@ -98,7 +98,7 @@ Mutasi admin: sesi + CSRF + Origin + audit. `PATCH` memakai `updatedAt` dan 409 
 | Task | Isi | Uji |
 |---|---|---|
 | 3.6 **DONE** | Migrasi `submission_rounds`, `group_notebooks` | uji skema: unik `(group, round)`, minimal satu berkas per putaran |
-| 3.7 | Status pengumpulan terhitung; catat/ubah/hapus putaran; buku tulis; audit dalam transaksi | TDD: AC02, AC03, AC08; klik ganda 409 |
+| 3.7 **DONE** | Status pengumpulan terhitung; catat/ubah/hapus putaran; buku tulis; audit dalam transaksi | TDD: AC02, AC03, AC08; klik ganda 409 |
 | 3.8 | UI admin "Catat Pengumpulan" + buku tulis di detail kelompok; publik menampilkan status | lint/typecheck/build + E2E |
 | 3.9 | Deploy + cek browser + `docs/F3B_ACCEPTANCE.md` | semua gerbang |
 
@@ -181,3 +181,10 @@ Status rencana: **DISETUJUI 14 Nov 2026.**
   - Uji konkurensi: 10 sisipan putaran 0 serentak → tepat 1 berhasil, lulus 3 kali. **Jujur:** indeks unik saja sudah cukup membuat uji ini lulus, jadi kunci `FOR UPDATE` di trigger tidak dibuktikan oleh uji ini (yang ia lindungi: dua sisipan berbeda nomor yang sama-sama membaca maks lama).
   - **Uji mutan:** cek nomor berikutnya dimatikan → uji "gap in rounds" gagal; cek minimal satu berkas dibuang → uji "no file in round" gagal.
   - Migrasi 9 belum di produksi; ikut deploy Task 3.9.
+- **Task 3.7 selesai (15 Nov 2026).** RED: build gagal (`undefined: progress.Actor`). GREEN di `cbt-vps` dengan database uji: 6 uji paket + 2 uji HTTP baru; seluruh suite 2 kali, `-race` `progress`/`http`, vet, build, gofmt hijau.
+  - Paket `progress`: `RecordRound` (nomor berikutnya wajib; sama dua kali atau lompat → `ErrConflict`), `UpdateRound` (`updatedAt` → `ErrConflict`/`ErrNotFound`), `DeleteRound` (hanya putaran terakhir → `ErrNotLast`), `Rounds`, `SubmissionOf`, `Notebook`, `SetNotebook` (diterima tanpa tanggal = sekarang; tidak diterima menghapus tanggal). Validasi: minimal satu berkas, nama berkas hanya untuk jenis yang dicentang, waktu terima maks 5 menit di masa depan, email pengirim huruf kecil, subjek/catatan dibatasi.
+  - **Audit dalam transaksi yang sama** (keputusan teknis #3): baris kelompok dikunci, perubahan + `progress_updated_at` + baris audit di satu transaksi lewat `audit.Write` baru (mengembalikan galat; `Record` lama tetap fail-open). Uji: trigger yang menggagalkan sisipan audit → catat putaran dan buku tulis **dibatalkan** (0 putaran, buku tidak berubah). Aksi: `progress.round_recorded/updated/deleted`, `progress.notebook_updated`, detail `entityId`, `title` (nama kelompok), `round`/`received` — tanpa email, subjek, atau catatan.
+  - Publik: lajur Pengumpulan **dihitung dari semua putaran** (AC02 PPT → SEBAGIAN, AC03 + PDF → LENGKAP, AC08 revisi PPT saja tetap LENGKAP); lajur Buku Tulis dari `group_notebooks`; "Terakhir Diperbarui" = yang lebih baru dari `updated_at` dan kolom baru `study_groups.progress_updated_at` (ikut migrasi 9, belum di produksi), jadi hapus putaran pun memajukan tanggal. Pemeriksaan tetap `BELUM_DICEK` dan tidak ada yang Tuntas sampai 3C.
+  - HTTP: `GET/POST /groups/{id}/submissions`, `PATCH/DELETE /submissions/{id}` (409 `NOT_LAST_ROUND`), `GET/PUT /groups/{id}/notebook`; kelompok bercatatan tidak bisa dihapus (409 `IN_USE`). Publik tidak memuat email/subjek/catatan (diuji).
+  - **Uji mutan:** audit ditulis di luar transaksi dengan galat diabaikan → uji atomik gagal; lajur dari putaran terakhir saja → uji AC08 gagal.
+  - OpenAPI 0.6.0: 29 jalur, skema `SubmissionRound(Write)`, `GroupNotebook`; semua `$ref` terselesaikan.

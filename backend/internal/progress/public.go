@@ -137,15 +137,28 @@ func (s *Store) PublicProgress(ctx context.Context, f PublicFilter) (PublicProgr
 		return PublicProgress{}, err
 	}
 	for _, r := range rows {
+		sub := SubmissionNone
+		switch {
+		case r.HasPpt && r.HasPdf:
+			sub = SubmissionFull
+		case r.HasPpt || r.HasPdf:
+			sub = SubmissionPartial
+		}
+		nb := NotebookNotReceived
+		if r.NotebookReceived {
+			nb = NotebookReceived
+		}
 		g := PublicGroup{
 			Name:       r.Name,
 			ClassCode:  r.ClassCode,
 			Topic:      PublicTopic{Code: r.TopicCode, Title: r.TopicTitle},
-			Submission: SubmissionNone,
-			Review:     ReviewNotChecked,
-			Notebook:   NotebookNotReceived,
-			Complete:   false,
-			UpdatedAt:  r.UpdatedAt.Time,
+			Submission: sub,
+			// Review and completion come with part 3C; until then nothing is
+			// approved, so no group can be complete.
+			Review:    ReviewNotChecked,
+			Notebook:  nb,
+			Complete:  false,
+			UpdatedAt: r.UpdatedAt.Time,
 		}
 		if f.keep(g) {
 			out.Groups = append(out.Groups, g)

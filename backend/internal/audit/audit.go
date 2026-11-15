@@ -9,6 +9,7 @@ package audit
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"log/slog"
 	"net/netip"
 	"regexp"
@@ -70,42 +71,44 @@ func New(db dbsql.DBTX, now func() time.Time) *Store {
 
 // Record stores e. It returns nothing on purpose: see the package comment.
 func (s *Store) Record(ctx context.Context, e Event) {
-	if !actionPattern.MatchString(e.Action) || (e.Outcome != "success" && e.Outcome != "failure") {
-		slog.Warn("audit: malformed event dropped")
-		return
+	// The request may already be cancelled (client hung up); the action still happened.
+	writeCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), writeTimeout)
+	defer cancel()
+	if err := Write(writeCtx, s.q, s.now(), e); err != nil {
+		slog.Error("audit: write failed", "action", e.Action, "error", err)
 	}
+}
 
+// ErrMalformed means an event's action or outcome does not match the format.
+var ErrMalformed = errors.New("audit: malformed event")
+
+// Write stores e with q, which may be a transaction, and returns any error.
+// Use it when the audit row must commit or roll back together with the
+// change it describes. Detail is sanitised exactly as in Record.
+func Write(ctx context.Context, q *dbsql.Queries, at time.Time, e Event) error {
+	if !actionPattern.MatchString(e.Action) || (e.Outcome != "success" && e.Outcome != "failure") {
+		return ErrMalformed
+	}
 	detail, err := json.Marshal(sanitizeDetail(e.Detail))
 	if err != nil {
-		slog.Error("audit: detail not encodable", "action", e.Action)
-		return
+		return err
 	}
-
 	ip := ""
 	if addr, err := netip.ParseAddr(e.IP); err == nil {
 		ip = addr.String()
 	}
-
 	var actor pgtype.Int8
 	if e.UserID != nil {
 		actor = pgtype.Int8{Int64: *e.UserID, Valid: true}
 	}
-
-	// The request may already be cancelled (client hung up); the action still happened.
-	writeCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), writeTimeout)
-	defer cancel()
-
-	err = s.q.InsertAuditLog(writeCtx, dbsql.InsertAuditLogParams{
-		OccurredAt:  pgtype.Timestamptz{Time: s.now().UTC(), Valid: true},
+	return q.InsertAuditLog(ctx, dbsql.InsertAuditLogParams{
+		OccurredAt:  pgtype.Timestamptz{Time: at.UTC(), Valid: true},
 		ActorUserID: actor,
 		Action:      e.Action,
 		Outcome:     e.Outcome,
 		Ip:          ip,
 		Detail:      detail,
 	})
-	if err != nil {
-		slog.Error("audit: write failed", "action", e.Action, "error", err)
-	}
 }
 
 func sanitizeDetail(in map[string]string) map[string]string {

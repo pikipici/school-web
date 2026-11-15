@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: Informatika Monitoring API
-  version: 0.5.0
+  version: 0.6.0
   description: Kontrak API yang saat ini diimplementasikan oleh backend Go, termasuk autentikasi admin. Endpoint admin hanya aktif bila database dikonfigurasi.
 servers:
   - url: /
@@ -627,6 +627,126 @@ paths:
         "403": {$ref: "#/components/responses/Forbidden"}
         "404": {$ref: "#/components/responses/NotFound"}
         "409": {$ref: "#/components/responses/ProgressConflict"}
+  /api/v1/admin/groups/{id}/submissions:
+    parameters:
+      - $ref: "#/components/parameters/ID"
+    get:
+      summary: Putaran pengumpulan satu kelompok + status pengumpulan terhitung
+      operationId: listSubmissionRounds
+      responses:
+        "200":
+          description: Status BELUM/SEBAGIAN/LENGKAP dihitung dari semua putaran.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    required: [submission, rounds]
+                    properties:
+                      submission: {type: string, enum: [BELUM, SEBAGIAN, LENGKAP]}
+                      rounds: {type: array, items: {$ref: "#/components/schemas/SubmissionRound"}}
+        "401": {$ref: "#/components/responses/Unauthenticated"}
+        "404": {$ref: "#/components/responses/NotFound"}
+    post:
+      summary: Catat putaran berikutnya (setelah guru memeriksa Gmail sendiri)
+      description: roundNumber wajib nomor berikutnya (0 untuk yang pertama). Nomor yang sama dua kali (klik ganda) atau nomor lompat memberi 409 CONFLICT. Perubahan dan audit progress.round_recorded satu transaksi.
+      operationId: recordSubmissionRound
+      parameters:
+        - $ref: "#/components/parameters/CSRF"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/SubmissionRoundWrite"}
+      responses:
+        "201":
+          description: Dicatat.
+          content:
+            application/json:
+              schema: {type: object, properties: {data: {$ref: "#/components/schemas/SubmissionRound"}}}
+        "401": {$ref: "#/components/responses/Unauthenticated"}
+        "403": {$ref: "#/components/responses/Forbidden"}
+        "404": {$ref: "#/components/responses/NotFound"}
+        "409": {$ref: "#/components/responses/ProgressConflict"}
+        "422": {$ref: "#/components/responses/Invalid"}
+  /api/v1/admin/submissions/{id}:
+    parameters:
+      - $ref: "#/components/parameters/ID"
+    patch:
+      summary: Koreksi putaran (wajib updatedAt)
+      operationId: updateSubmissionRound
+      parameters:
+        - $ref: "#/components/parameters/CSRF"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/SubmissionRoundWrite"}
+      responses:
+        "200":
+          description: Disimpan; audit progress.round_updated.
+          content:
+            application/json:
+              schema: {type: object, properties: {data: {$ref: "#/components/schemas/SubmissionRound"}}}
+        "401": {$ref: "#/components/responses/Unauthenticated"}
+        "403": {$ref: "#/components/responses/Forbidden"}
+        "404": {$ref: "#/components/responses/NotFound"}
+        "409": {$ref: "#/components/responses/ProgressConflict"}
+        "422": {$ref: "#/components/responses/Invalid"}
+    delete:
+      summary: Hapus putaran terakhir (salah input)
+      operationId: deleteSubmissionRound
+      parameters:
+        - $ref: "#/components/parameters/CSRF"
+      responses:
+        "204": {description: Dihapus; audit progress.round_deleted.}
+        "401": {$ref: "#/components/responses/Unauthenticated"}
+        "403": {$ref: "#/components/responses/Forbidden"}
+        "404": {$ref: "#/components/responses/NotFound"}
+        "409": {description: "NOT_LAST_ROUND: hanya putaran terakhir yang bisa dihapus.", content: {application/json: {schema: {$ref: "#/components/schemas/ErrorEnvelope"}}}}
+  /api/v1/admin/groups/{id}/notebook:
+    parameters:
+      - $ref: "#/components/parameters/ID"
+    get:
+      summary: Status buku tulis kelompok
+      operationId: getGroupNotebook
+      responses:
+        "200":
+          description: Belum pernah dicatat = received false.
+          content:
+            application/json:
+              schema: {type: object, properties: {data: {$ref: "#/components/schemas/GroupNotebook"}}}
+        "401": {$ref: "#/components/responses/Unauthenticated"}
+        "404": {$ref: "#/components/responses/NotFound"}
+    put:
+      summary: Catat buku tulis diterima atau belum
+      operationId: putGroupNotebook
+      parameters:
+        - $ref: "#/components/parameters/CSRF"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [received]
+              properties:
+                received: {type: boolean}
+                receivedAt: {type: string, format: date-time, nullable: true, description: Kosong saat received = sekarang.}
+                note: {type: string, maxLength: 1000}
+      responses:
+        "200":
+          description: Disimpan; audit progress.notebook_updated.
+          content:
+            application/json:
+              schema: {type: object, properties: {data: {$ref: "#/components/schemas/GroupNotebook"}}}
+        "401": {$ref: "#/components/responses/Unauthenticated"}
+        "403": {$ref: "#/components/responses/Forbidden"}
+        "404": {$ref: "#/components/responses/NotFound"}
+        "422": {$ref: "#/components/responses/Invalid"}
   /api/v1/admin/announcements:
     get:
       summary: Semua pengumuman (draf dan terbit)
@@ -1421,6 +1541,50 @@ components:
         updatedAt:
           type: string
           format: date-time
+    SubmissionRound:
+      type: object
+      additionalProperties: false
+      description: Catatan guru; tidak pernah tampil di publik.
+      required: [id, groupId, roundNumber, receivedAt, senderEmail, subject, ppt, pdf, pptFilename, pdfFilename, note, createdAt, updatedAt]
+      properties:
+        id: {type: integer, format: int64}
+        groupId: {type: integer, format: int64}
+        roundNumber: {type: integer, minimum: 0}
+        receivedAt: {type: string, format: date-time}
+        senderEmail: {type: string, nullable: true}
+        subject: {type: string, maxLength: 300}
+        ppt: {type: boolean}
+        pdf: {type: boolean}
+        pptFilename: {type: string, maxLength: 200}
+        pdfFilename: {type: string, maxLength: 200}
+        note: {type: string, maxLength: 2000}
+        createdAt: {type: string, format: date-time}
+        updatedAt: {type: string, format: date-time}
+    SubmissionRoundWrite:
+      type: object
+      additionalProperties: false
+      required: [receivedAt]
+      description: Minimal salah satu ppt/pdf true; nama berkas hanya untuk jenis yang dicentang; receivedAt maks 5 menit di masa depan.
+      properties:
+        roundNumber: {type: integer, minimum: 0, description: Wajib pada POST; diabaikan pada PATCH.}
+        receivedAt: {type: string, format: date-time}
+        senderEmail: {type: string}
+        subject: {type: string, maxLength: 300}
+        ppt: {type: boolean}
+        pdf: {type: boolean}
+        pptFilename: {type: string, maxLength: 200}
+        pdfFilename: {type: string, maxLength: 200}
+        note: {type: string, maxLength: 2000}
+        updatedAt: {type: string, format: date-time, description: Wajib pada PATCH.}
+    GroupNotebook:
+      type: object
+      additionalProperties: false
+      required: [received, receivedAt, note, updatedAt]
+      properties:
+        received: {type: boolean}
+        receivedAt: {type: string, format: date-time, nullable: true}
+        note: {type: string, maxLength: 1000}
+        updatedAt: {type: string, format: date-time, nullable: true}
     AcademicYear:
       type: object
       additionalProperties: false
