@@ -88,20 +88,6 @@ function GroupFields({
           </button>
         ) : null}
       </div>
-      <div className="form-field">
-        <label htmlFor={`${idPrefix}-urutan`}>Urutan tampil</label>
-        <input
-          id={`${idPrefix}-urutan`}
-          type="number"
-          inputMode="numeric"
-          min={0}
-          step={1}
-          value={Number.isNaN(draft.sortOrder) ? "" : String(draft.sortOrder)}
-          aria-invalid={errors.sortOrder ? true : undefined}
-          onChange={(e) => set({ ...draft, sortOrder: e.target.value === "" ? Number.NaN : Number(e.target.value) })}
-        />
-        {errors.sortOrder ? <p className="field-hint">{errors.sortOrder}</p> : null}
-      </div>
     </>
   );
 }
@@ -265,7 +251,6 @@ function Manager({ classId, csrf, onExpired }: { classId: number; csrf: string; 
                     <ActiveBadge active={g.active} />
                     <span>{topicName(g.topicId)}</span>
                     <span>{g.email ?? "Tanpa email"}</span>
-                    <span>Urutan {g.sortOrder}</span>
                   </p>
                 </div>
                 {editId === g.id ? (
