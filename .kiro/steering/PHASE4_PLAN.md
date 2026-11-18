@@ -1,6 +1,6 @@
 # Fase 4 — Tanya Jawab, Rekap, CSV, Audit; Fase 5 — Penutupan MVP (Rencana)
 
-> Status: **DIBATALKAN 18 Nov 2026.** User: "gausa terlalu advance, gua cuma perlu website buat ngasi tau siswa letak kesalahan tugas mereka". Tanya jawab, rekap, CSV, dan halaman audit tidak dibuat. Penutupan diganti satu task ringan (3.16 di `PHASE3_PLAN.md`). Dokumen ini disimpan sebagai riwayat; isinya di bawah tidak berlaku.
+> Status: **DIBATALKAN 18 Nov 2026.** User: "gausa terlalu advance, gua cuma perlu website buat ngasi tau siswa letak kesalahan tugas mereka". Tanya jawab, rekap, CSV, dan halaman audit tidak dibuat. Penutupan diganti satu task ringan (3.13 di `PHASE3_PLAN.md`). Dokumen ini disimpan sebagai riwayat; isinya di bawah tidak berlaku.
 > Sumber: `PLAN.md` bagian 2.4, 6E, 7 (rute `/admin/partisipasi`, `/admin/rekap`, `/admin/audit`), 9 (`presentation_sessions`, `question_participation`), 10 (endpoint), 13 (Fase 6–7 lama), 14 (AC14, AC15, AC01–AC25), 15–16 (kriteria MVP selesai).
 
 ## Tujuan

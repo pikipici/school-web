@@ -605,13 +605,13 @@ informatika-monitoring/
 - [ ] **AC04:** Data publik tidak memuat email kelompok atau catatan evaluasi rinci.
 - [ ] **AC05:** Catatan draf `PPT — Slide 5` tidak terlihat siswa.
 - [ ] **AC06:** Setelah guru memublikasikan, kelompok bersangkutan melihat lokasi dan instruksi revisi.
-- [ ] **AC07:** Kelompok berbeda tidak dapat melihat catatan tersebut dengan mengganti ID/URL.
+- [ ] ~~**AC07:** Kelompok berbeda tidak dapat melihat catatan tersebut dengan mengganti ID/URL.~~ **Dibatalkan 18 Nov 2026** (keputusan user): catatan terbit tampil publik untuk semua; tanpa kode akses.
 - [ ] **AC08:** Revisi PPT putaran 1 tidak menghapus penerimaan PDF lama.
 - [ ] **AC09:** `DISETUJUI` ditolak bila ada temuan wajib terbuka atau file digital belum lengkap.
 - [ ] **AC10:** `TUNTAS` hanya terjadi bila PPT/PDF lengkap, review disetujui, dan buku diterima.
 - [ ] **AC11:** Semua aksi penting memiliki audit log.
 - [ ] **AC12:** Request tanpa admin tidak dapat mengubah status atau publikasi, termasuk via API langsung.
-- [ ] **AC13:** Rate limit kode, rotasi kode, dan pencabutan sesi berfungsi.
+- [ ] ~~**AC13:** Rate limit kode, rotasi kode, dan pencabutan sesi berfungsi.~~ **Dibatalkan 18 Nov 2026**: tidak ada kode akses kelompok.
 - [ ] **AC14:** Guru dapat mencatat pertanyaan kelompok A pada presentasi kelompok B.
 - [ ] **AC15:** Hanya admin dapat ekspor CSV.
 - [ ] **AC16:** Tidak ada akses Gmail API/IMAP/OAuth inbox, pengiriman balasan, atau fitur upload file.
@@ -622,7 +622,7 @@ informatika-monitoring/
 - [ ] **AC21:** Semua CRUD/status/evaluasi/otorisasi dan ekspor CSV dilayani **API Go**, bukan Next.js Server Actions.
 - [ ] **AC22:** Frontend Next.js tidak memiliki direct DB client/SQL dan tidak mengetahui `DATABASE_URL`.
 - [ ] **AC23:** `go test ./...`, `go vet ./...`, build backend, serta pengujian endpoint Go berhasil.
-- [ ] **AC24:** Login guru, hash password Argon2id, sesi server-side, rotasi/pencabutan token kelompok, cookie dan CSRF berfungsi.
+- [ ] **AC24:** Login guru, hash password Argon2id, sesi server-side, cookie dan CSRF berfungsi. (Bagian token kelompok dibatalkan 18 Nov 2026.)
 - [ ] **AC25:** Deployment single-VPS di `cbt-vps` berjalan aman: binary Go melayani API + static export Next.js, PostgreSQL memakai role aplikasi terpisah, systemd aktif, HTTPS tersedia, backup/restore terdokumentasi, serta Git HEAD, migrasi, `/healthz`, `/readyz`, dan frontend smoke terverifikasi.
 
 ## 15. Panduan operasional guru

@@ -102,31 +102,20 @@ Mutasi admin: sesi + CSRF + Origin + audit. `PATCH` memakai `updatedAt` dan 409 
 | 3.8 **DONE** | UI admin "Catat Pengumpulan" + buku tulis di detail kelompok; publik menampilkan status | lint/typecheck/build + E2E |
 | 3.9 **DONE** | Deploy + cek browser + `docs/F3B_ACCEPTANCE.md` | semua gerbang |
 
-### 3C — Pemeriksaan
+### 3C — Kesalahan tugas (temuan), tampil publik
 
-> **Disederhanakan 18 Nov 2026** atas arahan user ("gausa terlalu advance, gua cuma perlu website buat ngasi tau siswa letak kesalahan tugas mereka"). 3C dan 3D masing-masing jadi 3 task. Fase 4 (tanya jawab, rekap, CSV, halaman audit) **dibatalkan**; lihat `PHASE4_PLAN.md`.
+> **Disederhanakan 18 Nov 2026** atas arahan user ("gausa terlalu advance, gua cuma perlu website buat ngasi tau siswa letak kesalahan tugas mereka"). Fase 4 (tanya jawab, rekap, CSV, halaman audit) **dibatalkan**; lihat `PHASE4_PLAN.md`.
+>
+> **Kode akses dibuang 18 Nov 2026** (user: "Buang kode akses, semua kesalahan tampil publik"). 3D dibatalkan. Temuan yang sudah **terbit** bisa dibaca siapa pun di halaman publik kelompok. Yang tetap tersembunyi: temuan **draf**, email kelompok, catatan internal guru, pengirim/subjek/nama berkas putaran. K15–K17 dan AC07, AC13 tidak berlaku.
 
 | Task | Isi | Uji |
 |---|---|---|
-| 3.10 | Migrasi `evaluation_findings` + status pemeriksaan di kelompok; paket + API: tambah/ubah/hapus temuan draf, terbitkan semua draf, tandai selesai, ubah status pemeriksaan; TUNTAS terhitung; audit dalam transaksi | TDD: AC05 (draf tidak terbit), AC09, AC10; publik tetap tanpa isi temuan |
-| 3.11 | UI admin di halaman detail kelompok: bagian **Temuan** (lokasi, masalah, perbaikan, Wajib/Saran), tombol **Terbitkan** dengan konfirmasi, pilih status pemeriksaan | uji klien; lint/typecheck/build; E2E |
+| 3.10 | Migrasi `evaluation_findings` + status pemeriksaan di kelompok; paket + API admin: tambah/ubah/hapus temuan draf, terbitkan semua draf, tandai selesai, ubah status pemeriksaan; TUNTAS terhitung; audit dalam transaksi. API publik `GET /api/v1/public/groups/{id}`: nama, kelas, topik, tiga lajur, temuan **terbit** saja; baris tabel publik dapat `id` | TDD: AC05 (draf tidak pernah publik, uji mutan), AC06, AC09, AC10; kunci JSON publik persis tanpa email/catatan |
+| 3.11 | Admin: bagian **Temuan** di halaman detail kelompok (jenis, lokasi, masalah, perbaikan, Wajib/Saran), **Terbitkan** dengan konfirmasi, **Selesai**, pilih status pemeriksaan. Publik: nama kelompok di `/progres/` jadi tautan ke `/progres/kelompok/?id=` berisi daftar kesalahan | uji klien; lint/typecheck/build; E2E; 360px |
 | 3.12 | Deploy + cek browser + `docs/F3C_ACCEPTANCE.md` | semua gerbang |
+| 3.13 | Panduan singkat guru (`docs/ADMIN_GUIDE.md`: buat kelas/kelompok, catat kiriman, tulis dan terbitkan kesalahan); satu uji alur nyata dari awal sampai siswa membaca kesalahannya | user membaca panduan; alur nyata lulus |
 
 Temuan yang sudah terbit tidak dihapus; guru menandainya **Selesai** setelah siswa memperbaiki. Tidak ada fitur arsip terpisah.
-
-### 3D — Portal kelompok
-
-| Task | Isi | Uji |
-|---|---|---|
-| 3.13 | Kode akses (HMAC, tampil sekali, ganti kode mencabut sesi), sesi kelompok 7 hari, `group/access`, `group/me` (status + temuan terbit + riwayat putaran), `group/logout`, batas percobaan | TDD: AC06, AC07 (manipulasi ID/URL/cookie), AC13; kode tidak tersimpan mentah |
-| 3.14 | UI `/progres/masuk/` (ketik kode) dan `/progres/kelompok/` (daftar kesalahan + status); admin "Buat/ganti kode" | uji klien; lint/typecheck/build; E2E; 360px |
-| 3.15 | `GROUP_CODE_KEY` di `.env` + `deploy.sh` (izin), deploy, cek browser, `docs/F3D_ACCEPTANCE.md` | semua gerbang |
-
-### Penutup
-
-| Task | Isi | Uji |
-|---|---|---|
-| 3.16 | Panduan singkat guru (`docs/ADMIN_GUIDE.md`: buat kelas/kelompok, catat kiriman, tulis temuan, bagikan kode); satu uji alur nyata dari awal sampai siswa melihat kesalahannya | user membaca panduan; alur nyata lulus |
 
 Setiap task: uji gagal dulu, implementasi, uji/vet/build di `cbt-vps`, commit, catat di dokumen ini dan `PROGRESS.md`.
 
