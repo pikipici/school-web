@@ -112,7 +112,10 @@ Pengecualian 3B: keyboard halaman detail belum dicek; `datetime-local` di HP bel
 - Verifikasi akhir perbaikan: 114 tes frontend lulus, lint, typecheck, static build lulus di workspace VPS; git diff --check lulus. Checkout produksi bersih dan tetap `cffeaff`. Tidak ada commit/deploy/restart produksi.
 - User menyetujui commit + deploy. Backend `edae2c8`, frontend `6a7dfdd`, source release `e4fbd337744f`; produksi aktif `20261118T111237Z-e4fbd337744f`, migrasi 10. Backup DB terverifikasi + snapshot lampiran tersedia, release lama dipertahankan. Gate deploy lengkap dan smoke lulus.
 - HTTPS browser produksi: halaman depan progres dan login admin lulus pada 360px tanpa overflow, tidak ada CSP/runtime exception; favicon 404 kosmetik dan auth/me 401 anonim yang diharapkan. Data publik produksi masih kosong, sehingga acceptance autentikasi/kelompok berisi data menunggu operator, bukan diklaim selesai. Rincian dan panduan admin: `docs/F3C_ACCEPTANCE.md`.
-- Selanjutnya: operator login, isi kelompok nyata, dan konfirmasi alur admin/publik. Tidak ada dummy data produksi atau review loop.
+- Redesign homepage disetujui dan deployed: commit `f3a6e00`, release `20261118T113835Z-f3a6e00f3c96`. Pencarian utama, filter kelas + Semua/Perlu perbaikan/Tuntas, ringkasan terpisah, kartu kelompok + status utama, catatan aktif inline, riwayat selesai dilipat. Shared `/progres/` ikut memakai kartu baru; judul pembungkus redundant dihapus setelah satu review (OK with notes), tanpa review loop.
+- Verifikasi redesign: RED utility test sebelum implementasi; GREEN 117 tes frontend, lint/typecheck/build di VPS, browser mock 360/1280px untuk pencarian/reset/filter dan catatan aktif/selesai tanpa overflow. Gate deploy lengkap dan smoke lulus; DB tetap versi 10, backup/snapshot tersedia.
+- Browser HTTPS aktual sesudah deploy pada 360px menampilkan 1 kelompok yang sudah ada (`Testing`, kelas 9A), pencarian/filter/kartu dan empty notes ter-render, zero right overflow, tanpa CSP/runtime exception; favicon 404 kosmetik dan auth/me 401 anonim tetap diketahui. Tidak membuat/mengubah data produksi dalam verifikasi.
+- Selanjutnya: user mengevaluasi tampilan homepage baru dan mengonfirmasi alur admin/publik dengan data nyata. Tidak ada dummy data produksi atau review loop.
 
 ## Sources of Truth
 
