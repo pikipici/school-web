@@ -382,7 +382,7 @@ func TestPublicProgressShowsOnlyActiveSafeRows(t *testing.T) {
 		keys = append(keys, k)
 	}
 	sort.Strings(keys)
-	if strings.Join(keys, ",") != "classCode,complete,name,notebook,review,submission,topic,updatedAt" {
+	if strings.Join(keys, ",") != "classCode,complete,id,name,notebook,review,submission,topic,updatedAt" {
 		t.Errorf("public row keys = %v", keys)
 	}
 

@@ -74,7 +74,7 @@ func submissionErr(w http.ResponseWriter, err error) {
 		writeError(w, 409, "NOT_LAST_ROUND", "Hanya putaran terakhir yang bisa dihapus.")
 		return
 	}
-	progressErr(w, err)
+	findingErr(w, err)
 }
 
 func actorOf(r *http.Request) progress.Actor {

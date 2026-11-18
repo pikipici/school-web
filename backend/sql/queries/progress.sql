@@ -65,7 +65,7 @@ ORDER BY lower(c.code), c.id;
 -- name: ListPublicGroups :many
 -- Only what a visitor may see: no email, no notes, no file names. The lanes
 -- are computed from every round, so a PPT-only revision keeps an earlier PDF.
-SELECT g.name,
+SELECT g.id, g.name, g.review_status,
        greatest(g.updated_at, coalesce(g.progress_updated_at, g.updated_at))::timestamptz AS updated_at,
        c.code AS class_code, t.code AS topic_code, t.title AS topic_title,
        coalesce((SELECT bool_or(r.ppt_received) FROM submission_rounds r WHERE r.group_id = g.id), false)::boolean AS has_ppt,

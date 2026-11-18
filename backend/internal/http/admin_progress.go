@@ -429,4 +429,5 @@ func (a adminProgress) routes(r chi.Router) {
 	r.Patch("/groups/{id}", a.updateGroup)
 	r.Delete("/groups/{id}", a.deleteGroup)
 	a.submissionRoutes(r)
+	a.findingRoutes(r)
 }

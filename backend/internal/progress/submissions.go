@@ -171,6 +171,13 @@ func (s *Store) change(ctx context.Context, groupID int64, a Actor, action strin
 	if err := fn(q, now); err != nil {
 		return err
 	}
+	valid, err := q.ReviewStateValid(ctx, groupID)
+	if err != nil {
+		return err
+	}
+	if !valid {
+		return ErrReviewRule
+	}
 	if err := q.TouchGroupProgress(ctx, dbsql.TouchGroupProgressParams{ID: groupID, ProgressUpdatedAt: stamp(now)}); err != nil {
 		return err
 	}

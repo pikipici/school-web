@@ -80,6 +80,7 @@ func newRouter(deps Deps) http.Handler {
 	if deps.Progress != nil {
 		router.Get("/api/v1/public/summary", publicProgressSummary(deps.Progress))
 		router.Get("/api/v1/public/progress", publicProgress(deps.Progress))
+		router.Get("/api/v1/public/groups/{id}", publicGroupDetail(deps.Progress))
 	} else {
 		router.Get("/api/v1/public/summary", publicSummary)
 	}

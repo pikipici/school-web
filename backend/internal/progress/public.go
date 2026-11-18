@@ -65,6 +65,7 @@ type PublicTopic struct {
 // PublicGroup is one row of the public table. It must never gain an email,
 // a note, a finding, or an access-code field.
 type PublicGroup struct {
+	ID         int64       `json:"id"`
 	Name       string      `json:"name"`
 	ClassCode  string      `json:"classCode"`
 	Topic      PublicTopic `json:"topic"`
@@ -137,29 +138,7 @@ func (s *Store) PublicProgress(ctx context.Context, f PublicFilter) (PublicProgr
 		return PublicProgress{}, err
 	}
 	for _, r := range rows {
-		sub := SubmissionNone
-		switch {
-		case r.HasPpt && r.HasPdf:
-			sub = SubmissionFull
-		case r.HasPpt || r.HasPdf:
-			sub = SubmissionPartial
-		}
-		nb := NotebookNotReceived
-		if r.NotebookReceived {
-			nb = NotebookReceived
-		}
-		g := PublicGroup{
-			Name:       r.Name,
-			ClassCode:  r.ClassCode,
-			Topic:      PublicTopic{Code: r.TopicCode, Title: r.TopicTitle},
-			Submission: sub,
-			// Review and completion come with part 3C; until then nothing is
-			// approved, so no group can be complete.
-			Review:    ReviewNotChecked,
-			Notebook:  nb,
-			Complete:  false,
-			UpdatedAt: r.UpdatedAt.Time,
-		}
+		g := publicGroup(r.ID, r.Name, r.ClassCode, r.TopicCode, r.TopicTitle, r.ReviewStatus, r.HasPpt, r.HasPdf, r.NotebookReceived, r.UpdatedAt.Time)
 		if f.keep(g) {
 			out.Groups = append(out.Groups, g)
 		}

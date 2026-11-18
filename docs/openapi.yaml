@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: Informatika Monitoring API
-  version: 0.6.0
+  version: 0.7.0
   description: Kontrak API yang saat ini diimplementasikan oleh backend Go, termasuk autentikasi admin. Endpoint admin hanya aktif bila database dikonfigurasi.
 servers:
   - url: /
@@ -746,6 +746,157 @@ paths:
         "401": {$ref: "#/components/responses/Unauthenticated"}
         "403": {$ref: "#/components/responses/Forbidden"}
         "404": {$ref: "#/components/responses/NotFound"}
+        "422": {$ref: "#/components/responses/Invalid"}
+  /api/v1/public/groups/{id}:
+    parameters:
+      - $ref: "#/components/parameters/ID"
+    get:
+      summary: Detail kelompok publik tanpa login; hanya temuan terbit
+      operationId: getPublicGroup
+      security: []
+      responses:
+        "200":
+          description: Identitas, tiga lajur status, dan findings terbit; Cache-Control no-store. Tanpa email, metadata pengumpulan, atau draf.
+          content:
+            application/json:
+              schema: {type: object, properties: {data: {$ref: "#/components/schemas/PublicGroupDetail"}}}
+        "404": {$ref: "#/components/responses/NotFound"}
+  /api/v1/admin/groups/{id}/findings:
+    parameters:
+      - $ref: "#/components/parameters/ID"
+    get:
+      summary: Daftar temuan admin termasuk draf
+      operationId: listFindings
+      responses:
+        "200":
+          description: Draf dan temuan terbit untuk admin.
+          content:
+            application/json:
+              schema: {type: object, properties: {data: {type: array, items: {$ref: "#/components/schemas/Finding"}}}}
+        "401": {$ref: "#/components/responses/Unauthenticated"}
+        "404": {$ref: "#/components/responses/NotFound"}
+    post:
+      summary: Tambah temuan draf; audit atomik
+      operationId: createFinding
+      parameters:
+        - $ref: "#/components/parameters/CSRF"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: "#/components/schemas/FindingWrite"}
+      responses:
+        "201":
+          description: Temuan draf baru.
+          content:
+            application/json:
+              schema: {type: object, properties: {data: {$ref: "#/components/schemas/Finding"}}}
+        "401": {$ref: "#/components/responses/Unauthenticated"}
+        "403": {$ref: "#/components/responses/Forbidden"}
+        "404": {$ref: "#/components/responses/NotFound"}
+        "409": {$ref: "#/components/responses/ProgressConflict"}
+        "422": {$ref: "#/components/responses/Invalid"}
+  /api/v1/admin/findings/{id}:
+    parameters:
+      - $ref: "#/components/parameters/ID"
+    patch:
+      summary: Ubah temuan atau tandai selesai; updatedAt wajib untuk konflik
+      operationId: updateFinding
+      parameters:
+        - $ref: "#/components/parameters/CSRF"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "#/components/schemas/FindingWrite"
+                - type: object
+                  required: [updatedAt]
+      responses:
+        "200":
+          description: Draf boleh diedit; setelah terbit hanya resolved yang boleh berubah.
+          content:
+            application/json:
+              schema: {type: object, properties: {data: {$ref: "#/components/schemas/Finding"}}}
+        "401": {$ref: "#/components/responses/Unauthenticated"}
+        "403": {$ref: "#/components/responses/Forbidden"}
+        "404": {$ref: "#/components/responses/NotFound"}
+        "409": {$ref: "#/components/responses/ProgressConflict"}
+        "422": {$ref: "#/components/responses/Invalid"}
+    delete:
+      summary: Hapus draf saja; temuan terbit menghasilkan FINDING_PUBLISHED 409
+      operationId: deleteFinding
+      parameters:
+        - $ref: "#/components/parameters/CSRF"
+        - name: updatedAt
+          in: query
+          required: true
+          schema: {type: string, format: date-time}
+      responses:
+        "204": {description: Draf dihapus; audit atomik.}
+        "401": {$ref: "#/components/responses/Unauthenticated"}
+        "403": {$ref: "#/components/responses/Forbidden"}
+        "404": {$ref: "#/components/responses/NotFound"}
+        "409": {$ref: "#/components/responses/ProgressConflict"}
+        "422": {$ref: "#/components/responses/Invalid"}
+  /api/v1/admin/groups/{id}/publish:
+    parameters:
+      - $ref: "#/components/parameters/ID"
+    post:
+      summary: Terbitkan semua draf kelompok agar terbaca publik tanpa login
+      operationId: publishFindings
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [status, updatedAt]
+              properties:
+                status: {type: string, enum: [BELUM_DICEK, DIPERIKSA, PERLU_REVISI, REVISI_DITERIMA, DISETUJUI]}
+                updatedAt: {type: string, format: date-time, description: Expected review timestamp; conflict cancels publication.}
+      parameters:
+        - $ref: "#/components/parameters/CSRF"
+      responses:
+        "200": {description: "data.published true; publikasi dan audit satu transaksi."}
+        "401": {$ref: "#/components/responses/Unauthenticated"}
+        "403": {$ref: "#/components/responses/Forbidden"}
+        "404": {$ref: "#/components/responses/NotFound"}
+        "409": {description: CONFLICT bila tidak ada draf; klik ganda tidak menambah audit.}
+  /api/v1/admin/groups/{id}/review-status:
+    parameters:
+      - $ref: "#/components/parameters/ID"
+    get:
+      summary: Status pemeriksaan dan updatedAt untuk edit
+      operationId: getReviewStatus
+      responses:
+        "200": {description: "data berisi status dan updatedAt."}
+        "401": {$ref: "#/components/responses/Unauthenticated"}
+        "404": {$ref: "#/components/responses/NotFound"}
+    patch:
+      summary: Ubah pemeriksaan; REVIEW_RULE 409 bila persyaratan tidak terpenuhi
+      operationId: setReviewStatus
+      parameters:
+        - $ref: "#/components/parameters/CSRF"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [status, updatedAt]
+              properties:
+                status: {type: string, enum: [BELUM_DICEK, DIPERIKSA, PERLU_REVISI, REVISI_DITERIMA, DISETUJUI]}
+                updatedAt: {type: string, format: date-time}
+      responses:
+        "200": {description: "data berisi status dan updatedAt terbaru; audit atomik."}
+        "401": {$ref: "#/components/responses/Unauthenticated"}
+        "403": {$ref: "#/components/responses/Forbidden"}
+        "404": {$ref: "#/components/responses/NotFound"}
+        "409": {$ref: "#/components/responses/ProgressConflict"}
         "422": {$ref: "#/components/responses/Invalid"}
   /api/v1/admin/announcements:
     get:
@@ -1511,9 +1662,10 @@ components:
     PublicGroup:
       type: object
       additionalProperties: false
-      description: Tidak pernah memuat email, ID, catatan, atau temuan.
-      required: [name, classCode, topic, submission, review, notebook, complete, updatedAt]
+      description: Baris publik dengan ID untuk tautan detail; tanpa email, catatan internal, atau metadata pengumpulan.
+      required: [id, name, classCode, topic, submission, review, notebook, complete, updatedAt]
       properties:
+        id: {type: integer, format: int64}
         name:
           type: string
         classCode:
@@ -1541,6 +1693,63 @@ components:
         updatedAt:
           type: string
           format: date-time
+    Finding:
+      type: object
+      additionalProperties: false
+      required: [id, groupId, fileType, location, problem, action, priority, resolved, publishedAt, createdAt, updatedAt]
+      properties:
+        id: {type: integer, format: int64}
+        groupId: {type: integer, format: int64}
+        fileType: {type: string, enum: [PPT, PDF, BUKU, PRESENTASI]}
+        location: {type: string, maxLength: 200}
+        problem: {type: string, maxLength: 2000}
+        action: {type: string, maxLength: 2000}
+        priority: {type: string, enum: [WAJIB, SARAN]}
+        resolved: {type: boolean}
+        publishedAt: {type: string, format: date-time, nullable: true}
+        createdAt: {type: string, format: date-time}
+        updatedAt: {type: string, format: date-time}
+    FindingWrite:
+      type: object
+      additionalProperties: false
+      required: [fileType, location, problem, action, priority]
+      properties:
+        fileType: {type: string, enum: [PPT, PDF, BUKU, PRESENTASI]}
+        location: {type: string, minLength: 1, maxLength: 200}
+        problem: {type: string, minLength: 1, maxLength: 2000}
+        action: {type: string, minLength: 1, maxLength: 2000}
+        priority: {type: string, enum: [WAJIB, SARAN]}
+        resolved: {type: boolean, default: false, description: Dipakai PATCH; POST selalu membuat draf terbuka.}
+        updatedAt: {type: string, format: date-time, description: Wajib PATCH.}
+    PublicFinding:
+      type: object
+      additionalProperties: false
+      required: [id, fileType, location, problem, action, priority, resolved, publishedAt, updatedAt]
+      properties:
+        id: {type: integer, format: int64}
+        fileType: {type: string, enum: [PPT, PDF, BUKU, PRESENTASI]}
+        location: {type: string}
+        problem: {type: string}
+        action: {type: string}
+        priority: {type: string, enum: [WAJIB, SARAN]}
+        resolved: {type: boolean}
+        publishedAt: {type: string, format: date-time}
+        updatedAt: {type: string, format: date-time}
+    PublicGroupDetail:
+      type: object
+      description: Semua properti PublicGroup ditambah findings (array PublicFinding); daftar kunci publik diuji persis. Tanpa login.
+      required: [id, name, classCode, topic, submission, review, notebook, complete, updatedAt, findings]
+      properties:
+        id: {type: integer, format: int64}
+        name: {type: string}
+        classCode: {type: string}
+        topic: {type: object, required: [code, title], properties: {code: {type: string}, title: {type: string}}}
+        submission: {type: string, enum: [BELUM, SEBAGIAN, LENGKAP]}
+        review: {type: string, enum: [BELUM_DICEK, DIPERIKSA, PERLU_REVISI, REVISI_DITERIMA, DISETUJUI]}
+        notebook: {type: string, enum: [BELUM_DITERIMA, SUDAH_DITERIMA]}
+        complete: {type: boolean}
+        updatedAt: {type: string, format: date-time}
+        findings: {type: array, items: {$ref: "#/components/schemas/PublicFinding"}}
     SubmissionRound:
       type: object
       additionalProperties: false
