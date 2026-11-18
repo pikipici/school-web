@@ -1,6 +1,7 @@
 import Link from "next/link";
 
-import { NAV_ITEMS, SITE_OWNER } from "@/lib/site";
+import { SITE_OWNER } from "@/lib/site";
+import { PublicNavigation } from "./PublicNavigation";
 
 export function SiteHeader() {
   return (
@@ -9,17 +10,7 @@ export function SiteHeader() {
         <Link className="brand" href="/" aria-label={`${SITE_OWNER}, beranda`}>
           {SITE_OWNER}
         </Link>
-        <nav aria-label="Menu utama">
-          <ul className="nav-list">
-            {NAV_ITEMS.map((item) => (
-              <li key={item.href}>
-                <Link className="nav-link" href={item.href}>
-                  {item.label}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </nav>
+        <PublicNavigation />
       </div>
     </header>
   );

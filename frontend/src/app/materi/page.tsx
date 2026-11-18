@@ -1,3 +1,11 @@
 import type { Metadata } from "next";
-import { MaterialList } from "@/components/public/ContentViews";import { SiteFooter,SiteHeader } from "@/components/site/SiteChrome";
-export const metadata:Metadata={title:"Materi"};export default function Page(){return <><SiteHeader/><main id="konten-utama" tabIndex={-1}><h1 className="page-title">Materi</h1><p className="section-note">Bahan belajar Informatika yang disusun menurut topik.</p><MaterialList/></main><SiteFooter/></>}
+import { MaterialList } from "@/components/public/ContentViews";
+import { SiteFooter, SiteHeader } from "@/components/site/SiteChrome";
+
+export const metadata: Metadata = { title: "Materi" };
+export default function Page() {
+ return <><SiteHeader /><main id="konten-utama" className="public-library" tabIndex={-1}>
+  <div className="library-intro"><p className="page-eyebrow">RUANG BELAJAR</p><h1 className="page-title">Materi Informatika</h1><p>Temukan bahan belajar sesuai topik. Buka materi untuk membaca penjelasan dan melihat lampiran yang tersedia.</p></div>
+  <MaterialList />
+ </main><SiteFooter /></>;
+}
