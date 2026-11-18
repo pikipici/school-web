@@ -42,7 +42,7 @@
 
 ## Current state
 
-> Checkpoint terbaru 18 Nov 2026: Fase 3B ditutup; berikutnya Task 3.10. Produksi terakhir tercatat rilis `20261118T045543Z-cffeaffbd4f3`, migrasi 9. Kebijakan: publik tanpa login siswa, login hanya admin. Butir lama di bawah adalah riwayat fondasi/Fase 2 awal, bukan status runtime terkini; lihat ringkasan `PROGRESS.md`.
+> Checkpoint terbaru 18 Nov 2026: Task 3.10–3.12 sudah deployed, Task 3.13 menunggu acceptance operator dengan data nyata (panduan singkat di `docs/F3C_ACCEPTANCE.md`). Produksi aktif `20261118T122948Z-b340b3b1ca32`, kode `b340b3b`, migrasi 10. Root `/` = Pengumuman, `/pengumuman/` tetap alias, `/materi/` = Materi, `/progres/` = Progres Tugas. Menu: Pengumuman → Materi → Progres Tugas. Subheader semua tab dihapus; judul progres Progres Tugas Kelompok Kelas 9. Publik tanpa login siswa, login hanya admin. Riwayat lama di bawah bukan status runtime terkini; lihat `.kiro/steering/PROGRESS.md`.
 
 - Fase 0 dan Fase 1 sudah ditutup pada 13 November 2026.
 - Redesign web pribadi guru, HTTPS, HSTS satu hari, dan CSP `enforce` sudah aktif di produksi.
@@ -104,4 +104,4 @@ npm run build
 
 ## Current next step
 
-Lanjutkan Task 3.10 sesuai `.kiro/steering/PHASE3_PLAN.md`: migrasi, aturan pemeriksaan, API admin temuan, dan API detail kelompok publik tanpa login (hanya temuan terbit). Jangan buat login siswa, kode akses, atau sesi kelompok. Produksi terakhir tercatat di `https://fikriramaaulia.online` dengan migrasi 9. Uji integrasi membutuhkan `/home/ubuntu/.informatika-monitoring-test.env`; deploy/restart tetap perlu persetujuan eksplisit.
+Berikutnya evaluasi UI terbaru dan acceptance alur admin → publik dengan data nyata (Task 3.13); jangan mengulang implementasi 3.10–3.12 yang sudah deployed. Catatan terbit tampil inline di `/progres/`; root `/` menampilkan Pengumuman. Jangan buat login siswa, kode akses, atau sesi kelompok. Produksi `https://fikriramaaulia.online`, release `20261118T122948Z-b340b3b1ca32`, migrasi 10. Uji/build/runtime hanya di VPS; integrasi memakai `/home/ubuntu/.informatika-monitoring-test.env`. Deploy/restart tetap perlu persetujuan eksplisit.

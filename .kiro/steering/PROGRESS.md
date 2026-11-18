@@ -2,20 +2,30 @@
 
 > Dokumen status aktual implementasi. Update setelah setiap task, verifikasi, commit, provisioning, dan deployment.
 >
-> Last updated: 18 November 2026, setelah penutupan Fase 3B
+> Last updated: 18 November 2026, setelah deployment UI publik dan penghapusan subheader
+>
+> **CHECKPOINT TERKINI (mengungguli ringkasan/riwayat lama di bawah):** Task 3.10–3.12 sudah implemented, reviewed, dan deployed. Fase 3 = 12/13; Task 3.13 masih memerlukan acceptance operator atas alur admin → publik dengan data nyata. Panduan singkat tersedia di `docs/F3C_ACCEPTANCE.md`.
+>
+> Produksi aktif: **`20261118T122948Z-b340b3b1ca32`**, kode **`b340b3b`**, migrasi **10**. Readiness dan smoke PASS. Branch `main`; kode telah di-push ke remote server, `.agents/` lokal tidak di-commit.
+>
+> Routing terbaru: **`/` = Pengumuman**, `/pengumuman/` tetap alias, `/materi/` = Materi, `/progres/` = Progres Tugas. Urutan menu **Pengumuman → Materi → Progres Tugas**. Semua tab tanpa subheader deskriptif; judul utama dan label kecil di atas judul tetap ada. Judul progres: **Progres Tugas Kelompok Kelas 9**.
+>
+> Deployment UI terakhir: `ca482d4` (judul dan urutan menu), `6e9619f` (root Pengumuman, review OK), `b340b3b` (hapus subheader). Semua gate deploy, tes/lint/typecheck/build dan smoke lulus di VPS. HTTPS memverifikasi judul, tujuan/menu aktif, dan penghapusan subheader pada keempat rute. Backup DB/snapshot tersedia; migrasi tetap 10, tanpa dummy data produksi.
+>
+> Berikutnya: user mengevaluasi UI dan mengonfirmasi alur admin/publik dengan data nyata; tidak menambah fitur atau deploy otomatis.
 
 ## Ringkasan
 
 - **Kebijakan akses:** website publik tanpa login pengunjung/siswa. Login hanya admin. Progres dan detail temuan terbit kelompok mana pun dapat dibaca publik; draf, email/metadata pengumpulan, catatan internal, dan audit tetap hanya admin. Tidak ada kode akses atau sesi kelompok.
 
-- Fase aktif: **Fase 3C — Pemeriksaan** (Task 3.10 diimplementasikan dan gerbang otomatis lulus; menunggu review). Fase 0, 1, 2A, 2B, **3A**, dan **3B** sudah ditutup.
-- Progress Fase 2A: **8/8 selesai** (ditutup dengan pengecualian). Fase 2B (lampiran): **7/7** (2.9–2.15), **ditutup 14 Nov 2026 dengan pengecualian**. Fase 3: **9/13** — 3A ditutup 15 Nov 2026; 3B ditutup 18 Nov 2026 dengan pengecualian.
-- Task terakhir selesai: **3.9 — deploy 3B + cek browser** (`docs/F3B_ACCEPTANCE.md`), plus perbaikan hapus kelompok dan 360 px
-- Task berjalan: **3.10 — temuan + status pemeriksaan (DB, aturan, API)**, belum commit/deploy; berikutnya review lalu 3.11 (UI). Sisa **4 task** sampai 3.10 diterima;  Fase 4 dan kode akses kelompok (3D) dibatalkan 18 Nov 2026 atas arahan user; temuan terbit tampil publik.
+- Fase aktif: **Fase 3C — implementasi/deployment selesai, acceptance operator tersisa** (3.10–3.12 deployed; 3.13 belum ditutup). Fase 0, 1, 2A, 2B, **3A**, dan **3B** sudah ditutup.
+- Progress Fase 2A: **8/8 selesai** (ditutup dengan pengecualian). Fase 2B (lampiran): **7/7** (2.9–2.15), **ditutup 14 Nov 2026 dengan pengecualian**. Fase 3: **12/13** — 3A ditutup 15 Nov 2026; 3B ditutup 18 Nov 2026 dengan pengecualian.
+- Task terakhir selesai: **3.12 — deployment 3C**, dilanjutkan redesign dan penyempurnaan UI publik; lihat checkpoint terkini di atas.
+- Task tersisa: **3.13 — acceptance operator dan panduan final**. Implementasi 3.10–3.12 sudah deployed;  Fase 4 dan kode akses kelompok (3D) dibatalkan 18 Nov 2026 atas arahan user; temuan terbit tampil publik.
 - Semua perbaikan gaya tautan sudah di produksi.
-- Local branch: `main`; produksi rilis `20261118T045543Z-cffeaffbd4f3` (kode `cffeaff`, migrasi 9). Commit dokumen sesudahnya belum di-push.
+- Local branch: `main`; kode produksi `b340b3b`, migrasi 10; implementasi sudah di-push ke remote server.
 - Produksi: **`https://fikriramaaulia.online`** aktif (Caddy + Let's Encrypt, berlaku s.d. 2027-02-11)
-- Rilis produksi: `20261118T045543Z-cffeaffbd4f3` (kode `cffeaff`), migrasi versi **9**. Pengumuman, Materi, lampiran, kelas/kelompok, dan pencatatan pengumpulan + buku tulis aktif di produksi.
+- Rilis produksi: `20261118T122948Z-b340b3b1ca32` (kode `b340b3b`), migrasi versi **10**. Pengumuman, Materi, lampiran, kelas/kelompok, dan pencatatan pengumpulan + buku tulis aktif di produksi.
 - PostgreSQL aplikasi: aktif, readiness PASS
 - Admin: satu akun `fikri`; login dan logout lewat browser terbukti di audit
 
@@ -29,7 +39,7 @@
 | Hardening | HSTS 1 hari + CSP `enforce` | DONE, aktif di produksi | bagian Current Next Step |
 | 2A | Pengumuman + Materi teks | DITUTUP 14 Nov 2026 (dengan pengecualian) | `.kiro/steering/PHASE2_PLAN.md` |
 | 2B | Lampiran PDF/PPT/PPTX | DITUTUP 14 Nov 2026 (dengan pengecualian) | `.kiro/steering/PHASE2_PLAN.md` |
-| 3 | Progres Tugas Kelompok (3A kelas/kelompok, 3B pengumpulan, 3C temuan publik tanpa login) | 9/13; 3A ditutup 15 Nov, 3B ditutup 18 Nov 2026 dengan pengecualian; berikutnya 3C. 3D dibatalkan; login hanya admin | `.kiro/steering/PHASE3_PLAN.md`, `docs/F3A_ACCEPTANCE.md`, `docs/F3B_ACCEPTANCE.md` |
+| 3 | Progres Tugas Kelompok (3A kelas/kelompok, 3B pengumpulan, 3C temuan publik tanpa login) | 12/13; 3A/3B ditutup dengan pengecualian; 3.10–3.12 deployed, 3.13 menunggu acceptance operator. 3D dibatalkan; login hanya admin | `.kiro/steering/PHASE3_PLAN.md`, `docs/F3A_ACCEPTANCE.md`, `docs/F3B_ACCEPTANCE.md` |
 
 ## Fase 2A Tracker
 
@@ -85,7 +95,7 @@ Pengecualian 3A: zoom 200% belum dicek; lebar 700 dan 1000 px tidak terukur; bel
 
 Pengecualian 3B: keyboard halaman detail belum dicek; `datetime-local` di HP belum dicoba; AC08 belum dicoba langsung di produksi; belum ada uji komponen UI; kunci `FOR UPDATE` di trigger nomor putaran tidak dibuktikan uji. **Ditutup 18 Nov 2026 atas persetujuan user.**
 
-## Task 3.10 — Implementasi, belum deploy
+## Task 3.10 — Riwayat implementasi (kini deployed)
 
 - Migrasi 10: `evaluation_findings`, status pemeriksaan dan waktu konflik pada kelompok. Up/down-to 9/up diuji pada database uji; produksi tetap migrasi 9.
 - API admin: daftar/tambah/ubah/hapus draf, terbitkan seluruh draf, tandai selesai, GET/PATCH status pemeriksaan. Temuan terbit tidak dapat dihapus. Audit dan perubahan satu transaksi.
@@ -98,7 +108,7 @@ Pengecualian 3B: keyboard halaman detail belum dicek; `datetime-local` di HP bel
 - Review 3.10 pertama: BLOCK (publikasi/status terpisah, isi temuan terbit bisa diubah, kunci temuan publik belum diuji persis, respons admin OpenAPI kurang). Setelah persetujuan user melanjutkan: publikasi + status + audit digabung; isi temuan terbit dikunci (hanya resolusi boleh berubah); tes kunci nested ditambah; skema Finding admin ditambahkan. Tes rollback stale/status/audit dan larangan ubah 5 bidang terbit ditulis RED lebih dahulu.
 - Belum commit/deploy. Tidak mengubah checkout/runtime produksi. Database uji digunakan sesuai kontrak reset skema testdb.
 
-## Task 3.11 — Beranda progres + catatan, belum deploy
+## Task 3.11 — Riwayat UI progres + catatan (kini deployed di /progres/)
 
 - Sesuai penegasan user: Beranda menjadi progres tiap kelompok dengan catatan perbaikan tepat di bawahnya. `/progres/` tetap tersedia. Pengumuman/Materi tetap menu tambahan; tidak dibuat halaman detail publik terpisah.
 - Komponen publik menampilkan status terpisah, filter kelas/status/cari, catatan jenis/lokasi/masalah/perbaikan/Wajib atau Saran/Selesai; loading/error/retry dibedakan dari catatan kosong. Hanya API publik dipanggil, tanpa login.

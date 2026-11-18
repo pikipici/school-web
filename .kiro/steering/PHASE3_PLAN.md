@@ -1,6 +1,6 @@
 # Fase 3 — Modul Progres Tugas Kelompok (Rencana)
 
-> Status: **DISETUJUI 14 Nov 2026** (user mengikuti semua rekomendasi). **3A ditutup 15 Nov 2026** dengan pengecualian (`docs/F3A_ACCEPTANCE.md`); **3B ditutup 18 Nov 2026** dengan pengecualian (`docs/F3B_ACCEPTANCE.md`); 3C berikutnya.
+> Status: **DISETUJUI 14 Nov 2026** (user mengikuti semua rekomendasi). **3A ditutup 15 Nov 2026** dengan pengecualian (`docs/F3A_ACCEPTANCE.md`); **3B ditutup 18 Nov 2026** dengan pengecualian (`docs/F3B_ACCEPTANCE.md`); 3.10–3.12 kini deployed (migrasi 10); 3.13 menunggu acceptance operator. Checkpoint terbaru: root Pengumuman, progres di `/progres/`, produksi `20261118T122948Z-b340b3b1ca32`.
 > Sumber: `PLAN.md` bagian 1–7, 9, 10, 14 (AC01–AC24); `DESIGN.md`; pola Fase 1–2 (sesi, CSRF, audit, `?id=` untuk ekspor statis).
 
 ## Tujuan
@@ -109,10 +109,10 @@ Mutasi admin: sesi + CSRF + Origin + audit. `PATCH` memakai `updatedAt` dan 409 
 
 | Task | Isi | Uji |
 |---|---|---|
-| 3.10 **IMPLEMENTED, menunggu review; belum commit/deploy** | Migrasi `evaluation_findings` + status pemeriksaan di kelompok; paket + API admin: tambah/ubah/hapus temuan draf, terbitkan semua draf, tandai selesai, ubah status pemeriksaan; TUNTAS terhitung; audit dalam transaksi. API publik `GET /api/v1/public/groups/{id}`: nama, kelas, topik, tiga lajur, temuan **terbit** saja; baris tabel publik dapat `id` | TDD: AC05 (draf tidak pernah publik, uji mutan), AC06, AC09, AC10; kunci JSON publik persis tanpa email/catatan |
-| 3.11 **IMPLEMENTED, menunggu review** | Admin: bagian **Catatan perbaikan** di detail kelompok, draf tambah/ubah/hapus, publikasi + status atomik dengan konfirmasi, tandai selesai. Publik: Beranda dan `/progres/` langsung menampilkan progres setiap kelompok dan catatan perbaikan di bawahnya; tanpa login atau halaman detail terpisah | uji klien; lint/typecheck/build; E2E; 360px |
-| 3.12 | Deploy + cek browser + `docs/F3C_ACCEPTANCE.md` | semua gerbang |
-| 3.13 | Panduan singkat guru (`docs/ADMIN_GUIDE.md`: buat kelas/kelompok, catat kiriman, tulis dan terbitkan kesalahan); satu uji alur nyata dari awal sampai siswa membaca kesalahannya | user membaca panduan; alur nyata lulus |
+| 3.10 **DONE, reviewed + deployed** | Migrasi `evaluation_findings` + status pemeriksaan di kelompok; paket + API admin: tambah/ubah/hapus temuan draf, terbitkan semua draf, tandai selesai, ubah status pemeriksaan; TUNTAS terhitung; audit dalam transaksi. API publik `GET /api/v1/public/groups/{id}`: nama, kelas, topik, tiga lajur, temuan **terbit** saja; baris tabel publik dapat `id` | TDD: AC05 (draf tidak pernah publik, uji mutan), AC06, AC09, AC10; kunci JSON publik persis tanpa email/catatan |
+| 3.11 **DONE, reviewed + deployed; progres kini di /progres/** | Admin: bagian **Catatan perbaikan** di detail kelompok, draf tambah/ubah/hapus, publikasi + status atomik dengan konfirmasi, tandai selesai. Publik: Beranda dan `/progres/` langsung menampilkan progres setiap kelompok dan catatan perbaikan di bawahnya; tanpa login atau halaman detail terpisah | uji klien; lint/typecheck/build; E2E; 360px |
+| 3.12 **DONE, deployed + verified** | Deploy + cek browser + `docs/F3C_ACCEPTANCE.md` | semua gerbang |
+| 3.13 **PENDING acceptance operator; panduan singkat tersedia di docs/F3C_ACCEPTANCE.md** | Panduan singkat guru (`docs/ADMIN_GUIDE.md`: buat kelas/kelompok, catat kiriman, tulis dan terbitkan kesalahan); satu uji alur nyata dari awal sampai siswa membaca kesalahannya | user membaca panduan; alur nyata lulus |
 
 Temuan yang sudah terbit tidak dihapus; guru menandainya **Selesai** setelah siswa memperbaiki. Tidak ada fitur arsip terpisah.
 
