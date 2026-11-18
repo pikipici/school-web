@@ -5,7 +5,7 @@
 
 ## Tujuan
 
-Guru mencatat kelas, kelompok, pengumpulan PPT/PDF, buku tulis, dan hasil pemeriksaan dari dashboard. Publik melihat tabel ringkas di `/progres/`. Tiap kelompok membaca catatan revisi miliknya sendiri lewat kode akses. Semua status tetap diisi manual oleh guru; tidak ada Gmail dan tidak ada unggah dari siswa.
+Guru mencatat kelas, kelompok, pengumpulan PPT/PDF, buku tulis, dan hasil pemeriksaan dari dashboard. Publik melihat tabel ringkas di `/progres/`. Semua pengunjung/siswa membaca catatan revisi yang sudah terbit untuk kelompok mana pun tanpa login. Login hanya tersedia bagi guru/admin. Semua status tetap diisi manual oleh guru; tidak ada Gmail dan tidak ada unggah dari siswa.
 
 ## Pembagian
 
@@ -16,9 +16,9 @@ Guru mencatat kelas, kelompok, pengumpulan PPT/PDF, buku tulis, dan hasil pemeri
 | **3A** | Tahun ajaran, kelas, kelompok; tabel publik `/progres/` | 2 | Data privat (email kelompok) bocor ke publik |
 | **3B** | Pencatatan pengumpulan PPT/PDF per putaran + buku tulis | 3 | Status salah hitung; revisi menghapus bukti lama |
 | **3C** | Pemeriksaan: status review, temuan draf/terbit | 4 | Draf terlihat siswa; transisi status tidak sah |
-| **3D** | Portal kelompok dengan kode akses | 5 | Kelompok A membaca temuan kelompok B |
+| **3D (dibatalkan)** | Tidak ada login/kode akses/sesi kelompok; detail temuan terbit menjadi publik di 3C | 5 dibatalkan | Draf dan data internal harus tetap khusus admin |
 
-Di luar Fase 3 (usul jadi Fase 4): sesi presentasi + pertanyaan antarkelompok, rekap + ekspor CSV, halaman audit admin.
+Fase 4 (sesi presentasi, pertanyaan antarkelompok, rekap, CSV, halaman audit admin) dibatalkan 18 Nov 2026. Audit backend tetap berjalan.
 
 ## Keputusan yang saya usulkan
 
@@ -27,7 +27,7 @@ Di luar Fase 3 (usul jadi Fase 4): sesi presentasi + pertanyaan antarkelompok, r
 | K1 | Tahun ajaran | Seed `2026/2027` aktif; guru bisa menambah; tepat satu aktif | AC20; publik hanya melihat tahun aktif |
 | K2 | Kelas | Kode bebas (mis. `9A`), unik per tahun ajaran | AC20 |
 | K3 | Kelompok | Nama (mis. `Kelompok 1`), unik per kelas; topik K1–K7 wajib; email kelompok opsional | Topik menentukan isi tugas |
-| K4 | Email kelompok | Disimpan untuk guru saja; form menyarankan format `[nama].[kelas].2627.Informatika@gmail.com` | AC04: tidak pernah di respons publik/portal |
+| K4 | Email kelompok | Disimpan untuk guru saja; form menyarankan format `[nama].[kelas].2627.Informatika@gmail.com` | AC04: tidak pernah di respons publik |
 | K5 | Data siswa | **Tidak menyimpan nama anggota**; peran anggota (`PLAN.md` 2.5) ditunda | Data siswa paling sedikit; tidak dibutuhkan untuk status |
 | K6 | Hapus kelompok/kelas | Hapus hanya bila belum ada catatan apa pun; selain itu **nonaktifkan** (hilang dari publik, riwayat tetap) | `PLAN.md` 9 aturan 4 |
 | K7 | Status pengumpulan | **Dihitung** dari semua putaran: BELUM / SEBAGIAN / LENGKAP; tidak disimpan | Aturan 9.1: revisi PPT tidak menghapus PDF lama (AC08) |
@@ -38,21 +38,19 @@ Di luar Fase 3 (usul jadi Fase 4): sesi presentasi + pertanyaan antarkelompok, r
 | K12 | Terbit temuan | Per kelompok: tombol **Terbitkan evaluasi** menerbitkan semua draf sekaligus, dengan konfirmasi; temuan terbit tidak dihapus, hanya **diarsipkan** | Satu langkah sengaja; aturan 9.4 |
 | K13 | TUNTAS | Dihitung: LENGKAP + DISETUJUI + buku diterima | AC10; tidak bisa diset tangan |
 | K14 | Tabel publik | Kolom `PLAN.md` 5.4; filter kelas dan status pengumpulan; cari nama kelompok; tanpa email, temuan, atau catatan | AC04 |
-| K15 | Kode akses | 12 karakter acak dari alfabet tanpa huruf mirip (mis. `K7QM-4XWD-9TRA`), ±60 bit; disimpan sebagai HMAC-SHA256 dengan kunci server; **ditampilkan sekali** saat dibuat/rotasi | Cukup kuat dengan rate limit; tidak bisa dibaca ulang dari DB |
-| K16 | Sesi kelompok | Cookie terpisah `__Host-group_session`, HttpOnly, SameSite=Strict, maks **7 hari**; rotasi kode mencabut semua sesi kelompok itu; portal **baca saja** | Siswa membuka sesekali; tidak bisa mengubah apa pun |
-| K17 | Batas percobaan kode | Pakai paket `ratelimit` Fase 1: per IP dan global; kunci bertahap | AC13; kode tidak terikat nama akun |
-| K18 | Alamat halaman | Publik `/progres/`; portal `/progres/masuk/` dan `/progres/kelompok/`; admin `/admin/kelas/`, `/admin/kelompok/`, `/admin/kelompok/detail/?id=` | Ekspor statis tanpa segmen dinamis (seperti Fase 2) |
+| K15–K17 | Akses siswa/publik | Tanpa login, kode akses, sesi kelompok, atau rahasia HMAC baru; autentikasi hanya admin | Mengikuti keputusan user 18 Nov 2026; AC07 dan AC13 lama dibatalkan |
+| K18 | Alamat halaman | Publik `/progres/` dan `/progres/kelompok/?id=`; admin `/admin/kelas/`, `/admin/kelompok/`, `/admin/kelompok/detail/?id=` | Ekspor statis tanpa segmen dinamis (seperti Fase 2) |
 | K19 | ID | `bigint`, seperti Fase 1–2 | Konsisten |
-| K20 | Audit | Setiap mutasi + rotasi kode + masuk/keluar kelompok; detail tanpa kode akses, email, atau isi temuan | AC11 |
+| K20 | Audit | Setiap mutasi admin; detail audit tanpa email atau isi temuan | AC11 |
 
 ## Temuan teknis
 
 1. **`/progres/` saat ini statis** (tiga jalur + `ProjectSummary` dari `GET /api/v1/public/summary` yang selalu nol). 3A mengganti isinya dengan data nyata; endpoint ringkasan diisi angka sebenarnya.
-2. **Kunci HMAC kode akses** butuh rahasia baru di `.env` (mis. `GROUP_CODE_KEY`, 32 byte acak). `deploy.sh` harus menerima dan memvalidasi kunci ini — perubahan `.env` produksi, butuh izin (3D).
-3. **Transaksi**: catat putaran + audit, terbitkan evaluasi + ubah status, rotasi kode + cabut sesi harus satu transaksi. Audit Fase 2 masih fail-open di luar transaksi; untuk Fase 3 saya usulkan audit ditulis **di dalam transaksi yang sama** untuk aksi-aksi ini.
+2. **Akses publik tanpa login**: tidak ada `GROUP_CODE_KEY`, kode akses, atau sesi kelompok yang perlu ditambahkan. Login/sesi hanya admin.
+3. **Transaksi**: catat putaran + audit serta terbitkan evaluasi + ubah status + audit harus satu transaksi. Audit Fase 2 masih fail-open di luar transaksi; untuk Fase 3 saya usulkan audit ditulis **di dalam transaksi yang sama** untuk aksi-aksi ini.
 4. **Klik ganda**: catat putaran dan terbitkan evaluasi rawan terkirim dua kali. Usul: putaran memakai nomor yang dikirim klien (`roundNumber` berikutnya) dengan constraint unik, sehingga kiriman kedua mendapat 409.
 5. **Waktu terima** diketik guru dalam WIB; disimpan UTC; tidak boleh di masa depan lebih dari beberapa menit.
-6. **Cache publik**: tabel publik `no-store` atau cache sangat singkat; portal dan admin selalu `no-store`.
+6. **Cache publik**: tabel publik `no-store` atau cache sangat singkat; detail publik dan admin selalu `no-store`.
 7. **CSP** tetap `enforce`; halaman baru mengikuti pola hash otomatis.
 
 ## Endpoint (garis besar)
@@ -67,7 +65,6 @@ Di luar Fase 3 (usul jadi Fase 4): sesi presentasi + pertanyaan antarkelompok, r
 | GET/PATCH/DELETE | `/api/v1/admin/classes/{id}` | admin |
 | GET/POST | `/api/v1/admin/groups` | admin (`?class=`) |
 | GET/PATCH/DELETE | `/api/v1/admin/groups/{id}` | admin |
-| POST | `/api/v1/admin/groups/{id}/access-code` | admin: buat/rotasi, kembalikan kode **sekali** |
 | GET/POST | `/api/v1/admin/groups/{id}/submissions` | admin (3B) |
 | PATCH/DELETE | `/api/v1/admin/submissions/{id}` | admin (3B) |
 | PUT | `/api/v1/admin/groups/{id}/notebook` | admin (3B) |
@@ -75,9 +72,7 @@ Di luar Fase 3 (usul jadi Fase 4): sesi presentasi + pertanyaan antarkelompok, r
 | PATCH | `/api/v1/admin/findings/{id}` | admin (3C: ubah, selesai, arsip) |
 | POST | `/api/v1/admin/groups/{id}/publish` | admin (3C: terbitkan semua draf) |
 | PATCH | `/api/v1/admin/groups/{id}/review-status` | admin (3C) |
-| POST | `/api/v1/group/access` | publik: tukar kode dengan sesi (3D) |
-| POST | `/api/v1/group/logout` | kelompok (3D) |
-| GET | `/api/v1/group/me` | kelompok: status + temuan **terbit** + riwayat putaran tanpa catatan internal (3D) |
+| GET | `/api/v1/public/groups/{id}` | publik tanpa login: identitas kelompok, tiga lajur status, temuan terbit saja (3C) |
 
 Mutasi admin: sesi + CSRF + Origin + audit. `PATCH` memakai `updatedAt` dan 409 saat konflik, seperti Fase 2.
 
@@ -102,7 +97,11 @@ Mutasi admin: sesi + CSRF + Origin + audit. `PATCH` memakai `updatedAt` dan 409 
 | 3.8 **DONE** | UI admin "Catat Pengumpulan" + buku tulis di detail kelompok; publik menampilkan status | lint/typecheck/build + E2E |
 | 3.9 **DONE** | Deploy + cek browser + `docs/F3B_ACCEPTANCE.md` | semua gerbang |
 
-### 3C — Kesalahan tugas (temuan), tampil publik
+### 3C — Kesalahan tugas (temuan), tampil publik tanpa login
+
+**Prioritas terbaru user:** Beranda langsung menampilkan progres per kelompok dan catatan perbaikan terbit di bawahnya. Tidak perlu halaman detail publik terpisah; API detail tetap digunakan untuk memuat catatan tiap kelompok.
+
+**Kebijakan akses:** login hanya untuk admin. Pengunjung/siswa tidak memerlukan akun, kode akses, atau sesi untuk membaca progres dan temuan terbit kelompok mana pun.
 
 > **Disederhanakan 18 Nov 2026** atas arahan user ("gausa terlalu advance, gua cuma perlu website buat ngasi tau siswa letak kesalahan tugas mereka"). Fase 4 (tanya jawab, rekap, CSV, halaman audit) **dibatalkan**; lihat `PHASE4_PLAN.md`.
 >
@@ -110,8 +109,8 @@ Mutasi admin: sesi + CSRF + Origin + audit. `PATCH` memakai `updatedAt` dan 409 
 
 | Task | Isi | Uji |
 |---|---|---|
-| 3.10 | Migrasi `evaluation_findings` + status pemeriksaan di kelompok; paket + API admin: tambah/ubah/hapus temuan draf, terbitkan semua draf, tandai selesai, ubah status pemeriksaan; TUNTAS terhitung; audit dalam transaksi. API publik `GET /api/v1/public/groups/{id}`: nama, kelas, topik, tiga lajur, temuan **terbit** saja; baris tabel publik dapat `id` | TDD: AC05 (draf tidak pernah publik, uji mutan), AC06, AC09, AC10; kunci JSON publik persis tanpa email/catatan |
-| 3.11 | Admin: bagian **Temuan** di halaman detail kelompok (jenis, lokasi, masalah, perbaikan, Wajib/Saran), **Terbitkan** dengan konfirmasi, **Selesai**, pilih status pemeriksaan. Publik: nama kelompok di `/progres/` jadi tautan ke `/progres/kelompok/?id=` berisi daftar kesalahan | uji klien; lint/typecheck/build; E2E; 360px |
+| 3.10 **IMPLEMENTED, menunggu review; belum commit/deploy** | Migrasi `evaluation_findings` + status pemeriksaan di kelompok; paket + API admin: tambah/ubah/hapus temuan draf, terbitkan semua draf, tandai selesai, ubah status pemeriksaan; TUNTAS terhitung; audit dalam transaksi. API publik `GET /api/v1/public/groups/{id}`: nama, kelas, topik, tiga lajur, temuan **terbit** saja; baris tabel publik dapat `id` | TDD: AC05 (draf tidak pernah publik, uji mutan), AC06, AC09, AC10; kunci JSON publik persis tanpa email/catatan |
+| 3.11 **IMPLEMENTED, menunggu review** | Admin: bagian **Catatan perbaikan** di detail kelompok, draf tambah/ubah/hapus, publikasi + status atomik dengan konfirmasi, tandai selesai. Publik: Beranda dan `/progres/` langsung menampilkan progres setiap kelompok dan catatan perbaikan di bawahnya; tanpa login atau halaman detail terpisah | uji klien; lint/typecheck/build; E2E; 360px |
 | 3.12 | Deploy + cek browser + `docs/F3C_ACCEPTANCE.md` | semua gerbang |
 | 3.13 | Panduan singkat guru (`docs/ADMIN_GUIDE.md`: buat kelas/kelompok, catat kiriman, tulis dan terbitkan kesalahan); satu uji alur nyata dari awal sampai siswa membaca kesalahannya | user membaca panduan; alur nyata lulus |
 
@@ -122,15 +121,17 @@ Setiap task: uji gagal dulu, implementasi, uji/vet/build di `cbt-vps`, commit, c
 ## Risiko dan mitigasi
 
 1. **Email/temuan bocor ke publik.** DTO publik terpisah; uji membandingkan daftar kunci JSON persis.
-2. **Kelompok membaca data kelompok lain.** `group/me` tidak menerima ID dari klien; identitas hanya dari sesi; uji AC07.
-3. **Tebak kode akses.** ±60 bit + rate limit per IP dan global + audit percobaan gagal.
-4. **Kode tersebar.** Rotasi satu klik mencabut semua sesi; kode lama langsung mati.
+2. **Detail publik tanpa login.** Membaca temuan terbit kelompok lain diperbolehkan; uji akses anonim untuk lebih dari satu ID kelompok.
+3. **Mutasi tanpa izin.** Semua perubahan tetap membutuhkan sesi admin + CSRF + Origin; akses baca publik tidak memberikan hak tulis.
+4. **Data internal pada detail publik.** Jangan kirim pengirim, subjek, nama berkas tugas, email kelompok, atau catatan guru.
 5. **Status salah hitung.** Status pengumpulan dan TUNTAS dihitung, bukan disimpan; uji kombinasi putaran.
-6. **Draf terlihat siswa.** Query portal memfilter `published`; uji mutan seperti 2B.
-7. **Salah input guru.** Putaran dan temuan bisa dikoreksi; semuanya beraudit; temuan terbit diarsipkan, bukan dihapus.
+6. **Draf terlihat siswa.** Query detail publik memfilter `published`; uji mutan seperti 2B.
+7. **Salah input guru.** Putaran dan temuan bisa dikoreksi; semuanya beraudit; temuan terbit ditandai Selesai, bukan dihapus; tidak ada fitur arsip terpisah.
 8. **Data siswa.** Tidak menyimpan nama anggota; email kelompok hanya admin.
 
-## Keputusan user (14 Nov 2026)
+## Riwayat keputusan user (14 Nov 2026)
+
+> Keputusan tentang kode akses, sesi kelompok, 3D, dan Fase 4 di bawah dibatalkan pada 18 Nov 2026. Kebijakan berlaku: website publik tanpa login siswa; login hanya admin, sesuai bagian 3C.
 
 User mengikuti semua rekomendasi:
 
@@ -150,7 +151,7 @@ Status rencana: **DISETUJUI 14 Nov 2026.**
   - `study_groups` (bukan `groups`, karena `GROUPS` kata kunci SQL): nama 1–60 karakter tanpa karakter kontrol, unik per kelas tanpa beda huruf; topik **wajib**; email opsional, huruf kecil, format email, ≤ 254; urutan ≥ 0; default aktif; kelas yang punya kelompok dan topik yang dipakai tidak bisa dihapus. Tidak ada kolom nama anggota.
   - `down-to 7` menghapus ketiga tabel tanpa menyentuh Materi; `up` ulang tidak menggandakan seed. `goose validate`, `sqlc generate`, seluruh suite 2 kali, vet, build hijau.
   - **Uji mutan:** indeks satu-aktif dibuang → uji tahun ajaran gagal; indeks nama tanpa `lower()` → uji kelompok gagal.
-  - Kolom kode akses ditambahkan nanti di Task 3.14. Migrasi 8 belum di produksi; ikut deploy Task 3.5.
+  - Rencana kolom kode akses dibatalkan 18 Nov 2026; tidak ditambahkan. Pada saat Task 3.1 selesai, migrasi 8 belum di produksi; kemudian dideploy di Task 3.5.
 - **Task 3.2 selesai (15 Nov 2026).** RED: `no non-test Go files`. GREEN di `cbt-vps` dengan database uji: paket `backend/internal/progress` + `sql/queries/progress.sql`; 6 uji lulus, seluruh suite 2 kali, `-race`, vet, build, gofmt hijau.
   - Validasi di Go (sama dengan DB): tahun `YYYY/YYYY` berurutan; kode kelas 1–20; nama kelas ≤ 80; nama kelompok 1–60 tanpa karakter kontrol; email dirapikan ke huruf kecil, kosong = tidak ada; topik dan kelas wajib; urutan ≥ 0. Semua dipangkas spasinya.
   - Tahun ajaran: daftar (terbaru dulu), tambah (tidak aktif), **aktifkan** dalam satu transaksi (matikan yang lama dulu, baru nyalakan yang baru; ID tak ada → `ErrNotFound` dan tahun aktif tidak berubah).

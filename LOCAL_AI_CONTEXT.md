@@ -5,6 +5,7 @@
 ## TL;DR
 
 - Produk: web pribadi guru berisi Pengumuman, Materi, dan monitoring/evaluasi manual tugas kelompok Informatika kelas IX.
+- Website publik tanpa login pengunjung/siswa. Login hanya admin. Detail kelompok dan temuan terbit publik; draf, email/metadata pengumpulan, catatan internal, dan audit khusus admin. Tidak ada kode akses atau sesi kelompok.
 - Backend wajib Go (`chi`, `pgxpool`, `sqlc`, Goose, PostgreSQL).
 - Frontend wajib Next.js App Router + TypeScript + Tailwind, static export.
 - Tidak ada Gmail API/IMAP, upload tugas siswa, atau AI grading. Upload PDF/PPT/PPTX hanya untuk lampiran Materi oleh admin pada Fase 2B.
@@ -41,6 +42,8 @@
 
 ## Current state
 
+> Checkpoint terbaru 18 Nov 2026: Fase 3B ditutup; berikutnya Task 3.10. Produksi terakhir tercatat rilis `20261118T045543Z-cffeaffbd4f3`, migrasi 9. Kebijakan: publik tanpa login siswa, login hanya admin. Butir lama di bawah adalah riwayat fondasi/Fase 2 awal, bukan status runtime terkini; lihat ringkasan `PROGRESS.md`.
+
 - Fase 0 dan Fase 1 sudah ditutup pada 13 November 2026.
 - Redesign web pribadi guru, HTTPS, HSTS satu hari, dan CSP `enforce` sudah aktif di produksi.
 - Fase 2 sudah disetujui dan dibagi menjadi 2A (konten teks) lalu 2B (lampiran).
@@ -68,8 +71,12 @@
   - [x] 0.11 Remote deployment/smoke
   - [x] 0.12 Delivery Gate (pengecualian: cek browser nyata belum)
 - [x] Fase 1 — Database + admin authentication (ditutup 13 Nov 2026; `.kiro/steering/PHASE1_PLAN.md`)
-- [~] Fase 2A — Pengumuman dan Materi teks (5/8; Task 2.1–2.5 selesai)
-- [ ] Fase 2B — Lampiran PDF/PPT/PPTX (belum mulai)
+- [x] Fase 2A — Pengumuman dan Materi teks (ditutup 14 Nov 2026 dengan pengecualian)
+- [x] Fase 2B — Lampiran PDF/PPT/PPTX (ditutup 14 Nov 2026 dengan pengecualian)
+- [x] Fase 3A — Kelas, kelompok, progres publik (ditutup 15 Nov 2026 dengan pengecualian)
+- [x] Fase 3B — Pengumpulan dan buku tulis (ditutup 18 Nov 2026 dengan pengecualian)
+- [ ] Fase 3C — Temuan kesalahan publik tanpa login (Task 3.10–3.13)
+- Fase 3D (kode akses/sesi kelompok) dan Fase 4 dibatalkan.
 
 ## Commands
 
@@ -97,4 +104,4 @@ npm run build
 
 ## Current next step
 
-Lanjutkan Task 2.6 sesuai `.kiro/steering/PHASE2_PLAN.md`: frontend admin untuk daftar/form Pengumuman dan Materi, terbitkan/tarik, hapus dengan konfirmasi, dan state lengkap. Produksi tetap di `https://fikriramaaulia.online`; perubahan Fase 2A dan migrasi 4–6 belum dideploy. Uji integrasi membutuhkan `/home/ubuntu/.informatika-monitoring-test.env`.
+Lanjutkan Task 3.10 sesuai `.kiro/steering/PHASE3_PLAN.md`: migrasi, aturan pemeriksaan, API admin temuan, dan API detail kelompok publik tanpa login (hanya temuan terbit). Jangan buat login siswa, kode akses, atau sesi kelompok. Produksi terakhir tercatat di `https://fikriramaaulia.online` dengan migrasi 9. Uji integrasi membutuhkan `/home/ubuntu/.informatika-monitoring-test.env`; deploy/restart tetap perlu persetujuan eksplisit.

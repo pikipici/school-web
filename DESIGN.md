@@ -128,7 +128,7 @@ components:
 
 > Revisi 13 November 2026: produk berubah dari alat tunggal "Papan Progres" menjadi **web pribadi guru** yang memuat konten sekolah. Lihat `.kiro/steering/REDESIGN_BACKLOG.md`.
 
-Web ini adalah rumah pribadi seorang guru Informatika. Kesannya rapi, profesional, dan tenang, seperti catatan seorang pengajar, bukan dashboard SaaS dan bukan papan kendali. Halaman depan langsung menampilkan konten: **Pengumuman** terbaru, lalu daftar **Materi**. **Progres Tugas Kelompok** adalah satu menu tersendiri, bukan seluruh produk. Di dalamnya tiga jalur status tetap dipisahkan: **Pengumpulan**, **Pemeriksaan**, dan **Buku Tulis**.
+Web ini adalah rumah pribadi seorang guru Informatika. Kesannya rapi, profesional, dan tenang, seperti catatan seorang pengajar, bukan dashboard SaaS dan bukan papan kendali. Keputusan terbaru user: halaman depan langsung menampilkan **progres tugas setiap kelompok**, dengan **catatan perbaikan terbit di bawah kelompok tersebut**. Pengumuman dan Materi tetap menu tambahan, bukan konten utama Beranda. Di dalamnya tiga jalur status tetap dipisahkan: **Pengumpulan**, **Pemeriksaan**, dan **Buku Tulis**.
 
 Acuan struktur: [leerob.com](https://leerob.com) untuk daftar konten yang bersih, dan [gov.uk](https://www.gov.uk) untuk pengumuman yang jelas dan mudah dibaca. Yang ditiru hanya struktur dan ketertiban, bukan tampilan.
 
@@ -140,7 +140,7 @@ Antislop digunakan sebagai filter, bukan sumber gaya. Setiap teknik visual harus
 - Pengumuman dan Materi nanti ditulis lewat dashboard admin; guru boleh melampirkan PDF dan PPT. Sebelum itu tersedia, tampilkan keadaan kosong yang jujur.
 - Status progres diperbarui manual oleh guru setelah memeriksa Gmail di luar website. Peringatan ini hanya muncul di halaman progres.
 - Website tidak membaca Gmail, tidak menerima upload dari siswa, dan tidak memeriksa tugas otomatis.
-- Monitoring publik hanya berisi informasi aman dan ringkas.
+- Semua halaman pengunjung/siswa bersifat publik tanpa login, termasuk detail kelompok dan temuan yang sudah diterbitkan. Login hanya admin. Draf, email, metadata pengumpulan, dan catatan internal tetap khusus admin.
 - Tidak ada ranking, statistik palsu, testimonial, klaim otomatis, atau copy pemasaran berlebihan.
 
 ### Liveliness dials
@@ -164,11 +164,11 @@ Aturan:
 
 ## Typography
 
-`Newsreader` dipakai terbatas pada judul halaman dan heading bagian agar halaman terasa seperti catatan akademik yang serius. `IBM Plex Sans` dipakai pada isi, navigasi, form, dan kontrol. `IBM Plex Mono` hanya untuk data yang memang teknis: waktu, kode kelompok yang sedang dikelola guru, ID audit, dan nama file metadata.
+`Newsreader` dipakai terbatas pada judul halaman dan heading bagian agar halaman terasa seperti catatan akademik yang serius. `IBM Plex Sans` dipakai pada isi, navigasi, form, dan kontrol. `IBM Plex Mono` hanya untuk data yang memang teknis: waktu, ID audit, dan nama file metadata.
 
 Aturan:
 
-- Body text minimal 16px pada halaman publik dan portal kelompok.
+- Body text minimal 16px pada halaman publik termasuk detail kelompok.
 - Gunakan `clamp()` untuk display/H1 agar tidak memotong layar sempit.
 - Jangan memakai monospace sebagai dekorasi atau seluruh heading.
 - Jangan memakai uppercase + letter spacing lebar sebagai pola heading standar.
@@ -180,22 +180,23 @@ Aturan:
 ### Beranda dan navigasi
 
 - Header: nama guru di kiri; menu `Pengumuman`, `Materi`, `Progres Tugas` di kanan. Pada layar sempit menu membungkus ke baris kedua, tetap terlihat, tanpa ikon hamburger.
-- Isi beranda berurutan: judul halaman satu baris, daftar Pengumuman terbaru, daftar Materi. Tidak ada hero.
+- Isi beranda: judul Progres Tugas Kelompok, peringatan pembaruan manual, filter kelas/status/cari, lalu setiap kelompok dengan progres dan catatan perbaikan di bawahnya. Tidak ada hero atau halaman detail wajib.
 - Pengumuman: baris berisi tanggal (WIB), judul, dan ringkasan satu kalimat. Materi: daftar judul dengan topik dan tautan lampiran.
 - Menu hanya berisi halaman atau bagian yang benar-benar ada.
 
 ### Public monitoring (halaman Progres Tugas)
 
-- Desktop: header ringkas, penjelasan manual-update, filter, kemudian daftar kelompok.
+- Beranda dan `/progres/`: header ringkas, penjelasan manual-update, filter, kemudian daftar kelompok. Setiap kelompok satu artikel, tiga status terpisah, lalu catatan perbaikan terbit langsung di bawahnya.
 - Kolom status tetap terpisah: Kelompok, Kelas, Topik, Pengumpulan, Pemeriksaan, Buku Tulis, Terakhir Diperbarui.
 - Ringkasan angka hanya ditampilkan jika membantu siswa/guru memahami progres nyata; bukan baris kartu KPI dekoratif.
 - Pada mobile, tabel berubah menjadi record rows satu kolom dengan label field; jangan memaksa horizontal scroll.
 
-### Group portal
+### Detail kelompok publik (tanpa login)
 
-- Status kelompok sendiri muncul pertama.
+- Semua pengunjung bisa membuka kelompok mana pun dari `/progres/`; tidak ada login siswa, kode akses, atau sesi kelompok.
+- Status kelompok yang dipilih muncul pertama.
 - Tiga jalur status disusun sebagai urutan kerja, bukan tiga kartu identik.
-- Catatan revisi dikelompokkan berdasarkan putaran dan file.
+- Hanya catatan revisi yang sudah diterbitkan ditampilkan, dengan jenis file dan lokasi kesalahan. Jangan tampilkan metadata privat pengumpulan.
 - Setiap temuan menampilkan lokasi, masalah, tindakan yang diminta, prioritas, dan status penyelesaian.
 
 ### Admin
@@ -257,7 +258,7 @@ Contoh label yang benar: `Belum Mengumpulkan`, `Terkumpul Sebagian`, `Sedang Dip
 - Setiap input memiliki visible `<label>`; placeholder bukan label.
 - Required/optional ditulis eksplisit.
 - Error menjelaskan masalah dan perbaikan, bukan hanya border merah.
-- Publikasi evaluasi dan rotasi kode meminta preview + konfirmasi.
+- Publikasi evaluasi meminta preview + konfirmasi, dengan penjelasan bahwa temuan akan bisa dibaca publik tanpa login.
 - Draft dan Published dibedakan dengan teks/ikon, bukan warna saja.
 - Focus input pada mobile tidak boleh tertutup keyboard.
 

@@ -1,7 +1,11 @@
 # PLAN.md — Website Monitoring dan Evaluasi Tugas Kelompok Informatika Kelas IX
 
 **Status:** Spesifikasi pengembangan / developer handoff
-**Versi:** 2.1 — 13 November 2026 (revisi arah: web pribadi guru dengan Pengumuman dan Materi)
+**Versi:** 2.2 — 18 November 2026 (akses publik tanpa login; login hanya admin)
+
+> **Prioritas tampilan terbaru:** halaman depan langsung menampilkan progres tugas tiap kelompok dan catatan perbaikan terbit di bawahnya, tanpa perlu halaman detail terpisah. Pengumuman dan Materi tetap menu tambahan. Keputusan terbaru ini menggantikan susunan Beranda lama di bagian berikut.
+>
+> **Kebijakan akses berlaku:** seluruh halaman pengunjung/siswa, termasuk detail kelompok dan temuan yang sudah diterbitkan, bersifat publik tanpa akun, kode akses, atau sesi kelompok. Login hanya untuk guru/admin. Draf, email kelompok, metadata email/berkas pengumpulan, catatan internal, dan audit tetap khusus admin. Rencana eksekusi terbaru: `.kiro/steering/PHASE3_PLAN.md` (3.10–3.13); tanya jawab, rekap, CSV, dan halaman audit dibatalkan.
 **Tahun pelajaran awal:** 2026/2027
 **Bahasa antarmuka:** Bahasa Indonesia
 **Prinsip utama:** Pengumpulan tugas tetap melalui email guru. **Website TIDAK terintegrasi dengan Gmail; seluruh status, pemeriksaan, dan revisi dicatat MANUAL oleh guru.** Backend aplikasi wajib menggunakan **Go**, sedangkan Next.js hanya untuk frontend.
@@ -16,11 +20,11 @@ Produk bukan lagi alat tunggal monitoring, melainkan **web pribadi guru** yang m
 |---|---|---|---|
 | **Pengumuman** | Judul, tanggal (WIB), isi singkat | Guru lewat dashboard admin | Publik |
 | **Materi** | Judul, topik, deskripsi, lampiran | Guru lewat dashboard admin | Publik |
-| **Progres Tugas Kelompok** | Seluruh isi PLAN ini | Guru lewat dashboard admin | Publik ringkas; detail via kode akses kelompok |
+| **Progres Tugas Kelompok** | Seluruh isi PLAN ini | Guru lewat dashboard admin | Publik tanpa login; detail hanya temuan yang sudah terbit |
 
 Keputusan terkunci:
 
-- Halaman depan langsung menampilkan konten (Pengumuman terbaru, lalu daftar Materi), tanpa hero.
+- Halaman depan langsung menampilkan progres setiap kelompok dan catatan perbaikan terbit di bawah kelompoknya, tanpa hero. Pengumuman dan Materi tetap menu tambahan.
 - Menu publik: `Pengumuman`, `Materi`, `Progres Tugas`.
 - Header menampilkan **nama pribadi guru saja**, tanpa foto. Nama: "Fikri Rama Aulia" (`frontend/src/lib/site.ts`).
 - Konten Pengumuman dan Materi ditulis lewat dashboard admin Go; tidak ada penulisan konten dari browser publik.
@@ -56,7 +60,7 @@ Tujuan:
 2. Memisahkan status **pengumpulan**, **evaluasi**, dan **buku tulis**.
 3. Guru dapat menulis catatan semisal `PPT, Slide 5: diagram kurang jelas; tambahkan keterangan setiap simpul` atau `PDF, Halaman 3: definisi Tree belum tepat; revisi definisi beserta contoh`.
 4. Catatan dapat disimpan sebagai draf, lalu **dipublikasikan secara sengaja**.
-5. Kelompok melihat evaluasinya sendiri, bukan detail kelompok lain.
+5. Semua pengunjung dapat melihat evaluasi kelompok mana pun yang sudah diterbitkan, tanpa login.
 6. Semua putaran revisi memiliki histori, tanggal, dan jejak tindakan guru.
 7. Kewajiban pertanyaan saat kelompok lain presentasi dapat dicatat.
 
@@ -118,11 +122,10 @@ Peran yang dapat dicatat secara opsional: (1) mencari/menyusun materi, (2) menyu
 
 | Jenis | Bisa melakukan | Tidak boleh melakukan |
 |---|---|---|
-| **Publik/siswa tanpa login** | Melihat tabel seluruh kelompok: kelas, topik, status pengumpulan, status evaluasi ringkas, waktu pembaruan | Membaca catatan kesalahan detail, email pengirim, audit log, atau data privat |
-| **Kelompok dengan kode akses** | Membaca detail status dan **catatan yang sudah dipublikasikan** milik kelompoknya sendiri, riwayat revisinya | Mengubah status/evaluasi, melihat detail kelompok lain, melihat draf guru |
+| **Publik/siswa tanpa login** | Melihat tabel progres dan detail kelompok mana pun, termasuk lokasi kesalahan dan instruksi perbaikan yang sudah diterbitkan | Mengubah data, melihat draf guru, email/metadata pengumpulan, catatan internal, atau audit |
 | **Guru/admin** | Mengelola kelas/kelompok, mencatat kiriman, buku, evaluasi, revisi, pertanyaan, ekspor rekap | Menggunakan website untuk membaca email otomatis (fitur tidak ada) |
 
-**Default akses:** monitoring publik tanpa akun; detail revisi dengan **kode akses kelompok yang kuat**. Guru memberikan kode privat kepada tiap kelompok. Jika suatu saat sekolah menghendaki detail juga publik, itu merupakan **perubahan kebijakan privasi** dan tidak termasuk MVP.
+**Default akses:** website publik tanpa akun. Hanya guru/admin yang login untuk mengelola data. Tidak ada login siswa/kelompok, kode akses, cookie sesi kelompok, atau pembatasan temuan terbit berdasarkan identitas kelompok.
 
 ## 4. MVP: fitur wajib dan fitur yang sengaja dikecualikan
 
@@ -138,7 +141,7 @@ Peran yang dapat dicatat secara opsional: (1) mencari/menyusun materi, (2) menyu
 - [ ] Pencatatan serah terima satu buku tulis kelompok secara **manual**.
 - [ ] Form catatan perbaikan: file, lokasi (slide/halaman/bagian), masalah, perbaikan yang diharapkan, prioritas.
 - [ ] Draf evaluasi, publikasi, dan status temuan terbuka/selesai.
-- [ ] Portal kelompok privat dengan kode akses dan riwayat revisi.
+- [ ] Halaman detail kelompok publik tanpa login untuk membaca temuan yang sudah diterbitkan.
 - [ ] Pencatatan partisipasi pertanyaan antarkelompok.
 - [ ] Rekap/ekspor CSV hanya untuk guru.
 - [ ] Audit log perubahan penting.
@@ -191,7 +194,7 @@ Aturan validasi:
 
 ### 5.4 Tampilan publik
 
-Gunakan kolom terpisah: **Kelompok | Kelas | Topik | Pengumpulan | Pemeriksaan | Buku Tulis | Terakhir Diperbarui**. Jangan tampilkan informasi internal, alamat email kelompok, atau detail kesalahan ke pengunjung publik.
+Gunakan kolom terpisah: **Kelompok | Kelas | Topik | Pengumpulan | Pemeriksaan | Buku Tulis | Terakhir Diperbarui**. Nama kelompok menaut ke detail publik berisi kesalahan yang sudah diterbitkan. Jangan tampilkan draf, informasi internal, alamat email, atau metadata berkas pengumpulan.
 
 ---
 
@@ -203,7 +206,7 @@ Gunakan kolom terpisah: **Kelompok | Kelas | Topik | Pengumpulan | Pemeriksaan |
 2. Buat kelas (`9A`, `9B`, dst.) dan kelompoknya.
 3. Pilih satu dari tujuh topik untuk masing-masing kelompok.
 4. Catat akun email kelompok sesuai format juknis.
-5. Hasilkan kode akses kuat per kelompok dan distribusikan **secara privat**.
+5. Bagikan tautan halaman progres publik; siswa tidak perlu login atau kode akses.
 6. Semua kelompok langsung muncul di monitoring dengan status **Belum Mengumpulkan**.
 
 ### B. Kelompok mengirim tugas
@@ -222,7 +225,7 @@ Gunakan kolom terpisah: **Kelompok | Kelas | Topik | Pengumpulan | Pemeriksaan |
 4. Simpan sebagai **Draf** (belum terlihat siswa).
 5. Klik **Publikasikan Evaluasi** jika sudah siap.
 6. Tetapkan `Perlu Revisi` bila ada temuan wajib.
-7. Kelompok membaca catatan yang dipublikasikan melalui portalnya.
+7. Siswa membaca catatan yang dipublikasikan di halaman detail kelompok publik tanpa login.
 
 ### D. Perbaikan dan pengumpulan ulang
 
@@ -249,8 +252,7 @@ Gunakan kolom terpisah: **Kelompok | Kelas | Topik | Pengumpulan | Pemeriksaan |
 | `/` | Publik | Ringkasan proyek dan tombol monitoring / akses kelompok |
 | `/monitoring` | Publik | Statistik, tabel semua kelompok, filter dan pencarian |
 | `/juknis` | Publik | Ringkasan ketentuan dan tautan juknis resmi jika ada |
-| `/akses-kelompok` | Kelompok | Form memasukkan kode akses |
-| `/kelompok/saya` | Kelompok tervalidasi | Status, buku tulis, catatan evaluasi terpublikasi, riwayat revisi |
+| `/progres/kelompok/?id=` | Publik tanpa login | Status kelompok, buku tulis, dan catatan evaluasi yang sudah diterbitkan |
 | `/admin/login` | Guru | Login |
 | `/admin` | Guru | KPI dan daftar tindakan yang harus ditangani |
 | `/admin/kelas` | Guru | CRUD kelas |
@@ -262,7 +264,7 @@ Gunakan kolom terpisah: **Kelompok | Kelas | Topik | Pengumpulan | Pemeriksaan |
 | `/admin/rekap` | Guru | Rekap, filter, unduh CSV |
 | `/admin/audit` | Guru | Log perubahan |
 
-**UX wajib:** mobile-first; label eksplisit; status punya teks dan ikon (bukan warna saja); form jelas; tombol cepat; konfirmasi sebelum publikasi/rotasi kode; keadaan loading, kosong, dan error; timestamp tampil **WIB (Asia/Jakarta)** dan disimpan sebagai UTC.
+**UX wajib:** mobile-first; label eksplisit; status punya teks dan ikon (bukan warna saja); form jelas; tombol cepat; konfirmasi sebelum publikasi; keadaan loading, kosong, dan error; timestamp tampil **WIB (Asia/Jakarta)** dan disimpan sebagai UTC.
 
 ---
 
@@ -272,14 +274,14 @@ Gunakan kolom terpisah: **Kelompok | Kelas | Topik | Pengumpulan | Pemeriksaan |
 
 | Lapisan | Teknologi | Tanggung jawab |
 |---|---|---|
-| **Frontend** | **Next.js App Router + TypeScript + Tailwind CSS** | Halaman publik, dashboard guru, portal kelompok, state UI, validasi untuk pengalaman pengguna, memanggil API Go |
+| **Frontend** | **Next.js App Router + TypeScript + Tailwind CSS** | Halaman publik termasuk detail kelompok, dashboard guru, state UI, validasi untuk pengalaman pengguna, memanggil API Go |
 | **Backend utama** | **Go (`net/http` + `go-chi/chi/v5`)** | REST API, aturan bisnis, seluruh validasi tepercaya, login/sesi, otorisasi, CRUD, status, evaluasi, audit, ekspor CSV |
 | **Database** | **PostgreSQL** (dapat memakai Supabase **sebagai hosting database saja**) | Menyimpan kelas, kelompok, metadata pengumpulan, catatan evaluasi, akun/sesi, dan riwayat |
 | **Akses DB Go** | **pgx/v5 + pgxpool**, **sqlc** | Koneksi pool PostgreSQL, query SQL bertipe, transaksi |
 | **Migrasi database** | **goose** (atau tool migrasi Go sekelas yang dipilih saat setup) | Skema database versioned dan reproducible |
 | **Validasi input** | **Go structs + validasi di service/handler**; Zod opsional di frontend | Sumber kebenaran tetap validasi backend, bukan validasi browser |
 | **Otentikasi guru** | **Go-managed admin session**, kata sandi hash **Argon2id** | Login admin, logout, otorisasi server-side; tidak ada daftar akun admin publik |
-| **Otentikasi kelompok** | Kode akses acak kuat + **sesi Go HttpOnly** | Akses detail kelompok sendiri saja, tidak dapat mengubah data |
+| **Akses publik/siswa** | Tanpa autentikasi | Membaca progres dan temuan terbit kelompok mana pun; tidak dapat mengubah data |
 | **Testing** | `go test`, `httptest`, integrasi PostgreSQL; Vitest opsional; Playwright E2E | Pengujian backend, akses ilegal, perilaku UI, end-to-end |
 | **Deployment** | **Single VPS `cbt-vps` + systemd**; Next.js static export dilayani binary Go; PostgreSQL di VPS | Satu origin publik, satu runtime Go, build/test/deploy di VPS mengikuti pola LMS |
 
@@ -334,7 +336,7 @@ Gunakan kolom terpisah: **Kelompok | Kelas | Topik | Pengumpulan | Pemeriksaan |
 - Pada development, Next.js boleh memakai rewrite transparan `/api/*` ke Go. Pada production, browser berbicara ke origin yang sama dan static frontend tidak memiliki runtime server Next.js.
 - Semua lalu lintas browser produksi memakai HTTPS. Cookie sesi `HttpOnly`, `Secure`, `SameSite=Lax/Strict` sesuai alur; validasi CSRF untuk request mutasi berbasis cookie dan periksa `Origin`.
 - Layanan Go mengakses PostgreSQL lokal melalui credential khusus aplikasi dengan privilege minimum. Koneksi **tidak** berasal dari browser. Jika database dipindah ke managed service, koneksi wajib TLS.
-- Data publik boleh di-cache singkat dan diinvalidasi saat berubah; **data admin/kelompok tidak boleh di-cache secara publik**.
+- Data publik boleh di-cache singkat dan diinvalidasi saat berubah; **data khusus admin tidak boleh di-cache secara publik**. Detail kelompok publik hanya memuat status dan temuan terbit, bukan data internal.
 - Sediakan `/healthz` untuk liveness dan `/readyz` untuk kesiapan database; jangan membeberkan secret dalam response/log.
 
 ### 8.5 Kebijakan pemilihan pustaka
@@ -365,7 +367,7 @@ Semua entitas utama memakai UUID, `created_at` dan `updated_at` bila sesuai. Sim
 | `academic_years` | `id`, `label`, `is_active` | Awal: `2026/2027`; dapat ditambah tahun lain |
 | `classes` | `id`, `academic_year_id`, `code`, `name` | Unik `(academic_year_id, code)` |
 | `topics` | `id`, `code`, `title`, `description`, `sort_order` | Seed tujuh topik K1–K7 |
-| `groups` | `id`, `class_id`, `topic_id`, `name`, `slug`, `expected_email`, `access_code_digest`, `is_active` | Unik `(class_id, slug)`; akses hanya dengan kode acak kuat |
+| `groups` | `id`, `class_id`, `topic_id`, `name`, `slug`, `expected_email`, `is_active` | Unik `(class_id, slug)`; email hanya admin, detail terbit publik |
 | `submission_rounds` | `id`, `group_id`, `round_number`, `received_at`, `sender_email`, `email_subject`, `ppt_received`, `pdf_received`, `ppt_filename`, `pdf_filename`, `internal_note`, `recorded_by` | Putaran 0 = awal; 1+ = revisi; unik `(group_id, round_number)` |
 | `group_notebooks` | `id`, `group_id`, `is_received`, `received_at`, `note`, `updated_by` | Satu record buku fisik per kelompok |
 | `group_reviews` | `id`, `group_id`, `review_status`, `summary`, `revision_due_at`, `last_published_at`, `updated_by` | Status pemeriksaan dipilih admin |
@@ -375,13 +377,12 @@ Semua entitas utama memakai UUID, `created_at` dan `updated_at` bila sesuai. Sim
 | `admin_users` | `id`, `email`, `password_hash`, `display_name`, `role`, `is_active` | Akun dibuat/direset melalui perintah CLI terproteksi; `password_hash` Argon2id; tanpa pendaftaran publik |
 | `admin_sessions` | `id`, `admin_user_id`, `token_digest`, `expires_at`, `revoked_at`, `created_at` | Sesi guru server-side di Go; simpan digest token bukan cookie mentah |
 | `audit_logs` | `id`, `actor_admin_id`, `entity_type`, `entity_id`, `action`, `before_json`, `after_json`, `created_at` | Tidak bisa diubah lewat UI biasa |
-| `group_access_sessions` | `id`, `group_id`, `token_digest`, `expires_at`, `revoked_at` | Hanya jika memakai sesi kelompok server-side |
 
 ### Aturan data yang sering terlewat
 
 1. Saat kiriman revisi **hanya berisi PPT**, status penerimaan PDF sebelumnya **tetap ada**. Hitung ketersediaan file dari seluruh kiriman valid, dan tunjukkan versi terbaru tiap jenis.
 2. Jangan menyimpan file asli atau konten Gmail di database MVP; simpan **metadata yang diinput guru** saja.
-3. Perubahan status, penerimaan kiriman, penerbitan evaluasi, dan reset kode harus meninggalkan audit log.
+3. Perubahan status, penerimaan kiriman, penerbitan evaluasi, dan perubahan akun admin harus meninggalkan audit log.
 4. Evaluasi terpublikasi tidak dihapus permanen dengan mudah; gunakan arsip/soft delete jika koreksi diperlukan.
 5. Pastikan `submission_rounds` mendukung kiriman hanya PPT, hanya PDF, atau keduanya.
 6. Pada pengiriman pertama, default status review `BELUM_DICEK`; jangan otomatis `DISETUJUI`.
@@ -402,9 +403,7 @@ API berbasis JSON pada `/api/v1/` kecuali endpoint unduh CSV. **Tidak ada** Serv
 | `POST` | `/api/v1/auth/login` | Publik | Verifikasi email/password admin dengan hash Argon2id; rate limit; buat sesi HttpOnly jika benar |
 | `POST` | `/api/v1/auth/logout` | Admin | Cabut sesi guru di database dan hapus cookie |
 | `GET` | `/api/v1/auth/me` | Admin | Tampilkan identitas admin aktif tanpa password/hash |
-| `POST` | `/api/v1/group/access` | Publik | Validasi kode akses, rate limit, terbitkan sesi privat kelompok |
-| `POST` | `/api/v1/group/logout` | Kelompok | Cabut sesi kelompok |
-| `GET` | `/api/v1/group/me` | Kelompok | Status dan evaluasi **hanya untuk kelompok sesi aktif**, hanya yang dipublikasikan |
+Tidak ada endpoint autentikasi kelompok. Detail publik tersedia melalui `GET /api/v1/public/groups/{id}` tanpa sesi; hanya temuan terbit yang dikirim.
 
 **Provisioning admin:** gunakan perintah CLI Go (`go run ./cmd/admin create`) atau seed terproteksi pada deploy pertama; kata sandi disuplai dari prompt/env rahasia sekali pakai, bukan dikomit di Git. Implementasikan rotasi/reset aman untuk guru.
 
@@ -418,7 +417,6 @@ API berbasis JSON pada `/api/v1/` kecuali endpoint unduh CSV. **Tidak ada** Serv
 
 - `GET/POST/PATCH/DELETE /api/v1/admin/classes` dan rute detail.
 - `GET/POST/PATCH/DELETE /api/v1/admin/groups` dan rute detail.
-- `POST /api/v1/admin/groups/{id}/rotate-access`.
 - `POST /api/v1/admin/groups/{id}/submissions` (catatan email yang sudah diperiksa **manual**).
 - `PATCH /api/v1/admin/groups/{id}/notebook`.
 - `POST /api/v1/admin/groups/{id}/evaluations`.
@@ -439,7 +437,7 @@ API berbasis JSON pada `/api/v1/` kecuali endpoint unduh CSV. **Tidak ada** Serv
 - Semua aksi mutasi dilindungi middleware `requireAdmin`, CSRF check, validasi resource, dan audit; **semua keputusan izin tetap di Go**.
 - Siapkan dokumentasi OpenAPI (`docs/openapi.yaml`) agar kontrak frontend–backend jelas dan bisa dites.
 
-### 10.5 Contoh response aman untuk portal kelompok
+### 10.5 Contoh response aman untuk detail kelompok publik tanpa login
 
 ```json
 {
@@ -467,20 +465,20 @@ Objek contoh **dummy** untuk pengujian, bukan catatan kelompok sungguhan. Jangan
 ## 11. Keamanan dan privasi (wajib untuk backend Go)
 
 - **Jangan membuat koneksi Gmail apa pun.** Tidak boleh ada token/izin Gmail, OAuth inbox, IMAP, pengiriman email otomatis, atau penyimpanan password Gmail.
-- **Wajib otorisasi Go pada setiap request:** handler publik hanya membaca data yang aman; endpoint admin memeriksa sesi dan role; endpoint kelompok mengambil `group_id` dari sesi, bukan dari ID bebas yang dikirim browser.
+- **Wajib otorisasi Go pada setiap request:** handler publik hanya membaca data yang aman; endpoint admin memeriksa sesi dan role; endpoint detail kelompok publik menerima ID dari URL dan hanya mengirim data publik serta temuan terbit. Tidak ada sesi kelompok.
 - **Login guru:** hash password dengan Argon2id dan salt unik; bandingkan secara aman; gunakan sesi opaque acak (bukan JWT statis yang sulit dicabut), simpan hanya digest token sesi; rate limit login; logout serta revocation.
-- **Kode kelompok:** generator kriptografis (>=128-bit entropi), hash/HMAC aman di database, rotasi dan revocation sesi; rate limit percobaan serta pesan kesalahan generik untuk mencegah enumerasi kelompok.
+- **Akses siswa/publik:** tidak memerlukan login atau kode akses. Memilih ID kelompok lain boleh untuk membaca temuan terbit; tidak boleh membuka draf atau data internal.
 - **Cookie:** `Secure`, `HttpOnly`, `SameSite=Lax/Strict`, path yang tepat, expiry; request mutasi berbasis cookie memerlukan perlindungan CSRF dan pemeriksaan Origin; batasi percobaan berulang.
 - **Database:** Go memegang satu-satunya credential koneksi DB pada server; pakai role DB privilege minimum, TLS, pool connection terbatas, SQL terparameterisasi, migrasi terkontrol. Jika memakai Supabase Postgres, **jangan** membiarkan client/browser mengakses tabel privat via Data API/anon key; disable/expose secara aman, dan jangan menganggap RLS otomatis berlaku untuk koneksi privileged Go.
 - **Validasi:** batas ukuran body, timeout HTTP, validasi struktur dan panjang field, normalisasi data, sanitasi output yang diperlukan; hindari raw HTML yang merender konten guru/siswa.
-- **Privasi:** monitoring publik tidak boleh mengirim email kelompok, nama anggota, catatan detail, nama file, draft guru, audit, atau metadata sesi. Draf dan komentar internal hanya bisa dilihat guru.
-- **Audit:** seluruh aksi perubahan status, penerimaan, publikasi, reset kode, dan perubahan akun tercatat; tidak memasukkan token, kode akses, password, atau isi cookie dalam log.
+- **Privasi:** monitoring publik tidak boleh mengirim email kelompok, nama anggota, nama file tugas, metadata email pengumpulan, draf guru, audit, atau metadata sesi. Catatan kesalahan yang sudah diterbitkan boleh dibaca publik. Draf dan komentar internal hanya bisa dilihat guru.
+- **Audit:** seluruh aksi perubahan status, penerimaan, publikasi, dan perubahan akun tercatat; tidak memasukkan token, password, atau isi cookie dalam log.
 - **Jaringan:** HTTPS pada frontend/API, same-origin proxy dianjurkan, CORS dibatasi jika diperlukan; jangan menganggap CORS mekanisme autentikasi.
 - **Operasional:** backup dan restore diuji; pertimbangkan backup otomatis penyedia database; log terstruktur tanpa data sensitif; rate limiting dan batas koneksi; rahasia lewat environment/secret store.
-- **Cache:** detail admin/kelompok `Cache-Control: no-store`, noindex untuk halaman privat. Public status boleh memakai cache terkontrol dengan invalidasi.
+- **Cache:** halaman/API admin memakai `Cache-Control: no-store`; halaman admin `noindex`. Detail kelompok publik juga `no-store` agar perubahan publikasi segera berlaku, tetapi tidak membutuhkan autentikasi. Status publik boleh memakai cache terkontrol dengan invalidasi.
 - **Akses admin awal:** tidak ada registrasi publik; buat akun melalui CLI terproteksi, gunakan password kuat dan prosedur reset aman; MFA adalah peningkatan lanjutan.
 
-**Kasus uji wajib:** kelompok A mengubah URL/query menjadi kelompok B; mencoba kode akses berkali-kali; mendapatkan draf melalui request langsung; POST status tanpa cookie admin; cookie yang dicabut; CSRF dari origin asing; CSV tanpa admin; password/secret bocor melalui response/log.
+**Kasus uji wajib:** tanpa login dapat membaca temuan terbit kelompok A maupun B melalui ID/URL; draf dan data internal tidak bocor lewat request langsung; POST status/publikasi tanpa cookie admin ditolak; cookie admin yang dicabut ditolak; CSRF dari origin asing ditolak; password/secret tidak bocor melalui response/log.
 
 ---
 
@@ -501,8 +499,7 @@ informatika-monitoring/
 │   │   ├── app/
 │   │   │   ├── (public)/
 │   │   │   ├── monitoring/page.tsx
-│   │   │   ├── akses-kelompok/page.tsx
-│   │   │   ├── kelompok/saya/page.tsx
+│   │   │   ├── progres/kelompok/page.tsx # detail publik via ?id=, tanpa login
 │   │   │   └── admin/
 │   │   ├── components/{ui,admin,public,groups}/
 │   │   ├── lib/api-client/             # pemanggil endpoint Go
@@ -573,10 +570,9 @@ informatika-monitoring/
 **Tugas:** service Go menangani draf/terbit, temuan per jenis file/slide/halaman, instruksi, validasi transisi; UI admin untuk catatan; transaksi dan audit.
 **Done jika:** draf tidak tampil ke kelompok; catatan detail hanya muncul setelah dipublikasikan oleh guru.
 
-### Fase 5 — Akses privat kelompok + riwayat revisi
+### Fase 5 lama — Akses privat kelompok (DIBATALKAN)
 
-**Tugas:** kode akses aman dan sesi server-side Go, rotasi dan rate limit; endpoint hanya mengambil identitas kelompok dari sesi; histori revisi per file; UI portal siswa.
-**Done jika:** kelompok A tidak dapat mengakses temuan B dengan manipulasi URL, API, atau cookie.
+Tidak dibuat login, kode akses, atau sesi kelompok. Diganti halaman detail kelompok publik tanpa login di Task 3.10–3.11 (`PHASE3_PLAN.md`). Semua pengunjung dapat membaca temuan terbit kelompok mana pun; draf dan data internal tetap hanya admin.
 
 ### Fase 6 — Tanya jawab, rekap dan CSV
 
@@ -602,7 +598,7 @@ informatika-monitoring/
 - [ ] **AC01:** Guru menambah kelas dan tujuh kelompok; semua tampil di publik sebagai `Belum Mengumpulkan`.
 - [ ] **AC02:** Hanya PPT dicatat → `Sebagian`.
 - [ ] **AC03:** PDF menyusul → `Lengkap`.
-- [ ] **AC04:** Data publik tidak memuat email kelompok atau catatan evaluasi rinci.
+- [ ] **AC04:** Data publik tidak memuat email kelompok, metadata pengumpulan, draf, atau catatan internal. Catatan evaluasi rinci yang sudah diterbitkan boleh dibaca tanpa login.
 - [ ] **AC05:** Catatan draf `PPT — Slide 5` tidak terlihat siswa.
 - [ ] **AC06:** Setelah guru memublikasikan, kelompok bersangkutan melihat lokasi dan instruksi revisi.
 - [ ] ~~**AC07:** Kelompok berbeda tidak dapat melihat catatan tersebut dengan mengganti ID/URL.~~ **Dibatalkan 18 Nov 2026** (keputusan user): catatan terbit tampil publik untuk semua; tanpa kode akses.
@@ -627,7 +623,7 @@ informatika-monitoring/
 
 ## 15. Panduan operasional guru
 
-**Pra-pengumpulan:** daftarkan kelas/kelompok/topik/email, bagikan kode kelompok secara privat, bagikan juknis.
+**Pra-pengumpulan:** admin login dan mendaftarkan kelas/kelompok/topik/email; bagikan tautan progres publik dan juknis. Siswa tidak perlu login.
 **Ketika email masuk:** buka Gmail secara manual, cocokkan pengirim dan lampiran, lalu **Catat Pengumpulan** pada kelompok terkait.
 **Ketika buku diserahkan:** tandai buku tulis sebagai diterima secara manual.
 **Ketika ada kesalahan:** tambah temuan dengan lokasi slide/halaman dan instruksi; simpan draf; publikasi saat final.
@@ -644,7 +640,7 @@ informatika-monitoring/
 |---|---|
 | Email sudah dikirim, dashboard belum berubah | Tampilkan waktu pembaruan; jelaskan guru memperbarui manual; daftar tugas pending di admin |
 | Siswa salah mengira sudah terkumpul berarti diterima | Tampilkan status kiriman, evaluasi, dan buku dalam kolom terpisah |
-| Kode kelompok bocor | Kode kuat, rotasi, revoke sesi, rate limiting |
+| Data internal bocor lewat detail publik | DTO publik terpisah; hanya temuan terbit, tanpa email/metadata pengumpulan/draf |
 | Temuan belum lengkap terlanjur dilihat siswa | Sistem draf dan tombol publikasi eksplisit |
 | Revisi menimpa bukti awal | Putaran kiriman immutable secara historis; perubahan tercatat dalam audit |
 | Akun email kelompok dibagi tidak aman | Ikuti kebijakan sekolah, jangan simpan password atau membagikannya pada website |
@@ -672,13 +668,13 @@ MVP dianggap selesai ketika: semua fitur wajib sudah berjalan; AC01–AC25 lulus
 
 ### Prompt siap pakai untuk coding agent
 
-> Bangun MVP website monitoring dan evaluasi tugas kelompok Informatika kelas IX berdasarkan PLAN.md ini. Implementasikan secara bertahap dari Fase 0 sampai Fase 7 dengan **backend Go (chi, pgxpool, sqlc, PostgreSQL)** dan **frontend Next.js + TypeScript + Tailwind CSS**. Seluruh API bisnis, autentikasi, status, evaluasi, dan audit wajib di Go; Next.js hanya mengurus UI dan proxy. Seluruh penerimaan email, perubahan status, pemeriksaan, dan revisi dilakukan manual oleh guru. Tidak ada integrasi Gmail atau upload file ke website. Utamakan keamanan data antar kelompok, catatan revisi spesifik per lokasi, histori, dan pengujian acceptance criteria. Hasilkan kode Go dan Next.js yang benar-benar berjalan, migrasi SQL, seed, Dockerfile backend, dokumen OpenAPI, dokumentasi setup/deploy, dan hasil tes AC01–AC25.
+> Bangun MVP website monitoring dan evaluasi tugas kelompok Informatika kelas IX berdasarkan PLAN.md ini. Implementasikan secara bertahap dari Fase 0 sampai Fase 7 dengan **backend Go (chi, pgxpool, sqlc, PostgreSQL)** dan **frontend Next.js + TypeScript + Tailwind CSS**. Seluruh API bisnis, autentikasi, status, evaluasi, dan audit wajib di Go; Next.js hanya mengurus UI dan proxy. Seluruh penerimaan email, perubahan status, pemeriksaan, dan revisi dilakukan manual oleh guru. Tidak ada integrasi Gmail atau upload file ke website. Website publik tanpa login siswa; login hanya admin. Utamakan perlindungan draf dan data internal, catatan revisi spesifik per lokasi, histori, dan pengujian acceptance criteria. Hasilkan kode Go dan Next.js yang benar-benar berjalan, migrasi SQL, seed, Dockerfile backend, dokumen OpenAPI, dokumentasi setup/deploy, dan hasil tes AC01–AC25.
 
 ---
 
 ## 19. Keputusan default yang dapat disesuaikan nanti
 
-- Ringkasan status publik; **detail koreksi privat per kelompok** menggunakan kode akses.
+- Website publik tanpa login: ringkasan status dan detail koreksi terbit dapat dibaca semua pengunjung. Login hanya admin.
 - Guru boleh mengisi tenggat revisi, tetapi tidak ada notifikasi otomatis.
 - Nilai akhir/rubrik numerik belum dihitung otomatis karena bobot belum dikunci dalam spesifikasi web.
 - Sistem mendukung banyak kelas dan tahun ajaran.

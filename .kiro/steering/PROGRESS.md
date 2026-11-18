@@ -6,10 +6,12 @@
 
 ## Ringkasan
 
-- Fase aktif: **Fase 3C — Pemeriksaan** (belum dimulai). Fase 0, 1, 2A, 2B, **3A**, dan **3B** sudah ditutup.
+- **Kebijakan akses:** website publik tanpa login pengunjung/siswa. Login hanya admin. Progres dan detail temuan terbit kelompok mana pun dapat dibaca publik; draf, email/metadata pengumpulan, catatan internal, dan audit tetap hanya admin. Tidak ada kode akses atau sesi kelompok.
+
+- Fase aktif: **Fase 3C — Pemeriksaan** (Task 3.10 diimplementasikan dan gerbang otomatis lulus; menunggu review). Fase 0, 1, 2A, 2B, **3A**, dan **3B** sudah ditutup.
 - Progress Fase 2A: **8/8 selesai** (ditutup dengan pengecualian). Fase 2B (lampiran): **7/7** (2.9–2.15), **ditutup 14 Nov 2026 dengan pengecualian**. Fase 3: **9/13** — 3A ditutup 15 Nov 2026; 3B ditutup 18 Nov 2026 dengan pengecualian.
 - Task terakhir selesai: **3.9 — deploy 3B + cek browser** (`docs/F3B_ACCEPTANCE.md`), plus perbaikan hapus kelompok dan 360 px
-- Next task: **3.10 — temuan + status pemeriksaan (DB, aturan, API)**. Sisa **4 task** (3.10–3.13); Fase 4 dan kode akses kelompok (3D) dibatalkan 18 Nov 2026 atas arahan user; temuan terbit tampil publik.
+- Task berjalan: **3.10 — temuan + status pemeriksaan (DB, aturan, API)**, belum commit/deploy; berikutnya review lalu 3.11 (UI). Sisa **4 task** sampai 3.10 diterima;  Fase 4 dan kode akses kelompok (3D) dibatalkan 18 Nov 2026 atas arahan user; temuan terbit tampil publik.
 - Semua perbaikan gaya tautan sudah di produksi.
 - Local branch: `main`; produksi rilis `20261118T045543Z-cffeaffbd4f3` (kode `cffeaff`, migrasi 9). Commit dokumen sesudahnya belum di-push.
 - Produksi: **`https://fikriramaaulia.online`** aktif (Caddy + Let's Encrypt, berlaku s.d. 2027-02-11)
@@ -27,7 +29,7 @@
 | Hardening | HSTS 1 hari + CSP `enforce` | DONE, aktif di produksi | bagian Current Next Step |
 | 2A | Pengumuman + Materi teks | DITUTUP 14 Nov 2026 (dengan pengecualian) | `.kiro/steering/PHASE2_PLAN.md` |
 | 2B | Lampiran PDF/PPT/PPTX | DITUTUP 14 Nov 2026 (dengan pengecualian) | `.kiro/steering/PHASE2_PLAN.md` |
-| 3 | Progres Tugas Kelompok (3A kelas/kelompok, 3B pengumpulan, 3C pemeriksaan, 3D portal) | DISETUJUI 14 Nov 2026; **3A DITUTUP 15 Nov 2026** (dengan pengecualian); 3B selesai dikerjakan (9/17), menunggu persetujuan tutup | `.kiro/steering/PHASE3_PLAN.md`, `docs/F3A_ACCEPTANCE.md` |
+| 3 | Progres Tugas Kelompok (3A kelas/kelompok, 3B pengumpulan, 3C temuan publik tanpa login) | 9/13; 3A ditutup 15 Nov, 3B ditutup 18 Nov 2026 dengan pengecualian; berikutnya 3C. 3D dibatalkan; login hanya admin | `.kiro/steering/PHASE3_PLAN.md`, `docs/F3A_ACCEPTANCE.md`, `docs/F3B_ACCEPTANCE.md` |
 
 ## Fase 2A Tracker
 
@@ -82,6 +84,33 @@ Pengecualian 3A: zoom 200% belum dicek; lebar 700 dan 1000 px tidak terukur; bel
 | 3.9b | 360 px halaman detail kelompok | DONE, di produksi | `77788ad` | Edge headless 360 px + API tiruan: meluap 491 px (email/nama berkas panjang) → rilis `20261118T045543Z-cffeaffbd4f3`, produksi 360 px, 0 elemen meluap (tampilan biasa dan formulir Ubah) |
 
 Pengecualian 3B: keyboard halaman detail belum dicek; `datetime-local` di HP belum dicoba; AC08 belum dicoba langsung di produksi; belum ada uji komponen UI; kunci `FOR UPDATE` di trigger nomor putaran tidak dibuktikan uji. **Ditutup 18 Nov 2026 atas persetujuan user.**
+
+## Task 3.10 — Implementasi, belum deploy
+
+- Migrasi 10: `evaluation_findings`, status pemeriksaan dan waktu konflik pada kelompok. Up/down-to 9/up diuji pada database uji; produksi tetap migrasi 9.
+- API admin: daftar/tambah/ubah/hapus draf, terbitkan seluruh draf, tandai selesai, GET/PATCH status pemeriksaan. Temuan terbit tidak dapat dihapus. Audit dan perubahan satu transaksi.
+- Publik tanpa login: `GET /api/v1/public/groups/{id}` (kelompok/kelas/tahun aktif saja), temuan terbit, kunci JSON diuji persis. Tabel publik mendapat `id`; TUNTAS dihitung. Login hanya admin.
+- Aturan status dijaga untuk setiap perubahan catatan: PERLU_REVISI membutuhkan temuan wajib terbit terbuka; DISETUJUI membutuhkan PPT/PDF lengkap dan tanpa temuan wajib terbuka (termasuk draf). Sebelum menyelesaikan temuan wajib terakhir, ubah status ke DIPERIKSA; sebelum menghapus berkas yang mendasari persetujuan, ubah status pemeriksaan.
+- RED di workspace terisolasi `/home/ubuntu/informatika-monitoring-task310`: simbol Finding belum ada; HTTP POST findings 404. GREEN: seluruh suite Go 2x, race progress/http, vet, build api/adminctl, sqlc dan goose validate lulus. Skema, lifecycle, konflik, audit gagal membatalkan mutasi, dan akses anonim dua kelompok diuji.
+- Uji mutan: filter published dibuang dari query publik → tes gagal `draft leaked`; query dipulihkan dan sqlc digenerasi ulang.
+- Regresi frontend: 108 uji, lint, typecheck, static build lulus di workspace uji (peringatan Node MODULE_TYPELESS_PACKAGE_JSON tetap ada).
+- OpenAPI 0.7.0, 34 path; YAML parse lulus. Validator spesifikasi tidak tersedia (`ModuleNotFoundError: openapi_spec_validator`), tidak diklaim lulus.
+- Review 3.10 pertama: BLOCK (publikasi/status terpisah, isi temuan terbit bisa diubah, kunci temuan publik belum diuji persis, respons admin OpenAPI kurang). Setelah persetujuan user melanjutkan: publikasi + status + audit digabung; isi temuan terbit dikunci (hanya resolusi boleh berubah); tes kunci nested ditambah; skema Finding admin ditambahkan. Tes rollback stale/status/audit dan larangan ubah 5 bidang terbit ditulis RED lebih dahulu.
+- Belum commit/deploy. Tidak mengubah checkout/runtime produksi. Database uji digunakan sesuai kontrak reset skema testdb.
+
+## Task 3.11 — Beranda progres + catatan, belum deploy
+
+- Sesuai penegasan user: Beranda menjadi progres tiap kelompok dengan catatan perbaikan tepat di bawahnya. `/progres/` tetap tersedia. Pengumuman/Materi tetap menu tambahan; tidak dibuat halaman detail publik terpisah.
+- Komponen publik menampilkan status terpisah, filter kelas/status/cari, catatan jenis/lokasi/masalah/perbaikan/Wajib atau Saran/Selesai; loading/error/retry dibedakan dari catatan kosong. Hanya API publik dipanggil, tanpa login.
+- Admin detail kelompok mendapat form draf, ubah/hapus dengan konfirmasi, pilih status, publikasi atomik dengan konfirmasi publik, dan tandai selesai. Isi temuan terbit tidak diedit.
+- Klien findings diuji RED modul belum ada; uji regresi resolusi menangkap kebocoran properti respons ke PATCH (`INVALID_REQUEST`), diperbaiki dengan whitelist body. Frontend 114 tes, lint/typecheck/build lulus di VPS.
+- E2E nyata memakai klien TypeScript asli → Go asli → PostgreSQL uji: login admin dummy, kelas/kelompok, berkas lengkap, draf tidak publik, terbit + PERLU_REVISI atomik, baca anonim, ubah DIPERIKSA, tandai selesai, publik resolved true. Lulus; proses uji dihentikan dan database uji direset. Produksi tidak berubah.
+- Edge headless lokal dengan hasil build VPS dan API tiruan (bukan produksi): emulasi CSS 360 px, Beranda memuat catatan, admin memuat form; keduanya 0 elemen melewati tepi kanan, document scrollWidth 345 px (viewport 360 termasuk scrollbar). Teks masalah tanpa spasi 150 karakter ikut diuji. Bukan bukti alur klik browser penuh atau deployment/CSP produksi.
+- Review UI 3.11 selesai satu kali: BLOCK karena publikasi saat edit belum disimpan, pemetaan REVIEW_RULE keliru, kontrol aktif sebelum reload selesai, dan nama tombol tidak spesifik. User menyetujui perbaikan keempat temuan; tidak ada review loop.
+- Perbaikan: publikasi awal dan konfirmasi akhir terkunci selama edit/formulir belum disimpan (dengan petunjuk Simpan/Batalkan); mutasi menunggu reload list+status selesai; reload gagal mengunci tindakan dan menyediakan retry; edit yang berubah/terbit/hilang direkonsiliasi; tombol dan konfirmasi menyebut jenis tugas serta lokasi. REVIEW_RULE dipetakan ke review_rule dengan petunjuk simpan Sedang Diperiksa, bukan konflik edit.
+- RED: tes pemetaan REVIEW_RULE gagal sebelum implementasi; pengujian komponen di Edge melalui CDP terhadap build lama gagal `unsaved edit must block publication`. GREEN: pengujian browser lulus untuk edit belum disimpan, formulir baru kotor setelah konfirmasi, reload ditunda 1,8 detik, reload gagal, dan label tombol/konteks hapus. API tiruan hanya lokal; tidak menulis produksi.
+- Verifikasi akhir perbaikan: 114 tes frontend lulus, lint, typecheck, static build lulus di workspace VPS; git diff --check lulus. Checkout produksi bersih dan tetap `cffeaff`. Tidak ada commit/deploy/restart produksi.
+- Selanjutnya: checkpoint perubahan 3.10–3.11, commit, lalu deployment/acceptance 3.12 dengan persetujuan eksplisit user. Tidak ada review ulang untuk perbaikan batch ini.
 
 ## Sources of Truth
 
@@ -446,8 +475,8 @@ Di kode, belum di produksi (3B, `docs/openapi.yaml` 0.6.0, 29 jalur):
 
 Belum ada:
 
-- Pemeriksaan dan temuan (3C), portal kelompok dengan kode akses (3D).
-- Tanya jawab antarkelompok, rekap, CSV (Fase 4).
+- Pemeriksaan dan temuan publik tanpa login (3C, Task 3.10–3.13).
+- Kode akses/login/sesi kelompok (3D), tanya jawab, rekap, CSV, dan halaman audit (Fase 4) dibatalkan; bukan pekerjaan tersisa.
 - 2FA admin.
 
 ## Safety and Scope Status
@@ -497,10 +526,12 @@ The remote deploy command passed Go test/vet/build, `sqlc generate`, frontend `n
 
 ## Current Next Step
 
-Fase 3B (3.6–3.9) di produksi, menunggu persetujuan tutup (`docs/F3B_ACCEPTANCE.md`). Saat dilanjutkan:
+Fase 3B sudah ditutup 18 Nov 2026 dengan pengecualian (`docs/F3B_ACCEPTANCE.md`). Berikutnya Task 3.10–3.13 sesuai `.kiro/steering/PHASE3_PLAN.md`:
 
-1. Tutup 3B (perbaikan hapus kelompok sudah di produksi, data uji dihapus), lalu 3C (pemeriksaan dan temuan) sesuai `.kiro/steering/PHASE3_PLAN.md`.
-3. Opsional: zoom 200% `/progres/`; 360 px halaman detail kelompok; `.ppt` asli dan unggahan besar untuk pengecualian 2B.
+1. Buat temuan dan pemeriksaan, API admin, serta API detail kelompok publik yang hanya mengirim temuan terbit.
+2. Tambah UI admin dan halaman publik `/progres/kelompok/?id=` tanpa login siswa; login hanya admin.
+3. Deploy setelah persetujuan, cek browser, lalu panduan guru dan uji alur lengkap. Kode akses/sesi kelompok dan Fase 4 tidak dibuat.
+4. Opsional: zoom 200% `/progres/`, `.ppt` asli, dan unggahan besar untuk pengecualian lama; 360 px detail kelompok sudah lulus.
 
 Selesai 15 Nov 2026 (Fase 3B, belum di produksi):
 
