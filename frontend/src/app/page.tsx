@@ -4,10 +4,10 @@ import { SiteFooter, SiteHeader } from "@/components/site/SiteChrome";
 
 export const metadata: Metadata = { title: "Progres Tugas Kelompok", description: "Lihat progres tugas setiap kelompok dan catatan perbaikannya tanpa login." };
 export default function Home() {
- return <><SiteHeader/><main id="konten-utama" tabIndex={-1}>
-  <h1 className="page-title">Progres Tugas Kelompok</h1>
-  <p>Lihat progres kelompokmu dan baca catatan perbaikan tepat di bawahnya. Tidak perlu login.</p>
-  <aside className="manual-notice" aria-label="Pembaruan manual"><span className="notice-icon" aria-hidden="true">!</span><p>Status diperbarui manual oleh guru. Jika email baru saja dikirim, status mungkin belum berubah. Lihat waktu pembaruan terakhir.</p></aside>
-  <section className="content-section" aria-labelledby="semua-kelompok"><h2 id="semua-kelompok">Semua kelompok</h2><ProgressTable/></section>
+ return <><SiteHeader/><main id="konten-utama" className="progress-home" tabIndex={-1}>
+  <div className="progress-intro"><p className="page-eyebrow">INFORMATIKA · KELAS IX</p><h1 className="page-title">Sudah sampai mana<br/>progres kelompokmu?</h1>
+  <p>Cari kelompokmu, cek progres tugas, dan lihat apa yang perlu diperbaiki. Tanpa login.</p></div>
+  <section aria-label="Pencarian dan progres kelompok"><ProgressTable/></section>
+  <p className="manual-footnote">Status diperbarui manual oleh guru, bukan otomatis dari email. Jika baru mengirim tugas, tunggu pembaruan dan periksa waktu pada kartu kelompok.</p>
  </main><SiteFooter/></>;
 }

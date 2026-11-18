@@ -27,8 +27,7 @@ export default function ProgressPage() {
           </div>
         </aside>
 
-        <section className="content-section" aria-labelledby="tabel-progres">
-          <h2 id="tabel-progres">Semua kelompok</h2>
+        <section className="content-section" aria-label="Daftar progres kelompok">
           <p className="section-note">
             Tiga jalur dicatat terpisah: Pengumpulan (PPT dan PDF lewat email), Pemeriksaan oleh guru, dan Buku Tulis fisik. Kelompok
             Tuntas bila ketiganya selesai. Catatan perbaikan yang sudah diterbitkan tampil di bawah setiap kelompok dan dapat dibaca tanpa login.
