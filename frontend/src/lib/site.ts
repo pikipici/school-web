@@ -5,7 +5,7 @@ export const SITE_DESCRIPTION =
   "Progres tugas kelompok Informatika kelas IX dan catatan perbaikan dari guru, terbuka tanpa login.";
 
 export const NAV_ITEMS = [
-  { href: "/", label: "Progres Tugas" },
   { href: "/pengumuman/", label: "Pengumuman" },
-  { href: "/materi/", label: "Materi" }
+  { href: "/materi/", label: "Materi" },
+  { href: "/", label: "Progres Tugas" }
 ] as const;
