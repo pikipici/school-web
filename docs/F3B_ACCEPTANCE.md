@@ -1,6 +1,6 @@
 # Fase 3B — Pengumpulan dan Buku Tulis: Acceptance
 
-> Tanggal: 15 November 2026. Produksi: [fikriramaaulia.online](https://fikriramaaulia.online), rilis `20261115T125117Z-a2d9fc52cbba` (kode `a2d9fc5`, termasuk perbaikan hapus kelompok), migrasi versi 9.
+> Tanggal: 15 November 2026. Produksi: [fikriramaaulia.online](https://fikriramaaulia.online), rilis `20261118T045543Z-cffeaffbd4f3` (kode `cffeaff`, termasuk perbaikan hapus kelompok dan 360 px), migrasi versi 9.
 > Status: **SIAP DITUTUP dengan pengecualian.** Penutupan menunggu persetujuan user.
 
 ## Gerbang
@@ -37,7 +37,7 @@
 
 ## Pengecualian
 
-1. Keyboard halaman detail belum dicek. **360 px sudah terukur** (15 Nov 2026): Edge headless pribadi, lebar CSS 360, halaman `/admin/kelompok/detail/?id=1` dari produksi, dengan `/api/v1/*` dijawab JSON tiruan (nama kelompok 57 karakter, email 67 karakter, nama berkas 98 karakter tanpa spasi, subjek panjang, tautan panjang). Tidak login dan tidak menulis apa pun ke produksi. Hasil awal: **meluap**, `scrollWidth` 491 px; 10 elemen melewati tepi kanan (email, nama berkas, subjek, catatan, tombol Ubah). Penyebab: pada ≤ 720 px `.admin-row` memakai kolom `1fr`, yang tidak bisa menyusut di bawah kata terpanjang, dan teks meta tidak boleh patah. Perbaikan `77788ad`: kolom `minmax(0, 1fr)`, `min-width: 0` dan `overflow-wrap: anywhere` pada isi baris. Dengan CSS itu disuntikkan ke halaman yang sama: `scrollWidth` 360, 0 elemen meluap, baik tampilan biasa maupun saat formulir Ubah terbuka. **Belum dideploy**; ukur ulang di produksi setelah deploy.
+1. Keyboard halaman detail belum dicek. **360 px sudah terukur** (15 Nov 2026): Edge headless pribadi, lebar CSS 360, halaman `/admin/kelompok/detail/?id=1` dari produksi, dengan `/api/v1/*` dijawab JSON tiruan (nama kelompok 57 karakter, email 67 karakter, nama berkas 98 karakter tanpa spasi, subjek panjang, tautan panjang). Tidak login dan tidak menulis apa pun ke produksi. Hasil awal: **meluap**, `scrollWidth` 491 px; 10 elemen melewati tepi kanan (email, nama berkas, subjek, catatan, tombol Ubah). Penyebab: pada ≤ 720 px `.admin-row` memakai kolom `1fr`, yang tidak bisa menyusut di bawah kata terpanjang, dan teks meta tidak boleh patah. Perbaikan `77788ad`: kolom `minmax(0, 1fr)`, `min-width: 0` dan `overflow-wrap: anywhere` pada isi baris. Dengan CSS itu disuntikkan ke halaman yang sama: `scrollWidth` 360, 0 elemen meluap, baik tampilan biasa maupun saat formulir Ubah terbuka. Dideploy 18 Nov 2026 (rilis `20261118T045543Z-cffeaffbd4f3`, cadangan 43850 B, migrasi tetap 9, smoke PASS). Diukur ulang di produksi tanpa CSS suntikan: `scrollWidth` 360, 0 elemen meluap, tampilan biasa dan formulir Ubah. **360 px lulus.**
 2. `datetime-local` di HP belum dicoba.
 3. AC08 di produksi belum dicoba (hanya uji dan E2E).
 4. Belum ada uji komponen UI.
