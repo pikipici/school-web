@@ -151,7 +151,10 @@ fieldset.form-field legend { margin-bottom: 6px; font-weight: 600; }
 .admin-list { margin: 0; padding: 0; border-top: 1px solid var(--line); list-style: none; }
 .admin-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px 24px; align-items: center; padding: 16px 0; border-bottom: 1px solid var(--line); }
 .admin-row-main h3 { margin: 0 0 6px; font-size: 1.0625rem; line-height: 1.35; overflow-wrap: anywhere; }
-.admin-row-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; margin: 0; color: var(--ink-muted); font-size: .875rem; }
+.admin-row-main { min-width: 0; }
+.admin-row-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; margin: 0; color: var(--ink-muted); font-size: .875rem; overflow-wrap: anywhere; }
+.admin-row-meta > * { min-width: 0; max-width: 100%; }
+.admin-row-main .field-hint { overflow-wrap: anywhere; }
 .admin-row-actions { display: flex; flex-wrap: wrap; gap: 8px; }
 .status-badge { display: inline-flex; align-items: center; gap: 6px; padding: 2px 8px; border-radius: 3px; font-weight: 600; }
 .status-published { background: var(--success-soft); color: var(--success); }
@@ -160,7 +163,7 @@ fieldset.form-field legend { margin-bottom: 6px; font-weight: 600; }
 .confirm-row { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; padding: 12px 16px; border: 1px solid var(--danger); border-radius: 3px; background: var(--danger-soft); }
 .confirm-row p { flex: 1 1 260px; margin: 0; color: var(--danger); font-weight: 600; }
 @media (max-width: 720px) {
-  .admin-row { grid-template-columns: 1fr; }
+  .admin-row { grid-template-columns: minmax(0, 1fr); }
 }
 
 /* Material attachments (Task 2.14) */
