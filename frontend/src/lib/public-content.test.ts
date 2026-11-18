@@ -2,8 +2,8 @@ import assert from "node:assert/strict";
 import { it } from "node:test";
 import { activePublicNav, contentPreview } from "./public-content.ts";
 it("marks exact public sections and their detail pages without matching unrelated prefixes", () => {
- for (const path of ["/", "/progres/", "/progres"]) assert.equal(activePublicNav(path), "/");
- assert.equal(activePublicNav("/pengumuman/baca/"), "/pengumuman/");
+ for (const path of ["/", "/pengumuman/", "/pengumuman/baca/"]) assert.equal(activePublicNav(path), "/");
+ for (const path of ["/progres/", "/progres"]) assert.equal(activePublicNav(path), "/progres/");
  assert.equal(activePublicNav("/materi/baca/"), "/materi/");
  assert.equal(activePublicNav("/materi"), "/materi/");
  assert.equal(activePublicNav("/material/"), null);

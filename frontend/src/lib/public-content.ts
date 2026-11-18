@@ -1,7 +1,8 @@
 export function activePublicNav(path: string): string | null {
  const normalized = path.replace(/\/+$/, "") || "/";
- if (normalized === "/" || normalized === "/progres") return "/";
- for (const section of ["/pengumuman", "/materi"]) {
+ if (normalized === "/" || normalized === "/pengumuman" || normalized.startsWith("/pengumuman/")) return "/";
+ if (normalized === "/progres") return "/progres/";
+ for (const section of ["/materi"]) {
   if (normalized === section || normalized.startsWith(`${section}/`)) return `${section}/`;
  }
  return null;
