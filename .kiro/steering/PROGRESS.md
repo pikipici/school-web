@@ -110,7 +110,9 @@ Pengecualian 3B: keyboard halaman detail belum dicek; `datetime-local` di HP bel
 - Perbaikan: publikasi awal dan konfirmasi akhir terkunci selama edit/formulir belum disimpan (dengan petunjuk Simpan/Batalkan); mutasi menunggu reload list+status selesai; reload gagal mengunci tindakan dan menyediakan retry; edit yang berubah/terbit/hilang direkonsiliasi; tombol dan konfirmasi menyebut jenis tugas serta lokasi. REVIEW_RULE dipetakan ke review_rule dengan petunjuk simpan Sedang Diperiksa, bukan konflik edit.
 - RED: tes pemetaan REVIEW_RULE gagal sebelum implementasi; pengujian komponen di Edge melalui CDP terhadap build lama gagal `unsaved edit must block publication`. GREEN: pengujian browser lulus untuk edit belum disimpan, formulir baru kotor setelah konfirmasi, reload ditunda 1,8 detik, reload gagal, dan label tombol/konteks hapus. API tiruan hanya lokal; tidak menulis produksi.
 - Verifikasi akhir perbaikan: 114 tes frontend lulus, lint, typecheck, static build lulus di workspace VPS; git diff --check lulus. Checkout produksi bersih dan tetap `cffeaff`. Tidak ada commit/deploy/restart produksi.
-- Selanjutnya: checkpoint perubahan 3.10–3.11, commit, lalu deployment/acceptance 3.12 dengan persetujuan eksplisit user. Tidak ada review ulang untuk perbaikan batch ini.
+- User menyetujui commit + deploy. Backend `edae2c8`, frontend `6a7dfdd`, source release `e4fbd337744f`; produksi aktif `20261118T111237Z-e4fbd337744f`, migrasi 10. Backup DB terverifikasi + snapshot lampiran tersedia, release lama dipertahankan. Gate deploy lengkap dan smoke lulus.
+- HTTPS browser produksi: halaman depan progres dan login admin lulus pada 360px tanpa overflow, tidak ada CSP/runtime exception; favicon 404 kosmetik dan auth/me 401 anonim yang diharapkan. Data publik produksi masih kosong, sehingga acceptance autentikasi/kelompok berisi data menunggu operator, bukan diklaim selesai. Rincian dan panduan admin: `docs/F3C_ACCEPTANCE.md`.
+- Selanjutnya: operator login, isi kelompok nyata, dan konfirmasi alur admin/publik. Tidak ada dummy data produksi atau review loop.
 
 ## Sources of Truth
 
