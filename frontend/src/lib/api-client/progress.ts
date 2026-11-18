@@ -94,6 +94,7 @@ export type ProgressErrorKind =
   | "duplicate"
   | "in_use"
   | "not_last"
+  | "confirm"
   | "review_rule"
   | "reference"
   | "validation"
@@ -109,6 +110,7 @@ const MESSAGES: Record<ProgressErrorKind, string> = {
   duplicate: "Nama atau kode itu sudah dipakai (huruf besar/kecil dianggap sama).",
   in_use: "Masih punya data terkait, jadi tidak bisa dihapus. Nonaktifkan saja.",
   not_last: "Hanya putaran terakhir yang bisa dihapus. Koreksi putaran lama lewat Ubah.",
+  confirm: "Nama kelompok yang diketik tidak sama. Tidak ada yang dihapus.",
   review_rule: "Status pemeriksaan belum sesuai. Pilih dan simpan status Sedang Diperiksa pada bagian Catatan perbaikan terlebih dahulu, lalu ulangi koreksi berkas.",
   reference: "Tahun ajaran, kelas, atau topik yang dipilih tidak ada. Muat ulang halaman.",
   validation: "Isian belum sesuai aturan. Periksa lalu coba lagi.",
@@ -138,6 +140,7 @@ const CODE_TO_KIND: Record<string, ProgressErrorKind> = {
   DUPLICATE: "duplicate",
   IN_USE: "in_use",
   NOT_LAST_ROUND: "not_last",
+  CONFIRM_MISMATCH: "confirm",
   REVIEW_RULE: "review_rule",
   INVALID_REFERENCE: "reference",
   VALIDATION_ERROR: "validation",
@@ -412,6 +415,14 @@ export async function updateGroup(id: number, d: GroupDraft, updatedAt: string, 
 export async function deleteGroup(id: number, csrf: string, deps: ProgressDeps = {}): Promise<void> {
   requireId(id);
   const res = await write("DELETE", `/api/v1/admin/groups/${id}`, csrf, undefined, deps);
+  if (res.status !== 204) throw errorFrom(res.status, res.body);
+}
+
+/** Permanently deletes a group with all its records. confirmName must repeat the group's name. */
+export async function purgeGroup(id: number, confirmName: string, csrf: string, deps: ProgressDeps = {}): Promise<void> {
+  requireId(id);
+  if (confirmName.trim() === "") throw new ProgressError("confirm");
+  const res = await write("POST", `/api/v1/admin/groups/${id}/purge`, csrf, { confirmName: confirmName.trim() }, deps);
   if (res.status !== 204) throw errorFrom(res.status, res.body);
 }
 

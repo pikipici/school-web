@@ -129,3 +129,15 @@ SELECT EXISTS(SELECT 1 FROM study_groups WHERE id = $1);
 -- name: DeleteEmptyNotebook :exec
 -- A notebook row that says "not received" with no note carries no record.
 DELETE FROM group_notebooks WHERE group_id = $1 AND NOT is_received AND note = '';
+
+-- Permanent removal of a group and every record that blocks a normal delete.
+-- Run only inside PurgeGroup's transaction, after LockGroup.
+
+-- name: PurgeGroupFindings :execrows
+DELETE FROM evaluation_findings WHERE group_id = $1;
+
+-- name: PurgeGroupRounds :execrows
+DELETE FROM submission_rounds WHERE group_id = $1;
+
+-- name: PurgeGroupNotebook :execrows
+DELETE FROM group_notebooks WHERE group_id = $1;

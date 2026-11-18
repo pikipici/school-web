@@ -24,7 +24,10 @@ Buka `/admin/login/`, isi **Nama pengguna** dan **Kata sandi**. Sesi berakhir se
 3. Di baris kelas, klik **Kelompok**.
 4. Bagian **Tambah kelompok**: nama, topik, email kelompok (opsional), lalu simpan.
 
-Kelas atau kelompok yang sudah punya catatan tidak bisa dihapus. Nonaktifkan saja; ia hilang dari halaman publik.
+Kelas atau kelompok yang sudah punya catatan tidak bisa dihapus biasa. Pilihannya:
+
+- **Nonaktifkan**: hilang dari halaman publik, data tetap ada, bisa diaktifkan lagi.
+- **Hapus permanen** (khusus kelompok): klik **Hapus**, lalu ketik nama kelompok persis dan klik **Hapus permanen**. Semua kiriman, buku tulis, dan catatan perbaikan kelompok itu ikut terhapus, termasuk yang sudah terbit. Tidak bisa dibatalkan; hanya bisa kembali lewat cadangan database.
 
 ## 3. Catat kiriman dari Gmail
 
@@ -75,4 +78,5 @@ Buka [fikriramaaulia.online/progres/](https://fikriramaaulia.online/progres/) di
 | "Sesi Anda telah berakhir" | Login lagi. |
 | "Data ini sudah diubah di tempat lain" | Ada tab lain yang mengubah. Halaman dimuat ulang; ulangi. |
 | "Hanya putaran terakhir yang bisa dihapus" | Koreksi putaran lama lewat **Ubah**. |
-| "Masih punya data terkait" | Nonaktifkan, jangan hapus. |
+| "Masih punya data terkait" | Kelas: hapus dulu kelompoknya. Kelompok: pakai **Hapus permanen** atau nonaktifkan. |
+| "Nama kelompok yang diketik tidak sama" | Ketik ulang persis, termasuk huruf besar/kecil. |

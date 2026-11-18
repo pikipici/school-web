@@ -11,6 +11,7 @@ import {
   deleteGroup,
   getClass,
   listGroups,
+  purgeGroup,
   listYears,
   messageForProgress,
   suggestEmail,
@@ -107,6 +108,8 @@ function Manager({ classId, csrf, onExpired }: { classId: number; csrf: string; 
   const [edit, setEdit] = useState<GroupDraft>(blank(classId));
   const [editErrors, setEditErrors] = useState<GroupErrors>({});
   const [confirmId, setConfirmId] = useState<number | null>(null);
+  const [purgeId, setPurgeId] = useState<number | null>(null);
+  const [purgeText, setPurgeText] = useState("");
   const noticeRef = useRef<HTMLDivElement>(null);
 
   const reload = () => setTick((n) => n + 1);
@@ -180,11 +183,36 @@ function Manager({ classId, csrf, onExpired }: { classId: number; csrf: string; 
       return saved.active ? `${saved.name} aktif lagi.` : `${saved.name} dinonaktifkan dan disembunyikan dari publik.`;
     });
 
-  const remove = (g: StudyGroup) =>
-    run(async () => {
-      setConfirmId(null);
+  const remove = async (g: StudyGroup) => {
+    setConfirmId(null);
+    setBusy(true);
+    setNotice(null);
+    try {
       await deleteGroup(g.id, csrf);
-      return `${g.name} dihapus.`;
+      setNotice({ tone: "ok", text: `${g.name} dihapus.` });
+      reload();
+    } catch (e) {
+      const error = asError(e);
+      if (error.kind === "unauthenticated") onExpired();
+      else if (error.kind === "in_use") {
+        // The group has records: offer the permanent delete instead.
+        setPurgeId(g.id);
+        setPurgeText("");
+      } else {
+        setNotice({ tone: "error", text: messageForProgress(error.kind) });
+        if (error.kind === "conflict" || error.kind === "not_found") reload();
+      }
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const purge = (g: StudyGroup) =>
+    run(async () => {
+      await purgeGroup(g.id, purgeText, csrf);
+      setPurgeId(null);
+      setPurgeText("");
+      return `${g.name} dihapus permanen beserta semua catatannya.`;
     });
 
   if (loadError) {
@@ -264,6 +292,29 @@ function Manager({ classId, csrf, onExpired }: { classId: number; csrf: string; 
                         Batal
                       </button>
                     </div>
+                  </form>
+                ) : purgeId === g.id ? (
+                  <form
+                    className="confirm-row"
+                    aria-label={`Hapus permanen ${g.name}`}
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      if (purgeText.trim() === g.name) purge(g);
+                    }}
+                  >
+                    <p>
+                      {g.name} sudah punya catatan. Hapus permanen akan menghapus kelompok beserta semua kiriman, buku tulis, dan catatan perbaikannya, termasuk yang sudah terbit. Tidak bisa dibatalkan.
+                    </p>
+                    <div className="form-field">
+                      <label htmlFor={`hapus-permanen-${g.id}`}>Ketik nama kelompok untuk memastikan: {g.name}</label>
+                      <input id={`hapus-permanen-${g.id}`} type="text" autoComplete="off" value={purgeText} onChange={(e) => setPurgeText(e.target.value)} />
+                    </div>
+                    <button className="button-danger" type="submit" disabled={busy || purgeText.trim() !== g.name}>
+                      Hapus permanen
+                    </button>
+                    <button className="button-secondary" type="button" onClick={() => { setPurgeId(null); setPurgeText(""); }}>
+                      Batal
+                    </button>
                   </form>
                 ) : confirmId === g.id ? (
                   <div className="confirm-row" role="group" aria-label={`Konfirmasi hapus ${g.name}`}>

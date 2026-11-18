@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: Informatika Monitoring API
-  version: 0.7.0
+  version: 0.7.1
   description: Kontrak API yang saat ini diimplementasikan oleh backend Go, termasuk autentikasi admin. Endpoint admin hanya aktif bila database dikonfigurasi.
 servers:
   - url: /
@@ -627,6 +627,29 @@ paths:
         "403": {$ref: "#/components/responses/Forbidden"}
         "404": {$ref: "#/components/responses/NotFound"}
         "409": {$ref: "#/components/responses/ProgressConflict"}
+  /api/v1/admin/groups/{id}/purge:
+    parameters:
+      - $ref: "#/components/parameters/ID"
+    post:
+      summary: Hapus permanen kelompok beserta putaran, buku tulis, dan semua temuan (termasuk yang terbit)
+      operationId: purgeGroup
+      parameters:
+        - $ref: "#/components/parameters/CSRF"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [confirmName]
+              properties:
+                confirmName: {type: string, description: Nama kelompok persis (spasi di tepi diabaikan).}
+      responses:
+        "204": {description: Dihapus permanen; audit progress.group_purged dalam transaksi yang sama.}
+        "401": {$ref: "#/components/responses/Unauthenticated"}
+        "403": {$ref: "#/components/responses/Forbidden"}
+        "404": {$ref: "#/components/responses/NotFound"}
+        "422": {description: "CONFIRM_MISMATCH: nama tidak sama; tidak ada yang dihapus."}
   /api/v1/admin/groups/{id}/submissions:
     parameters:
       - $ref: "#/components/parameters/ID"

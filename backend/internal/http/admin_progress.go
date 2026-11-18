@@ -412,6 +412,33 @@ func (a adminProgress) deleteGroup(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(204)
 }
 
+type purgeRequest struct {
+	ConfirmName string `json:"confirmName"`
+}
+
+// purgeGroup permanently removes a group with all its records. The body must
+// repeat the group's exact name; the store writes its own audit row.
+func (a adminProgress) purgeGroup(w http.ResponseWriter, r *http.Request) {
+	id, err := parseID(r)
+	if err != nil {
+		progressErr(w, progress.ErrNotFound)
+		return
+	}
+	q, ok := decodeJSON[purgeRequest](w, r, maxProgressBody)
+	if !ok {
+		return
+	}
+	if _, err := a.store.PurgeGroup(r.Context(), id, q.ConfirmName, actorOf(r)); err != nil {
+		if errors.Is(err, progress.ErrConfirm) {
+			writeError(w, 422, "CONFIRM_MISMATCH", "Nama kelompok yang diketik tidak sama.")
+			return
+		}
+		progressErr(w, err)
+		return
+	}
+	w.WriteHeader(204)
+}
+
 // routes mounts the admin progress API on r, which must already require a
 // valid admin session (and CSRF + Origin for unsafe methods).
 func (a adminProgress) routes(r chi.Router) {
@@ -428,6 +455,7 @@ func (a adminProgress) routes(r chi.Router) {
 	r.Get("/groups/{id}", a.getGroup)
 	r.Patch("/groups/{id}", a.updateGroup)
 	r.Delete("/groups/{id}", a.deleteGroup)
+	r.Post("/groups/{id}/purge", a.purgeGroup)
 	a.submissionRoutes(r)
 	a.findingRoutes(r)
 }

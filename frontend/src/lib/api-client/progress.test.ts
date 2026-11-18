@@ -9,6 +9,7 @@ import {
   createYear,
   deleteClass,
   deleteRound,
+  purgeGroup,
   draftFromRound,
   fromWIBInput,
   getNotebook,
@@ -202,6 +203,23 @@ describe("admin", () => {
     await assert.rejects(listClasses(null, undefined, { fetch: offline }), (e: unknown) => e instanceof ProgressError && e.kind === "network");
     assert.match(messageForProgress("in_use"), /Nonaktifkan/);
     assert.match(messageForProgress("review_rule"), /Sedang Diperiksa/);
+  });
+
+  it("purge sends the typed name with CSRF and maps a mismatch", async () => {
+    const ok = fakeFetch(() => new Response(null, { status: 204 }));
+    await purgeGroup(7, "  Kelompok 1 ", CSRF, { fetch: ok.fetch });
+    assert.equal(ok.calls[0].url, "/api/v1/admin/groups/7/purge");
+    assert.equal(ok.calls[0].init.method, "POST");
+    assert.equal(headers(ok.calls[0])["X-CSRF-Token"], CSRF);
+    assert.deepEqual(JSON.parse(String(ok.calls[0].init.body)), { confirmName: "Kelompok 1" });
+
+    const empty = fakeFetch(() => new Response(null, { status: 204 }));
+    await assert.rejects(purgeGroup(7, "  ", CSRF, { fetch: empty.fetch }), (e: unknown) => e instanceof ProgressError && e.kind === "confirm");
+    assert.equal(empty.calls.length, 0, "an empty name is not sent");
+
+    const bad = fakeFetch(() => json(422, errorBody("CONFIRM_MISMATCH")));
+    await assert.rejects(purgeGroup(7, "kelompok 1", CSRF, { fetch: bad.fetch }), (e: unknown) => e instanceof ProgressError && e.kind === "confirm");
+    assert.match(messageForProgress("confirm"), /Tidak ada yang dihapus/);
   });
 });
 
