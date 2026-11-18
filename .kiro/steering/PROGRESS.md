@@ -118,7 +118,8 @@ Pengecualian 3B: keyboard halaman detail belum dicek; `datetime-local` di HP bel
 - User menerima homepage dan menyetujui batch UI navigasi/Pengumuman/Materi. Implementasi lokal: navigasi aktif termasuk detail, 3 menu mobile tanpa hamburger, kartu konten dengan preview, filter topik, halaman baca konsisten. Backend tidak berubah.
 - Review satu kali batch UI publik: BLOCK karena CSS generik menimpa padding kartu; juga selector jarak baris tidak cocok, CTA mencemari nama aksesibel judul, pemotongan UTF-16 membelah emoji. User menyetujui perbaikan, semuanya diterapkan tanpa review loop: selector kartu lebih spesifik, target `.plain-text`, CTA dekoratif aria-hidden, preview dipotong per Unicode code point.
 - RED regresi: emoji batas 180 gagal (surrogate terbelah), computed padding mobile 0px bukan 18px. GREEN: 120 tes frontend, lint/typecheck/build di workspace VPS; browser build ekspor+API mock pada 360/1280px home/list/detail kedua konten lulus. Pengujian mencakup computed padding 18/24px, line-height 28.8px, CTA aria-hidden, menu aktif, pagination, filter topik dan zero overflow. Browser test lokal, tidak menulis data produksi.
-- Batch navigasi/Pengumuman/Materi belum commit/deploy; menunggu persetujuan user. Produksi tetap release homepage `f3a6e00`. Tidak ada dummy data produksi atau review loop.
+- User menyetujui commit/deploy batch navigasi/Pengumuman/Materi. Commit `9f8e590`, release produksi `20261118T115811Z-9f8e590965b6`; gate deploy lengkap + smoke lulus, backup DB/snapshot tersimpan, migrasi tetap 10.
+- Browser HTTPS produksi pada 360/1280px: homepage, Pengumuman, Materi lulus penanda menu aktif, zero right overflow, tanpa CSP/runtime error tak terduga. Pengumuman/Materi produksi masih kosong; kartu berisi konten dan halaman baca sudah diverifikasi dengan API mock lokal, bukan diklaim diuji berisi data di produksi. Tidak membuat/mengubah data produksi; tidak ada review loop.
 
 ## Sources of Truth
 
