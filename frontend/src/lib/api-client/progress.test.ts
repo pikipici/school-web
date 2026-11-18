@@ -50,6 +50,7 @@ const CSRF = "c".repeat(43);
 const T = "2026-11-15T01:00:00.123456Z";
 
 const wireRow = {
+  id: 7,
   name: "Kelompok 1",
   classCode: "9A",
   topic: { code: "K1", title: "Struktur Data (Graf dan Tree)" },
@@ -184,6 +185,7 @@ describe("admin", () => {
       [403, "FORBIDDEN", "forbidden"],
       [404, "NOT_FOUND", "not_found"],
       [409, "CONFLICT", "conflict"],
+      [409, "REVIEW_RULE", "review_rule"],
       [409, "DUPLICATE", "duplicate"],
       [409, "IN_USE", "in_use"],
       [422, "INVALID_REFERENCE", "reference"],
@@ -199,6 +201,7 @@ describe("admin", () => {
     }) as typeof fetch;
     await assert.rejects(listClasses(null, undefined, { fetch: offline }), (e: unknown) => e instanceof ProgressError && e.kind === "network");
     assert.match(messageForProgress("in_use"), /Nonaktifkan/);
+    assert.match(messageForProgress("review_rule"), /Sedang Diperiksa/);
   });
 });
 

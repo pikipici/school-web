@@ -31,7 +31,7 @@ export default function ProgressPage() {
           <h2 id="tabel-progres">Semua kelompok</h2>
           <p className="section-note">
             Tiga jalur dicatat terpisah: Pengumpulan (PPT dan PDF lewat email), Pemeriksaan oleh guru, dan Buku Tulis fisik. Kelompok
-            Tuntas bila ketiganya selesai. Catatan revisi hanya bisa dibaca kelompok masing-masing.
+            Tuntas bila ketiganya selesai. Catatan perbaikan yang sudah diterbitkan tampil di bawah setiap kelompok dan dapat dibaca tanpa login.
           </p>
           <ProgressTable />
         </section>

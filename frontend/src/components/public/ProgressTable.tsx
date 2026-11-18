@@ -12,6 +12,7 @@ import {
   type StatusFilter
 } from "@/lib/api-client/progress";
 import { formatWIB } from "@/lib/format";
+import { GroupFindings } from "./GroupFindings";
 
 type Load = { status: "loading" } | { status: "error" } | { status: "ready"; data: PublicProgress };
 
@@ -160,52 +161,17 @@ export function ProgressTable() {
           <p>Tidak ada kelompok untuk pilihan ini.</p>
         </div>
       ) : (
-        <table className="progress-table">
-          <caption className="visually-hidden">Progres tugas kelompok, {rows.length} kelompok</caption>
-          <thead>
-            <tr>
-              <th scope="col">Kelompok</th>
-              <th scope="col">Kelas</th>
-              <th scope="col">Topik</th>
-              <th scope="col">Pengumpulan</th>
-              <th scope="col">Pemeriksaan</th>
-              <th scope="col">Buku Tulis</th>
-              <th scope="col">Terakhir Diperbarui</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((g) => (
-              <tr key={`${g.classCode}/${g.name}`}>
-                <th scope="row">
-                  {g.name}
-                  {g.complete ? (
-                    <span className="lane-chip lane-done tuntas">
-                      <span aria-hidden="true">★</span> Tuntas
-                    </span>
-                  ) : null}
-                </th>
-                <td data-label="Kelas">{g.classCode}</td>
-                <td data-label="Topik">
-                  <span>
-                    <span className="topic-code">{g.topic.code}</span> {g.topic.title}
-                  </span>
-                </td>
-                <td data-label="Pengumpulan">
-                  <SubmissionCell g={g} />
-                </td>
-                <td data-label="Pemeriksaan">
-                  <ReviewCell g={g} />
-                </td>
-                <td data-label="Buku Tulis">
-                  <NotebookCell g={g} />
-                </td>
-                <td data-label="Terakhir Diperbarui">
-                  <time dateTime={g.updatedAt}>{formatWIB(g.updatedAt)}</time>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <div className="group-progress-list">{rows.map(g => <article className="group-progress" key={g.id} aria-labelledby={`kelompok-${g.id}`}>
+          <h3 id={`kelompok-${g.id}`}>{g.classCode} — {g.name}{g.complete ? <span className="lane-chip lane-done">✓ Tuntas</span> : null}</h3>
+          <p><strong>{g.topic.code}</strong> · {g.topic.title}</p>
+          <dl className="group-lanes">
+            <div><dt>Pengumpulan</dt><dd><SubmissionCell g={g}/></dd></div>
+            <div><dt>Pemeriksaan</dt><dd><ReviewCell g={g}/></dd></div>
+            <div><dt>Buku tulis</dt><dd><NotebookCell g={g}/></dd></div>
+          </dl>
+          <p className="section-note">Terakhir diperbarui <time dateTime={g.updatedAt}>{formatWIB(g.updatedAt)}</time>.</p>
+          <GroupFindings groupId={g.id}/>
+        </article>)}</div>
       )}
     </>
   );

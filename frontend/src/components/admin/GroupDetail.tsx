@@ -35,6 +35,7 @@ import {
 import { formatWIB, validContentID } from "@/lib/format";
 
 import { AdminPageGate } from "./AdminPageGate";
+import { FindingManager } from "./FindingManager";
 
 type Notice = { tone: "ok" | "error"; text: string } | null;
 type Loaded = { group: StudyGroup; cls: SchoolClass; topic: Topic | null; submission: Submission; rounds: SubmissionRound[]; notebook: GroupNotebook };
@@ -351,6 +352,7 @@ function Detail({ groupId, csrf, onExpired }: { groupId: number; csrf: string; o
         </form>
       </section>
 
+      <FindingManager groupId={groupId} csrf={csrf} onExpired={onExpired}/>
       <section className="content-section" aria-labelledby="jalur-buku">
         <div className="section-heading">
           <h2 id="jalur-buku">Buku tulis</h2>

@@ -27,6 +27,7 @@ export const NOTEBOOK_LABEL: Record<Notebook, string> = {
 };
 
 export interface PublicGroup {
+  id: number;
   name: string;
   classCode: string;
   topic: { code: string; title: string };
@@ -93,6 +94,7 @@ export type ProgressErrorKind =
   | "duplicate"
   | "in_use"
   | "not_last"
+  | "review_rule"
   | "reference"
   | "validation"
   | "invalid_request"
@@ -107,6 +109,7 @@ const MESSAGES: Record<ProgressErrorKind, string> = {
   duplicate: "Nama atau kode itu sudah dipakai (huruf besar/kecil dianggap sama).",
   in_use: "Masih punya data terkait, jadi tidak bisa dihapus. Nonaktifkan saja.",
   not_last: "Hanya putaran terakhir yang bisa dihapus. Koreksi putaran lama lewat Ubah.",
+  review_rule: "Status pemeriksaan belum sesuai. Pilih dan simpan status Sedang Diperiksa pada bagian Catatan perbaikan terlebih dahulu, lalu ulangi koreksi berkas.",
   reference: "Tahun ajaran, kelas, atau topik yang dipilih tidak ada. Muat ulang halaman.",
   validation: "Isian belum sesuai aturan. Periksa lalu coba lagi.",
   invalid_request: "Permintaan tidak valid. Muat ulang halaman, lalu coba lagi.",
@@ -135,6 +138,7 @@ const CODE_TO_KIND: Record<string, ProgressErrorKind> = {
   DUPLICATE: "duplicate",
   IN_USE: "in_use",
   NOT_LAST_ROUND: "not_last",
+  REVIEW_RULE: "review_rule",
   INVALID_REFERENCE: "reference",
   VALIDATION_ERROR: "validation",
   INVALID_REQUEST: "invalid_request",
@@ -163,11 +167,12 @@ const REVIEWS = ["BELUM_DICEK", "DIPERIKSA", "PERLU_REVISI", "REVISI_DITERIMA", 
 const NOTEBOOKS = ["BELUM_DITERIMA", "SUDAH_DITERIMA"] as const;
 
 function parsePublicGroup(v: unknown): PublicGroup | null {
-  if (!isRecord(v) || !isStr(v.name) || !isStr(v.classCode) || !isRecord(v.topic)) return null;
+  if (!isRecord(v) || !isInt(v.id, 1) || !isStr(v.name) || !isStr(v.classCode) || !isRecord(v.topic)) return null;
   if (!isStr(v.topic.code) || !isStr(v.topic.title)) return null;
   if (!oneOf(v.submission, SUBMISSIONS) || !oneOf(v.review, REVIEWS) || !oneOf(v.notebook, NOTEBOOKS)) return null;
   if (typeof v.complete !== "boolean" || !isDate(v.updatedAt)) return null;
   return {
+    id: v.id,
     name: v.name,
     classCode: v.classCode,
     topic: { code: v.topic.code, title: v.topic.title },

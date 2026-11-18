@@ -2,10 +2,10 @@
 export const SITE_OWNER = "Fikri Rama Aulia";
 export const SITE_TITLE = `${SITE_OWNER} — Web Pribadi`;
 export const SITE_DESCRIPTION =
-  "Web pribadi guru Informatika: pengumuman, materi, dan progres tugas kelompok kelas IX.";
+  "Progres tugas kelompok Informatika kelas IX dan catatan perbaikan dari guru, terbuka tanpa login.";
 
 export const NAV_ITEMS = [
+  { href: "/", label: "Progres Tugas" },
   { href: "/pengumuman/", label: "Pengumuman" },
-  { href: "/materi/", label: "Materi" },
-  { href: "/progres/", label: "Progres Tugas" }
+  { href: "/materi/", label: "Materi" }
 ] as const;
