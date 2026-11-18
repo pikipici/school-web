@@ -1,7 +1,7 @@
 # Fase 3B — Pengumpulan dan Buku Tulis: Acceptance
 
 > Tanggal: 15 November 2026. Produksi: [fikriramaaulia.online](https://fikriramaaulia.online), rilis `20261118T045543Z-cffeaffbd4f3` (kode `cffeaff`, termasuk perbaikan hapus kelompok dan 360 px), migrasi versi 9.
-> Status: **SIAP DITUTUP dengan pengecualian.** Penutupan menunggu persetujuan user.
+> Status: **DITUTUP 18 Nov 2026 dengan pengecualian** atas instruksi user ("Tutup Fase 3B dengan pengecualian").
 
 ## Gerbang
 

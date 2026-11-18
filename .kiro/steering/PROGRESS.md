@@ -2,18 +2,18 @@
 
 > Dokumen status aktual implementasi. Update setelah setiap task, verifikasi, commit, provisioning, dan deployment.
 >
-> Last updated: 15 November 2026, setelah Task 3.8 (3B siap deploy)
+> Last updated: 18 November 2026, setelah penutupan Fase 3B
 
 ## Ringkasan
 
-- Fase aktif: **Fase 3B — Pengumpulan dan buku tulis** (rencana Fase 3 disetujui 14 Nov 2026). Fase 0, 1, 2A, 2B, dan **3A** sudah ditutup.
-- Progress Fase 2A: **8/8 selesai** (ditutup dengan pengecualian). Fase 2B (lampiran): **7/7** (2.9–2.15), **ditutup 14 Nov 2026 dengan pengecualian**. Fase 3: **9/17** — 3A ditutup 15 Nov 2026; 3B (3.6–3.9) di produksi, menunggu persetujuan tutup.
-- Task terakhir selesai: **3.9 — deploy 3B + cek browser** (`docs/F3B_ACCEPTANCE.md`); 3B menunggu persetujuan tutup
-- Next task: **persetujuan tutup 3B**, lalu mulai 3C (Task 3.10).
+- Fase aktif: **Fase 3C — Pemeriksaan** (belum dimulai). Fase 0, 1, 2A, 2B, **3A**, dan **3B** sudah ditutup.
+- Progress Fase 2A: **8/8 selesai** (ditutup dengan pengecualian). Fase 2B (lampiran): **7/7** (2.9–2.15), **ditutup 14 Nov 2026 dengan pengecualian**. Fase 3: **9/17** — 3A ditutup 15 Nov 2026; 3B ditutup 18 Nov 2026 dengan pengecualian.
+- Task terakhir selesai: **3.9 — deploy 3B + cek browser** (`docs/F3B_ACCEPTANCE.md`), plus perbaikan hapus kelompok dan 360 px
+- Next task: **3.10 — migrasi `group_reviews`, `evaluation_findings`** (3C)
 - Semua perbaikan gaya tautan sudah di produksi.
-- Local branch: `main`; produksi rilis `20261115T125117Z-a2d9fc52cbba` (kode `a2d9fc5`, migrasi 9). Commit dokumen sesudahnya belum di-push.
+- Local branch: `main`; produksi rilis `20261118T045543Z-cffeaffbd4f3` (kode `cffeaff`, migrasi 9). Commit dokumen sesudahnya belum di-push.
 - Produksi: **`https://fikriramaaulia.online`** aktif (Caddy + Let's Encrypt, berlaku s.d. 2027-02-11)
-- Rilis produksi: `20261115T125117Z-a2d9fc52cbba` (kode `a2d9fc5`), migrasi versi **9**. Pengumuman, Materi, dan lampiran (unggah admin + unduh publik) aktif di produksi.
+- Rilis produksi: `20261118T045543Z-cffeaffbd4f3` (kode `cffeaff`), migrasi versi **9**. Pengumuman, Materi, lampiran, kelas/kelompok, dan pencatatan pengumpulan + buku tulis aktif di produksi.
 - PostgreSQL aplikasi: aktif, readiness PASS
 - Admin: satu akun `fikri`; login dan logout lewat browser terbukti di audit
 
@@ -77,9 +77,11 @@ Pengecualian 3A: zoom 200% belum dicek; lebar 700 dan 1000 px tidak terukur; bel
 | 3.6 | Migrasi `submission_rounds`, `group_notebooks` | DONE | `ca7cd57` | RED 7 uji skema; minimal satu berkas, nomor urut tanpa lompat, unik per kelompok, kelompok bercatatan tidak bisa dihapus; konkurensi 10 → 1 (3×); 2 mutan tertangkap. Kunci `FOR UPDATE` trigger tidak dibuktikan uji |
 | 3.7 | Lajur terhitung; catat/ubah/hapus putaran; buku tulis; audit dalam transaksi | DONE | `6e26777` | RED build; 6 uji paket + 2 uji HTTP: AC02/AC03/AC08, klik ganda 409, `NOT_LAST_ROUND`, `IN_USE`; audit gagal → perubahan batal; 2 mutan tertangkap; OpenAPI 0.6.0 |
 | 3.8 | UI Catat Pengumpulan + buku tulis | DONE | `f660abc` | 108 uji frontend (tanpa RED ketat), lint 0, typecheck, build; E2E nyata AC02/AC03/AC08, konflik, `not_last`, `in_use`, publik tanpa data privat, audit 6 baris |
-| 3.9 | Deploy + cek browser + `docs/F3B_ACCEPTANCE.md` | DONE (menunggu persetujuan tutup) | — | Rilis `20261115T122908Z-f660abcc6378`, migrasi 9 setelah cadangan; Edge produksi: catat PPT → PDF → Lengkap, validasi tanpa berkas, buku tulis, hapus berurutan, publik tanpa data privat, audit 8 baris. Temuan: kelompok tak bisa dihapus setelah buku tulis pernah disimpan (kelas `UJI` dinonaktifkan) |
+| 3.9 | Deploy + cek browser + `docs/F3B_ACCEPTANCE.md` | DONE | — | Rilis `20261115T122908Z-f660abcc6378`, migrasi 9 setelah cadangan; Edge produksi: catat PPT → PDF → Lengkap, validasi tanpa berkas, buku tulis, hapus berurutan, publik tanpa data privat, audit 8 baris. Temuan: kelompok tak bisa dihapus setelah buku tulis pernah disimpan (kelas `UJI` dinonaktifkan) |
 | 3.9a | Perbaikan hapus kelompok (buku tulis kosong) | DONE, di produksi | `a2d9fc5` | RED → GREEN; rilis `20261115T125117Z-a2d9fc52cbba`; data `UJI` dihapus lewat UI |
 | 3.9b | 360 px halaman detail kelompok | DONE, di produksi | `77788ad` | Edge headless 360 px + API tiruan: meluap 491 px (email/nama berkas panjang) → rilis `20261118T045543Z-cffeaffbd4f3`, produksi 360 px, 0 elemen meluap (tampilan biasa dan formulir Ubah) |
+
+Pengecualian 3B: keyboard halaman detail belum dicek; `datetime-local` di HP belum dicoba; AC08 belum dicoba langsung di produksi; belum ada uji komponen UI; kunci `FOR UPDATE` di trigger nomor putaran tidak dibuktikan uji. **Ditutup 18 Nov 2026 atas persetujuan user.**
 
 ## Sources of Truth
 

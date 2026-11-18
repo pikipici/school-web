@@ -1,6 +1,6 @@
 # Fase 3 — Modul Progres Tugas Kelompok (Rencana)
 
-> Status: **DISETUJUI 14 Nov 2026** (user mengikuti semua rekomendasi). **3A ditutup 15 Nov 2026** dengan pengecualian (`docs/F3A_ACCEPTANCE.md`); 3B berikutnya.
+> Status: **DISETUJUI 14 Nov 2026** (user mengikuti semua rekomendasi). **3A ditutup 15 Nov 2026** dengan pengecualian (`docs/F3A_ACCEPTANCE.md`); **3B ditutup 18 Nov 2026** dengan pengecualian (`docs/F3B_ACCEPTANCE.md`); 3C berikutnya.
 > Sumber: `PLAN.md` bagian 1–7, 9, 10, 14 (AC01–AC24); `DESIGN.md`; pola Fase 1–2 (sesi, CSRF, audit, `?id=` untuk ekspor statis).
 
 ## Tujuan
@@ -100,7 +100,7 @@ Mutasi admin: sesi + CSRF + Origin + audit. `PATCH` memakai `updatedAt` dan 409 
 | 3.6 **DONE** | Migrasi `submission_rounds`, `group_notebooks` | uji skema: unik `(group, round)`, minimal satu berkas per putaran |
 | 3.7 **DONE** | Status pengumpulan terhitung; catat/ubah/hapus putaran; buku tulis; audit dalam transaksi | TDD: AC02, AC03, AC08; klik ganda 409 |
 | 3.8 **DONE** | UI admin "Catat Pengumpulan" + buku tulis di detail kelompok; publik menampilkan status | lint/typecheck/build + E2E |
-| 3.9 **DONE (menunggu persetujuan tutup 3B)** | Deploy + cek browser + `docs/F3B_ACCEPTANCE.md` | semua gerbang |
+| 3.9 **DONE** | Deploy + cek browser + `docs/F3B_ACCEPTANCE.md` | semua gerbang |
 
 ### 3C — Pemeriksaan
 
@@ -195,3 +195,5 @@ Status rencana: **DISETUJUI 14 Nov 2026.**
   - **Belum:** tampilan di browser nyata (360 px, keyboard, `datetime-local` di HP) — Task 3.9.
 - **Perbaikan 3B (15 Nov 2026): hapus kelompok dengan buku tulis kosong.** Temuan cek browser 3.9: setelah buku tulis dicentang lalu dibatalkan, kelompok tidak bisa dihapus (baris `group_notebooks` kosong + `RESTRICT`). RED: uji baru gagal dengan `still has records`. GREEN: `DeleteGroup` dalam satu transaksi membuang dulu baris buku "belum diterima, tanpa catatan" (`DeleteEmptyNotebook`), lalu menghapus kelompok; buku diterima, buku bercatatan, dan putaran tetap `ErrInUse` tanpa menyentuh baris buku. Seluruh suite 2 kali, `-race`, vet, build, gofmt hijau; mutan "hapus semua baris buku" tertangkap.
   - Dideploy ke produksi (rilis `20261115T125117Z-a2d9fc52cbba`, cadangan 44271 B). Data uji `UJI` + Kelompok 1 dihapus lewat UI; audit tercatat; produksi kembali kosong.
+- **Perbaikan 360 px halaman detail (18 Nov 2026).** Edge headless 360 px dengan API tiruan menemukan meluap 491 px (email dan nama berkas panjang). Perbaikan CSS `77788ad` dideploy (rilis `20261118T045543Z-cffeaffbd4f3`); produksi 360 px, 0 elemen meluap.
+- **3B ditutup 18 Nov 2026** atas instruksi user ("Tutup Fase 3B dengan pengecualian"), dengan pengecualian di `docs/F3B_ACCEPTANCE.md`: keyboard halaman detail, `datetime-local` di HP, AC08 langsung di produksi, uji komponen UI, dan kunci `FOR UPDATE` trigger.
