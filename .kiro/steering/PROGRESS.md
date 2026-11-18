@@ -7,9 +7,9 @@
 ## Ringkasan
 
 - Fase aktif: **Fase 3C — Pemeriksaan** (belum dimulai). Fase 0, 1, 2A, 2B, **3A**, dan **3B** sudah ditutup.
-- Progress Fase 2A: **8/8 selesai** (ditutup dengan pengecualian). Fase 2B (lampiran): **7/7** (2.9–2.15), **ditutup 14 Nov 2026 dengan pengecualian**. Fase 3: **9/17** — 3A ditutup 15 Nov 2026; 3B ditutup 18 Nov 2026 dengan pengecualian.
+- Progress Fase 2A: **8/8 selesai** (ditutup dengan pengecualian). Fase 2B (lampiran): **7/7** (2.9–2.15), **ditutup 14 Nov 2026 dengan pengecualian**. Fase 3: **9/16** — 3A ditutup 15 Nov 2026; 3B ditutup 18 Nov 2026 dengan pengecualian.
 - Task terakhir selesai: **3.9 — deploy 3B + cek browser** (`docs/F3B_ACCEPTANCE.md`), plus perbaikan hapus kelompok dan 360 px
-- Next task: **3.10 — migrasi `group_reviews`, `evaluation_findings`** (3C)
+- Next task: **3.10 — temuan + status pemeriksaan (DB, aturan, API)**. Sisa **7 task** (3.10–3.16); Fase 4 dibatalkan 18 Nov 2026 atas arahan user.
 - Semua perbaikan gaya tautan sudah di produksi.
 - Local branch: `main`; produksi rilis `20261118T045543Z-cffeaffbd4f3` (kode `cffeaff`, migrasi 9). Commit dokumen sesudahnya belum di-push.
 - Produksi: **`https://fikriramaaulia.online`** aktif (Caddy + Let's Encrypt, berlaku s.d. 2027-02-11)

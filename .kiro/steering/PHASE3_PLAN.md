@@ -104,21 +104,29 @@ Mutasi admin: sesi + CSRF + Origin + audit. `PATCH` memakai `updatedAt` dan 409 
 
 ### 3C — Pemeriksaan
 
+> **Disederhanakan 18 Nov 2026** atas arahan user ("gausa terlalu advance, gua cuma perlu website buat ngasi tau siswa letak kesalahan tugas mereka"). 3C dan 3D masing-masing jadi 3 task. Fase 4 (tanya jawab, rekap, CSV, halaman audit) **dibatalkan**; lihat `PHASE4_PLAN.md`.
+
 | Task | Isi | Uji |
 |---|---|---|
-| 3.10 | Migrasi `group_reviews`, `evaluation_findings` | uji skema |
-| 3.11 | Aturan status review + temuan draf/terbit/selesai/arsip + TUNTAS | TDD: AC05, AC09, AC10; transisi ilegal ditolak |
-| 3.12 | UI admin evaluasi: tambah temuan, terbitkan dengan konfirmasi, ubah status | lint/typecheck/build + E2E |
-| 3.13 | Deploy + cek browser + `docs/F3C_ACCEPTANCE.md` | semua gerbang |
+| 3.10 | Migrasi `evaluation_findings` + status pemeriksaan di kelompok; paket + API: tambah/ubah/hapus temuan draf, terbitkan semua draf, tandai selesai, ubah status pemeriksaan; TUNTAS terhitung; audit dalam transaksi | TDD: AC05 (draf tidak terbit), AC09, AC10; publik tetap tanpa isi temuan |
+| 3.11 | UI admin di halaman detail kelompok: bagian **Temuan** (lokasi, masalah, perbaikan, Wajib/Saran), tombol **Terbitkan** dengan konfirmasi, pilih status pemeriksaan | uji klien; lint/typecheck/build; E2E |
+| 3.12 | Deploy + cek browser + `docs/F3C_ACCEPTANCE.md` | semua gerbang |
+
+Temuan yang sudah terbit tidak dihapus; guru menandainya **Selesai** setelah siswa memperbaiki. Tidak ada fitur arsip terpisah.
 
 ### 3D — Portal kelompok
 
 | Task | Isi | Uji |
 |---|---|---|
-| 3.14 | Migrasi `group_access_sessions`; kode akses HMAC; rotasi mencabut sesi | TDD: kode tidak tersimpan mentah; rotasi |
-| 3.15 | `group/access`, `group/me`, `group/logout`; rate limit; identitas hanya dari sesi | TDD: AC06, AC07 (manipulasi ID/URL/cookie), AC13, AC24 |
-| 3.16 | UI `/progres/masuk/` dan `/progres/kelompok/`; admin "Buat/ganti kode" dengan tampilan sekali | lint/typecheck/build + E2E |
-| 3.17 | `GROUP_CODE_KEY` di `.env` + `deploy.sh` (izin), deploy, cek browser, `docs/F3D_ACCEPTANCE.md` | semua gerbang |
+| 3.13 | Kode akses (HMAC, tampil sekali, ganti kode mencabut sesi), sesi kelompok 7 hari, `group/access`, `group/me` (status + temuan terbit + riwayat putaran), `group/logout`, batas percobaan | TDD: AC06, AC07 (manipulasi ID/URL/cookie), AC13; kode tidak tersimpan mentah |
+| 3.14 | UI `/progres/masuk/` (ketik kode) dan `/progres/kelompok/` (daftar kesalahan + status); admin "Buat/ganti kode" | uji klien; lint/typecheck/build; E2E; 360px |
+| 3.15 | `GROUP_CODE_KEY` di `.env` + `deploy.sh` (izin), deploy, cek browser, `docs/F3D_ACCEPTANCE.md` | semua gerbang |
+
+### Penutup
+
+| Task | Isi | Uji |
+|---|---|---|
+| 3.16 | Panduan singkat guru (`docs/ADMIN_GUIDE.md`: buat kelas/kelompok, catat kiriman, tulis temuan, bagikan kode); satu uji alur nyata dari awal sampai siswa melihat kesalahannya | user membaca panduan; alur nyata lulus |
 
 Setiap task: uji gagal dulu, implementasi, uji/vet/build di `cbt-vps`, commit, catat di dokumen ini dan `PROGRESS.md`.
 
