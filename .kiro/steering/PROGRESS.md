@@ -78,6 +78,8 @@ Pengecualian 3A: zoom 200% belum dicek; lebar 700 dan 1000 px tidak terukur; bel
 | 3.7 | Lajur terhitung; catat/ubah/hapus putaran; buku tulis; audit dalam transaksi | DONE | `6e26777` | RED build; 6 uji paket + 2 uji HTTP: AC02/AC03/AC08, klik ganda 409, `NOT_LAST_ROUND`, `IN_USE`; audit gagal → perubahan batal; 2 mutan tertangkap; OpenAPI 0.6.0 |
 | 3.8 | UI Catat Pengumpulan + buku tulis | DONE | `f660abc` | 108 uji frontend (tanpa RED ketat), lint 0, typecheck, build; E2E nyata AC02/AC03/AC08, konflik, `not_last`, `in_use`, publik tanpa data privat, audit 6 baris |
 | 3.9 | Deploy + cek browser + `docs/F3B_ACCEPTANCE.md` | DONE (menunggu persetujuan tutup) | — | Rilis `20261115T122908Z-f660abcc6378`, migrasi 9 setelah cadangan; Edge produksi: catat PPT → PDF → Lengkap, validasi tanpa berkas, buku tulis, hapus berurutan, publik tanpa data privat, audit 8 baris. Temuan: kelompok tak bisa dihapus setelah buku tulis pernah disimpan (kelas `UJI` dinonaktifkan) |
+| 3.9a | Perbaikan hapus kelompok (buku tulis kosong) | DONE, di produksi | `a2d9fc5` | RED → GREEN; rilis `20261115T125117Z-a2d9fc52cbba`; data `UJI` dihapus lewat UI |
+| 3.9b | 360 px halaman detail kelompok | DIPERBAIKI, belum dideploy | `77788ad` | Edge headless 360 px + API tiruan: meluap 491 px (email/nama berkas panjang) → dengan CSS baru 360 px, 0 elemen meluap (tampilan biasa dan formulir Ubah) |
 
 ## Sources of Truth
 

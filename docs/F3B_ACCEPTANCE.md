@@ -37,7 +37,7 @@
 
 ## Pengecualian
 
-1. 360 px dan keyboard halaman detail **belum terukur**: skrip DevTools macet, dan tangkapan headless tidak bisa sesempit 360 px. Halaman publik `/progres/` sudah lulus 360 px di 3A dan tata letaknya tidak berubah.
+1. Keyboard halaman detail belum dicek. **360 px sudah terukur** (15 Nov 2026): Edge headless pribadi, lebar CSS 360, halaman `/admin/kelompok/detail/?id=1` dari produksi, dengan `/api/v1/*` dijawab JSON tiruan (nama kelompok 57 karakter, email 67 karakter, nama berkas 98 karakter tanpa spasi, subjek panjang, tautan panjang). Tidak login dan tidak menulis apa pun ke produksi. Hasil awal: **meluap**, `scrollWidth` 491 px; 10 elemen melewati tepi kanan (email, nama berkas, subjek, catatan, tombol Ubah). Penyebab: pada ≤ 720 px `.admin-row` memakai kolom `1fr`, yang tidak bisa menyusut di bawah kata terpanjang, dan teks meta tidak boleh patah. Perbaikan `77788ad`: kolom `minmax(0, 1fr)`, `min-width: 0` dan `overflow-wrap: anywhere` pada isi baris. Dengan CSS itu disuntikkan ke halaman yang sama: `scrollWidth` 360, 0 elemen meluap, baik tampilan biasa maupun saat formulir Ubah terbuka. **Belum dideploy**; ukur ulang di produksi setelah deploy.
 2. `datetime-local` di HP belum dicoba.
 3. AC08 di produksi belum dicoba (hanya uji dan E2E).
 4. Belum ada uji komponen UI.
